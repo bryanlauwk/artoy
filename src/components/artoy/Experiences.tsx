@@ -37,9 +37,9 @@ export function Experiences() {
                   src={c.img}
                   alt={c.label}
                   loading="lazy"
-                  className="block aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="block aspect-[4/5] w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
                 <button
                   aria-label={`Play ${c.label}`}
                   className="absolute inset-0 m-auto grid size-12 place-items-center rounded-full border border-white/40 bg-background/40 backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100"
