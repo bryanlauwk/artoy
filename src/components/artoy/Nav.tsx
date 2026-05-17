@@ -1,24 +1,24 @@
 export function Nav() {
   return (
-    <nav className="sticky top-0 z-20 border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-[74px] w-[min(1180px,92vw)] items-center justify-between">
-        <div className="flex items-baseline gap-2.5">
-          <span className="text-gradient-brand text-3xl font-black tracking-[-0.04em]">
+    <nav className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] w-[min(1200px,94vw)] items-center justify-between">
+        <a href="#top" className="flex items-baseline gap-3">
+          <span className="text-gradient-brand text-2xl font-black tracking-[-0.04em]">
             ARTOY
           </span>
-          <span className="hidden text-xs text-muted-foreground sm:inline">
+          <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:inline">
             Playable IP for creators
           </span>
-        </div>
-        <div className="hidden gap-7 text-sm text-foreground/85 md:flex">
+        </a>
+        <div className="hidden gap-9 text-xs font-bold uppercase tracking-[0.14em] text-foreground/80 md:flex">
           <a href="#how" className="hover:text-foreground">How it works</a>
           <a href="#universes" className="hover:text-foreground">Universes</a>
-          <a href="#demo" className="hover:text-foreground">Game demo</a>
-          <a href="#waitlist" className="hover:text-foreground">Waitlist</a>
+          <a href="#creators" className="hover:text-foreground">Creators</a>
+          <a href="#waitlist" className="hover:text-foreground">About</a>
         </div>
         <a
           href="#waitlist"
-          className="bg-gradient-brand shadow-glow rounded-2xl px-5 py-3.5 text-sm font-extrabold text-white"
+          className="bg-gradient-brand shadow-glow rounded-xl px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white"
         >
           Join Waitlist
         </a>
