@@ -61,31 +61,29 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Blended hero artwork — no panel border, soft-fade into background */}
-        <div className="relative -mr-[6vw] lg:-mr-[4vw]">
-          <img
-            src={heroArt}
-            alt="Nova — pink-haired cyberpunk character with collectible figurine box"
-            width={1280}
-            height={800}
-            className="block h-auto w-full select-none"
-            style={{
-              WebkitMaskImage:
-                "radial-gradient(120% 100% at 75% 50%, #000 55%, transparent 100%), linear-gradient(to left, #000 70%, transparent 100%)",
-              WebkitMaskComposite: "source-over",
-              maskImage:
-                "radial-gradient(120% 100% at 75% 50%, #000 55%, transparent 100%)",
-            }}
-          />
-          {/* Bottom fade into next section */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
-            style={{
-              background:
-                "linear-gradient(to bottom, transparent, var(--background))",
-            }}
-          />
+        {/* Blended hero artwork — no panel border, soft-fade into background on all sides */}
+        <div className="relative -mr-[8vw] lg:-mr-[6vw]">
+          {(() => {
+            const fadeMask =
+              "radial-gradient(ellipse 70% 75% at 55% 50%, #000 35%, rgba(0,0,0,0.6) 60%, transparent 88%)";
+            return (
+              <img
+                src={heroArt}
+                alt="Nova — pink-haired cyberpunk character with collectible figurine box"
+                width={1280}
+                height={800}
+                className="block h-auto w-full select-none"
+                style={{
+                  WebkitMaskImage: fadeMask,
+                  maskImage: fadeMask,
+                  WebkitMaskRepeat: "no-repeat",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskSize: "100% 100%",
+                  maskSize: "100% 100%",
+                }}
+              />
+            );
+          })()}
         </div>
       </div>
     </section>
