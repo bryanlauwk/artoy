@@ -1,4 +1,5 @@
-import { ArrowRight, ArrowUp } from "lucide-react";
+import { Fragment } from "react";
+import { ArrowRight } from "lucide-react";
 import upload from "@/assets/artoy/lunarie.png";
 import analyze from "@/assets/artoy/exp-pet.png";
 import game from "@/assets/artoy/exp-game.png";
@@ -46,8 +47,8 @@ export function HowItWorks() {
         </p>
         <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
           {STEPS.map((s, i) => (
-            <>
-              <div key={s.n}>
+            <Fragment key={s.n}>
+              <div>
                 <div className="mb-3 flex gap-2">
                   {s.images.map((img, idx) => (
                     <img
@@ -66,12 +67,9 @@ export function HowItWorks() {
                 <p className="mt-1.5 text-sm text-muted-foreground">{s.desc}</p>
               </div>
               {i < STEPS.length - 1 && (
-                <ArrowRight
-                  key={`arrow-${i}`}
-                  className="hidden size-7 text-foreground/40 lg:block"
-                />
+                <ArrowRight className="hidden size-7 text-foreground/40 lg:block" />
               )}
-            </>
+            </Fragment>
           ))}
         </div>
       </div>
