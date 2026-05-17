@@ -104,9 +104,15 @@ export function Universes() {
                   src={w.img}
                   alt={`${w.name} — ${w.tag}`}
                   loading="lazy"
-                  className="block size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  className="block size-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
                 />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(15,15,30,0.92) 0%, rgba(15,15,30,0.55) 45%, transparent 100%)",
+                  }}
+                />
                 <div className="absolute inset-x-0 bottom-0 p-5">
                   <div className="flex items-center gap-1.5">
                     <h3 className="text-2xl font-black tracking-tight drop-shadow-lg">{w.name}</h3>
