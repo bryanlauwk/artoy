@@ -3,9 +3,9 @@ import { Nav } from "@/components/artoy/Nav";
 import { Hero } from "@/components/artoy/Hero";
 import { HowItWorks } from "@/components/artoy/HowItWorks";
 import { Universes } from "@/components/artoy/Universes";
-import { GameDemo } from "@/components/artoy/GameDemo";
 import { Experiences } from "@/components/artoy/Experiences";
 import { WhyCreators } from "@/components/artoy/WhyCreators";
+import { Testimonials } from "@/components/artoy/Testimonials";
 import { Waitlist } from "@/components/artoy/Waitlist";
 import { SiteFooter } from "@/components/artoy/SiteFooter";
 
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "ARTOY helps artists and creators turn their characters, key visuals and IP into mini games, collectible toys, virtual pets and merch experiences.",
+          "ARTOY helps artists and creators turn their characters into mini games, collectible toys, virtual pets, trading cards and merch experiences.",
       },
       { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
       {
@@ -40,9 +40,9 @@ function Index() {
         <Hero />
         <HowItWorks />
         <Universes />
-        <GameDemo />
         <Experiences />
         <WhyCreators />
+        <Testimonials />
         <Waitlist />
       </main>
       <SiteFooter />

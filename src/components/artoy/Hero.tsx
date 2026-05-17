@@ -1,49 +1,48 @@
 import heroArt from "@/assets/artoy/hero.png";
+import { ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="px-0 py-[72px] pb-7">
-      <div className="mx-auto grid w-[min(1180px,92vw)] grid-cols-1 items-center gap-9 lg:grid-cols-[1.03fr_0.97fr]">
+    <section id="top" className="pt-12 pb-8">
+      <div className="mx-auto grid w-[min(1200px,94vw)] grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1.05fr]">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white/5 px-3 py-2 text-xs text-foreground/85">
-            <span className="size-2 rounded-full bg-cyan shadow-[0_0_18px_var(--cyan)]" />
-            AI toy lab for artists, OCs and creator IP
-          </div>
-          <h1 className="my-5 text-[clamp(46px,7vw,86px)] font-black leading-[0.94] tracking-[-0.04em]">
-            Turn your art into a{" "}
-            <span className="text-gradient-brand">playable universe</span>
+          <h1 className="text-[clamp(44px,6.4vw,80px)] font-black uppercase leading-[0.95] tracking-[-0.035em]">
+            Turn your art<br />into a{" "}
+            <span className="text-gradient-brand">playable</span>{" "}
+            <br className="hidden md:inline" />
+            <span className="text-gradient-brand">universe</span>
           </h1>
-          <p className="max-w-[590px] text-lg leading-[1.7] text-foreground/80">
-            Upload your character or key visual. ARTOY transforms it into mini games,
-            collectible toys, virtual pets, trading cards and merch experiences fans
-            can play, collect and share.
+          <p className="mt-6 max-w-[520px] text-base leading-[1.7] text-foreground/75">
+            AI transforms your characters into mini games, collectible toys, virtual
+            pets and merch experiences. Build your world. Grow your fandom. Own your IP.
           </p>
-          <div className="my-7 flex flex-wrap gap-3.5">
+          <div className="mt-8 flex flex-wrap gap-3.5">
             <a
               href="#waitlist"
-              className="bg-gradient-brand shadow-glow rounded-2xl px-5 py-3.5 font-extrabold text-white"
+              className="bg-gradient-brand shadow-glow inline-flex items-center gap-2 rounded-xl px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white"
             >
-              Join the Waitlist →
+              Join the Waitlist <ArrowRight className="size-4" />
             </a>
             <a
               href="#demo"
-              className="rounded-2xl border border-border bg-white/5 px-5 py-3.5 font-extrabold text-white"
+              className="inline-flex items-center rounded-xl border border-border bg-white/5 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white hover:bg-white/10"
             >
               See Demo Universe
             </a>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-            <span>✦ For artists</span>
-            <span>✦ For creators</span>
-            <span>✦ For fandom builders</span>
+          <div className="mt-7 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <span>✦ For Artists</span>
+            <span>✦ For Creators</span>
+            <span>✦ For Dreamers</span>
           </div>
         </div>
 
-        {/* Showcase */}
         <div className="panel-surface shadow-glow relative overflow-hidden">
           <img
             src={heroArt}
-            alt="Lunarie cyberpunk character with collectible figurine box"
+            alt="Lunarie — pink-haired cyberpunk character with collectible figurine box"
+            width={1280}
+            height={800}
             className="block h-auto w-full"
           />
         </div>

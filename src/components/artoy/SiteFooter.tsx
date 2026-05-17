@@ -1,11 +1,26 @@
+import { Instagram, Music2, Youtube, Twitter, MessageCircle } from "lucide-react";
+
 export function SiteFooter() {
   return (
-    <footer className="mx-auto flex w-[min(1180px,92vw)] flex-col justify-between gap-2.5 border-t border-border py-8 text-sm text-muted-foreground md:flex-row">
-      <div>
-        <span className="text-gradient-brand text-xl font-black">ARTOY</span>{" "}
-        Playable IP for creators
+    <footer className="border-t border-border">
+      <div className="mx-auto flex w-[min(1200px,94vw)] flex-col items-center justify-between gap-4 py-7 text-xs text-muted-foreground md:flex-row">
+        <div className="flex items-baseline gap-2">
+          <span className="text-gradient-brand text-lg font-black tracking-[-0.04em]">
+            ARTOY
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em]">
+            Playable IP for Creators
+          </span>
+        </div>
+        <div className="flex gap-5 text-foreground/70">
+          <a href="#" aria-label="Discord"><MessageCircle className="size-4" /></a>
+          <a href="#" aria-label="Instagram"><Instagram className="size-4" /></a>
+          <a href="#" aria-label="TikTok"><Music2 className="size-4" /></a>
+          <a href="#" aria-label="YouTube"><Youtube className="size-4" /></a>
+          <a href="#" aria-label="X / Twitter"><Twitter className="size-4" /></a>
+        </div>
+        <div>© 2026 ARTOY. All rights reserved.</div>
       </div>
-      <div>© 2026 ARTOY. Concept landing page.</div>
     </footer>
   );
 }
