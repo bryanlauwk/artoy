@@ -16,7 +16,7 @@ export function Hero() {
 
       <div className="mx-auto grid w-[min(1200px,94vw)] grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_1.1fr]">
         <div className="relative z-10">
-          <h1 className="text-[clamp(44px,6.4vw,80px)] font-black uppercase leading-[0.95] tracking-[-0.035em]">
+          <h1 className="text-[clamp(40px,5.6vw,72px)] font-black uppercase leading-[0.95] tracking-[-0.035em]">
             Turn your art<br />into a{" "}
             <span className="text-gradient-brand">playable</span>{" "}
             <br className="hidden md:inline" />
