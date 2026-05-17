@@ -1,4 +1,4 @@
-import { BadgeCheck, Gamepad2, Cat, Smartphone, Package, Tent, Sticker, Box, Swords, Layers, Skull, Play } from "lucide-react";
+import { BadgeCheck, Gamepad2, Cat, Smartphone, Package, Tent, Sticker, Box, Swords, Layers, Skull, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import lunarie from "@/assets/artoy/lunarie.png";
 import booboi from "@/assets/artoy/booboi.png";
