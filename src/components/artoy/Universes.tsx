@@ -1,4 +1,4 @@
-import { BadgeCheck, Gamepad2, Cat, Smartphone, Package, Tent, Sticker, Box, Swords, Layers, Skull, Play } from "lucide-react";
+import { BadgeCheck, Gamepad2, Cat, Smartphone, Package, Tent, Sticker, Box, Swords, Layers, Skull, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import lunarie from "@/assets/artoy/lunarie.png";
 import booboi from "@/assets/artoy/booboi.png";
@@ -72,13 +72,15 @@ const WORLDS: Universe[] = [
 
 export function Universes() {
   return (
-    <section id="universes" className="ambient-pink relative py-20">
+    <section id="universes" className="ambient-pink relative py-16">
       <div className="mx-auto w-[min(1200px,94vw)]">
-        <div className="mb-8 flex items-end justify-between">
+        <div className="mb-6 flex items-end justify-between">
           <div>
-            <h2 className="eyebrow">Creator universes</h2>
-            <p className="mt-2 text-2xl font-black tracking-[-0.02em] md:text-3xl">
-              Real art. <span className="text-gradient-brand">AI-generated</span> experiences.
+            <h2 className="text-xl font-black uppercase tracking-[0.04em] md:text-2xl">
+              Creator universes
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Real art. AI-generated experiences.
             </p>
           </div>
           <a
@@ -89,7 +91,20 @@ export function Universes() {
           </a>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="relative">
+          <button
+            aria-label="Previous"
+            className="absolute -left-3 top-1/2 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/70 text-foreground/70 backdrop-blur-md hover:text-foreground md:grid lg:-left-6"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <button
+            aria-label="Next"
+            className="absolute -right-3 top-1/2 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/70 text-foreground/70 backdrop-blur-md hover:text-foreground md:grid lg:-right-6"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {WORLDS.map((w) => (
             <article
               key={w.name}
@@ -160,6 +175,7 @@ export function Universes() {
               </div>
             </article>
           ))}
+          </div>
         </div>
 
         <div className="mt-7 flex justify-center gap-1.5">
