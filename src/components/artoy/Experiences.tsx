@@ -15,12 +15,14 @@ const CARDS = [
 
 export function Experiences() {
   return (
-    <section className="ambient-warm relative py-20">
-      <div className="mx-auto w-[min(1200px,94vw)]">
+    <section className="relative py-14">
+      <div className="mx-auto w-[min(1200px,94vw)] panel-surface px-6 py-12 md:px-10">
         <div className="mb-8">
-          <h2 className="eyebrow">Playable experiences</h2>
-          <p className="mt-2 max-w-2xl text-2xl font-black tracking-[-0.02em] md:text-3xl">
-            More than merch. Experiences your fans <span className="text-gradient-brand">play, collect &amp; share</span>.
+          <h2 className="text-xl font-black uppercase tracking-[0.04em] md:text-2xl">
+            Playable experiences
+          </h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            More than merch. These are experiences your fans can play, collect and share.
           </p>
         </div>
 
@@ -28,7 +30,7 @@ export function Experiences() {
           {CARDS.map((c) => (
             <div key={c.label} className="group">
               <div
-                className="relative overflow-hidden rounded-3xl border border-border transition-transform group-hover:-translate-y-1"
+                className="relative overflow-hidden rounded-2xl border border-border transition-transform group-hover:-translate-y-1"
                 style={{
                   boxShadow: `0 24px 60px -30px color-mix(in oklab, ${c.accent} 70%, transparent)`,
                 }}
@@ -37,16 +39,10 @@ export function Experiences() {
                   src={c.img}
                   alt={c.label}
                   loading="lazy"
-                  className="block aspect-[4/5] w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                  className="block aspect-square w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
-                <button
-                  aria-label={`Play ${c.label}`}
-                  className="absolute inset-0 m-auto grid size-12 place-items-center rounded-full border border-white/40 bg-background/40 backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <Play className="size-4 fill-white text-white" />
-                </button>
-                <div className="absolute bottom-2 right-2 grid size-8 place-items-center rounded-full border border-white/40 bg-background/60 backdrop-blur-md group-hover:opacity-0 transition-opacity">
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-2 right-2 grid size-8 place-items-center rounded-full border border-white/40 bg-background/60 backdrop-blur-md">
                   <Play className="size-3 fill-white text-white" />
                 </div>
               </div>

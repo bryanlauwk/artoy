@@ -5,7 +5,7 @@ const ITEMS: { icon: LucideIcon; color: string; title: string; desc: string }[] 
   {
     icon: Heart,
     color: "var(--purple)",
-    title: "Bring characters to life",
+    title: "Bring your characters to life",
     desc: "Turn static art into interactive games, pets and collectibles.",
   },
   {
@@ -30,35 +30,27 @@ const ITEMS: { icon: LucideIcon; color: string; title: string; desc: string }[] 
 
 export function WhyCreators() {
   return (
-    <section id="creators" className="relative py-20">
-      <div className="mx-auto w-[min(1200px,94vw)]">
-        <div className="mb-12 text-center">
-          <h2 className="eyebrow">Why creators love ARTOY</h2>
-          <p className="mt-3 text-2xl font-black tracking-[-0.02em] md:text-3xl">
-            Built for the next generation of <span className="text-gradient-brand">IP-first</span> creators.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <section id="creators" className="relative py-14">
+      <div className="mx-auto w-[min(1200px,94vw)] panel-surface px-6 py-12 md:px-10">
+        <h2 className="mb-10 text-center text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/90 md:text-sm">
+          Why creators love ARTOY
+        </h2>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-4">
           {ITEMS.map(({ icon: Icon, color, title, desc }) => (
-            <div
-              key={title}
-              className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-white/[0.05] to-white/[0.01] p-6 transition-transform hover:-translate-y-1"
-            >
+            <div key={title} className="flex items-start gap-3">
               <div
-                className="absolute -right-10 -top-10 size-32 rounded-full blur-3xl opacity-50 transition-opacity group-hover:opacity-80"
-                style={{ background: `color-mix(in oklab, ${color} 40%, transparent)` }}
-              />
-              <div
-                className="relative grid size-12 place-items-center rounded-2xl"
+                className="grid size-11 shrink-0 place-items-center rounded-xl"
                 style={{
-                  background: `linear-gradient(135deg, color-mix(in oklab, ${color} 30%, transparent), color-mix(in oklab, ${color} 10%, transparent))`,
+                  background: `color-mix(in oklab, ${color} 18%, transparent)`,
                   border: `1px solid color-mix(in oklab, ${color} 40%, transparent)`,
                 }}
               >
-                <Icon className="size-6" style={{ color }} />
+                <Icon className="size-5" style={{ color }} />
               </div>
-              <h3 className="relative mt-4 text-base font-extrabold tracking-tight">{title}</h3>
-              <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
+              <div>
+                <h3 className="text-sm font-extrabold tracking-tight">{title}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{desc}</p>
+              </div>
             </div>
           ))}
         </div>
