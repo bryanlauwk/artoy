@@ -1,3 +1,5 @@
+import burning from "@/assets/artoy/scene-burning.png";
+
 export function GameDemo() {
   return (
     <section id="demo" className="py-11">
@@ -9,21 +11,12 @@ export function GameDemo() {
           <p className="mb-5 text-muted-foreground">
             A fast, browser-first mini game generated from one uploaded character visual.
           </p>
-          <div className="relative min-h-[390px] overflow-hidden rounded-3xl border border-border bg-[#160d12]">
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(255,100,45,.12), rgba(0,0,0,.75)), radial-gradient(circle at 20% 50%, rgba(255,110,40,.55), transparent 16%), radial-gradient(circle at 80% 35%, rgba(255,70,20,.55), transparent 18%), linear-gradient(90deg,#2b140e,#101015)",
-              }}
-            />
+          <div className="relative overflow-hidden rounded-3xl border border-border">
+            <img src={burning} alt="Escape The Burning Room scene" className="block h-auto w-full" />
             <div className="absolute left-4 right-4 top-4 flex items-center justify-between">
               <span className="rounded-xl border border-border bg-black/55 px-3 py-2 font-black">♥ ♥ ♥</span>
               <span className="rounded-xl border border-border bg-black/55 px-3 py-2 font-black">00:45</span>
               <span className="rounded-xl border border-border bg-black/55 px-3 py-2 font-black">PAUSE</span>
-            </div>
-            <div className="absolute bottom-20 left-1/2 text-[64px] drop-shadow-[0_10px_16px_#000]">
-              🧑‍🎤
             </div>
             <div className="absolute bottom-4 left-4 right-4 flex justify-between">
               <div className="flex gap-2.5">

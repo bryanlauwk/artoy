@@ -1,10 +1,16 @@
+import game from "@/assets/artoy/exp-game.png";
+import pet from "@/assets/artoy/exp-pet.png";
+import toy from "@/assets/artoy/exp-toy.png";
+import cards from "@/assets/artoy/exp-cards.png";
+import wall from "@/assets/artoy/exp-wall.png";
+
 const CARDS = [
-  ["🎮", "Mini games", "Browser-first playable worlds."],
-  ["🐾", "Virtual pets", "Character companions for fans."],
-  ["🧸", "Collectible toys", "Toy concepts and drop previews."],
-  ["🃏", "Trading cards", "Lore, powers and rarity systems."],
-  ["🛍️", "Merch drops", "Launch physical products later."],
-];
+  [game, "Mini games", "Browser-first playable worlds."],
+  [pet, "Virtual pets", "Character companions for fans."],
+  [toy, "Collectible toys", "Toy concepts and drop previews."],
+  [cards, "Trading cards", "Lore, powers and rarity systems."],
+  [wall, "Interactive wallpapers", "Animated lockscreens and drops."],
+] as const;
 
 export function Experiences() {
   return (
@@ -15,14 +21,16 @@ export function Experiences() {
           More than merch. Experiences fans can play, collect and share.
         </p>
         <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3 lg:grid-cols-5">
-          {CARDS.map(([icon, t, d]) => (
+          {CARDS.map(([img, t, d]) => (
             <div
               key={t}
-              className="min-h-[158px] rounded-3xl border border-border bg-white/5 p-4"
+              className="overflow-hidden rounded-3xl border border-border bg-white/5"
             >
-              <div className="mb-3.5 text-4xl">{icon}</div>
-              <b>{t}</b>
-              <p className="text-sm text-muted-foreground">{d}</p>
+              <img src={img} alt={t} className="block h-36 w-full object-cover" />
+              <div className="p-4">
+                <b>{t}</b>
+                <p className="text-sm text-muted-foreground">{d}</p>
+              </div>
             </div>
           ))}
         </div>

@@ -1,3 +1,5 @@
+import heroArt from "@/assets/artoy/hero.png";
+
 export function Hero() {
   return (
     <section className="px-0 py-[72px] pb-7">
@@ -38,44 +40,12 @@ export function Hero() {
         </div>
 
         {/* Showcase */}
-        <div className="panel-surface shadow-glow relative min-h-[500px] overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(6,8,19,.1),rgba(6,8,19,.85)), url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1200&q=80')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              filter: "saturate(1.3)",
-            }}
+        <div className="panel-surface shadow-glow relative overflow-hidden">
+          <img
+            src={heroArt}
+            alt="Lunarie cyberpunk character with collectible figurine box"
+            className="block h-auto w-full"
           />
-          <div
-            className="absolute bottom-0 right-[7%] grid h-[86%] w-[56%] place-items-center rounded-[30px] text-[120px]"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 20%, rgba(255,79,189,.45), transparent 45%), linear-gradient(160deg,#1d1028,#0f1427)",
-            }}
-          >
-            <span className="absolute left-[16%] top-[10%] text-[64px]">🎧</span>
-            <span className="text-[180px] drop-shadow-[0_20px_30px_rgba(0,0,0,0.6)]">
-              🧑‍🎤
-            </span>
-          </div>
-          <div className="absolute bottom-[9%] left-[8%] right-[8%] grid grid-cols-3 gap-3">
-            {[
-              ["Mini Game", "Escape The Burning Room"],
-              ["Collectible", "Lunarie blind box"],
-              ["Merch", "QR-linked drops"],
-            ].map(([t, s]) => (
-              <div
-                key={t}
-                className="rounded-2xl border border-border bg-background/75 p-3.5 backdrop-blur-md"
-              >
-                <b className="block text-sm">{t}</b>
-                <span className="text-xs text-muted-foreground">{s}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
