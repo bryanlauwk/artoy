@@ -17,7 +17,7 @@ type Universe = {
 
 const WORLDS: Universe[] = [
   {
-    name: "Lunarie",
+    name: "Nova",
     tag: "Cyberpunk Dreamer",
     img: lunarie,
     features: [
@@ -28,13 +28,13 @@ const WORLDS: Universe[] = [
     ],
     scene: {
       img: sceneBurning,
-      title: "Escape The Burning Room",
+      title: "Neon Escape Room",
       cta: "Play Now",
       ctaBg: "linear-gradient(135deg, var(--purple), var(--pink))",
     },
   },
   {
-    name: "BooBoi",
+    name: "Mochi",
     tag: "Cozy Adventurer",
     img: booboi,
     features: [
@@ -45,13 +45,13 @@ const WORLDS: Universe[] = [
     ],
     scene: {
       img: sceneCamp,
-      title: "Boo's Camp Adventure",
+      title: "Mochi's Camp Adventure",
       cta: "Play Now",
       ctaBg: "linear-gradient(135deg, #ffb84d, #ff7a3d)",
     },
   },
   {
-    name: "JayGyii",
+    name: "Hexx",
     tag: "Chaos Creator",
     img: jaygyii,
     features: [
@@ -62,7 +62,7 @@ const WORLDS: Universe[] = [
     ],
     scene: {
       img: sceneBoss,
-      title: "Dark Boss Rush",
+      title: "Hexx Boss Rush",
       cta: "Play Now",
       ctaBg: "linear-gradient(135deg, #26e1d1, #8b5cf6)",
     },
