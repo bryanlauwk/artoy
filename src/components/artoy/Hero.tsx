@@ -3,9 +3,19 @@ import { ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
-    <section id="top" className="pt-12 pb-8">
-      <div className="mx-auto grid w-[min(1200px,94vw)] grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1.05fr]">
-        <div>
+    <section id="top" className="relative overflow-hidden pt-10 pb-12">
+      {/* Ambient glow behind hero */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 80% 30%, rgba(255,79,189,.22), transparent 60%), radial-gradient(50% 50% at 20% 80%, rgba(139,92,246,.22), transparent 65%)",
+        }}
+      />
+
+      <div className="mx-auto grid w-[min(1200px,94vw)] grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <div className="relative z-10">
           <h1 className="text-[clamp(44px,6.4vw,80px)] font-black uppercase leading-[0.95] tracking-[-0.035em]">
             Turn your art<br />into a{" "}
             <span className="text-gradient-brand">playable</span>{" "}
@@ -24,26 +34,57 @@ export function Hero() {
               Join the Waitlist <ArrowRight className="size-4" />
             </a>
             <a
-              href="#demo"
+              href="#universes"
               className="inline-flex items-center rounded-xl border border-border bg-white/5 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white hover:bg-white/10"
             >
               See Demo Universe
             </a>
           </div>
-          <div className="mt-7 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+
+          {/* Social proof — drives waitlist intent */}
+          <div className="mt-5 flex items-center gap-3 text-xs text-foreground/75">
+            <div className="flex -space-x-2">
+              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-pink to-purple" />
+              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-purple to-cyan" />
+              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-cyan to-orange" />
+              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-orange to-pink" />
+            </div>
+            <span>
+              <b className="text-foreground">2,000+ creators</b> already on the waitlist
+            </span>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
             <span>✦ For Artists</span>
             <span>✦ For Creators</span>
             <span>✦ For Dreamers</span>
           </div>
         </div>
 
-        <div className="panel-surface shadow-glow relative overflow-hidden">
+        {/* Blended hero artwork — no panel border, soft-fade into background */}
+        <div className="relative -mr-[6vw] lg:-mr-[4vw]">
           <img
             src={heroArt}
-            alt="Lunarie — pink-haired cyberpunk character with collectible figurine box"
+            alt="Nova — pink-haired cyberpunk character with collectible figurine box"
             width={1280}
             height={800}
-            className="block h-auto w-full"
+            className="block h-auto w-full select-none"
+            style={{
+              WebkitMaskImage:
+                "radial-gradient(120% 100% at 75% 50%, #000 55%, transparent 100%), linear-gradient(to left, #000 70%, transparent 100%)",
+              WebkitMaskComposite: "source-over",
+              maskImage:
+                "radial-gradient(120% 100% at 75% 50%, #000 55%, transparent 100%)",
+            }}
+          />
+          {/* Bottom fade into next section */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent, var(--background))",
+            }}
           />
         </div>
       </div>
