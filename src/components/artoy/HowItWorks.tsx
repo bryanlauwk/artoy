@@ -76,6 +76,3 @@ export function HowItWorks() {
     </section>
   );
 }
-
-// silence unused import warning when lucide ArrowUp not used
-void ArrowUp;
