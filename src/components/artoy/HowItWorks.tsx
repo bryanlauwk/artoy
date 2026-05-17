@@ -1,73 +1,92 @@
 import { Fragment } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Upload, Sparkles, Wand2, Rocket } from "lucide-react";
 import upload from "@/assets/artoy/lunarie.png";
 import analyze from "@/assets/artoy/exp-pet.png";
-import game from "@/assets/artoy/exp-game.png";
-import toy from "@/assets/artoy/exp-toy.png";
-import pet from "@/assets/artoy/exp-pet.png";
-import cards from "@/assets/artoy/exp-cards.png";
+import generate from "@/assets/artoy/exp-toy.png";
 import launch from "@/assets/artoy/scene-boss.png";
 
 const STEPS = [
   {
-    n: "1",
+    n: "01",
     title: "Upload your art",
-    desc: "Upload any character, illustration or key visual.",
-    images: [upload],
+    desc: "Drop in any character, illustration or key visual.",
+    img: upload,
+    icon: Upload,
+    accent: "var(--purple)",
   },
   {
-    n: "2",
+    n: "02",
     title: "AI analyzes your character",
-    desc: "Our AI understands your art, style and character potential.",
-    images: [analyze],
+    desc: "We understand your art, style and IP potential.",
+    img: analyze,
+    icon: Sparkles,
+    accent: "var(--cyan)",
   },
   {
-    n: "3",
+    n: "03",
     title: "Generate experiences",
-    desc: "Instantly create mini games, toys, pets, cards and more.",
-    images: [game, toy, pet, cards],
+    desc: "Instantly create mini-games, toys, pets and cards.",
+    img: generate,
+    icon: Wand2,
+    accent: "var(--pink)",
   },
   {
-    n: "4",
+    n: "04",
     title: "Launch & grow your universe",
     desc: "Share, collect and sell digital and physical drops.",
-    images: [launch],
+    img: launch,
+    icon: Rocket,
+    accent: "var(--orange)",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how" className="py-10">
-      <div className="panel-surface mx-auto w-[min(1200px,94vw)] p-7 md:p-10">
-        <h2 className="mb-1 text-center text-xs font-extrabold uppercase tracking-[0.22em] text-foreground/80">
-          How it works
-        </h2>
-        <p className="mb-9 text-center text-muted-foreground">
-          From static artwork to playable IP in four simple steps.
-        </p>
-        <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
+    <section id="how" className="ambient-cyan relative py-20">
+      <div className="mx-auto w-[min(1200px,94vw)]">
+        <div className="mb-12 text-center">
+          <h2 className="eyebrow">How it works</h2>
+          <p className="mt-3 text-2xl font-black tracking-[-0.02em] md:text-3xl">
+            From static artwork to <span className="text-gradient-brand">playable IP</span> in four steps.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch">
           {STEPS.map((s, i) => (
             <Fragment key={s.n}>
-              <div>
-                <div className="mb-3 flex gap-2">
-                  {s.images.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt=""
-                      loading="lazy"
-                      className="size-16 rounded-xl border border-border object-cover"
-                    />
-                  ))}
+              <article className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-white/[0.06] to-white/[0.015] p-4 backdrop-blur-sm transition-transform hover:-translate-y-1">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                  <img
+                    src={s.img}
+                    alt=""
+                    loading="lazy"
+                    className="block size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(180deg, transparent 40%, color-mix(in oklab, ${s.accent} 35%, transparent))`,
+                    }}
+                  />
+                  <div
+                    className="absolute left-3 top-3 grid size-9 place-items-center rounded-xl border border-white/30 backdrop-blur-md"
+                    style={{ background: `color-mix(in oklab, ${s.accent} 35%, transparent)` }}
+                  >
+                    <s.icon className="size-4 text-white" />
+                  </div>
                 </div>
-                <div className="text-3xl font-black text-purple">{s.n}</div>
-                <h3 className="mt-1 text-sm font-extrabold uppercase tracking-wider">
-                  {s.title}
-                </h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{s.desc}</p>
-              </div>
+                <div className="mt-4">
+                  <div className="text-xs font-black tracking-[0.3em]" style={{ color: s.accent }}>
+                    {s.n}
+                  </div>
+                  <h3 className="mt-1 text-base font-extrabold tracking-tight">{s.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+                </div>
+              </article>
               {i < STEPS.length - 1 && (
-                <ArrowRight className="hidden size-7 text-foreground/40 lg:block" />
+                <div className="hidden items-center justify-center lg:flex">
+                  <ArrowRight className="size-6 text-foreground/30" />
+                </div>
               )}
             </Fragment>
           ))}

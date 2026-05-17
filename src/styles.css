@@ -94,6 +94,19 @@
       var(--color-background);
     background-attachment: fixed;
     min-height: 100vh;
+    position: relative;
+  }
+
+  /* Subtle film-grain overlay across the whole page */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
   }
 }
 
@@ -116,4 +129,52 @@
   border: 1px solid var(--color-border);
   background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
   border-radius: 1.5rem;
+}
+
+/* Soft ambient glows that bleed between sections */
+@utility ambient-pink {
+  position: relative;
+}
+@utility ambient-pink {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -10% -5%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(60% 50% at 20% 30%, color-mix(in oklab, var(--pink) 22%, transparent), transparent 70%),
+                radial-gradient(50% 50% at 85% 70%, color-mix(in oklab, var(--purple) 20%, transparent), transparent 70%);
+  }
+}
+
+@utility ambient-cyan {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -10% -5%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(55% 50% at 80% 20%, color-mix(in oklab, var(--cyan) 18%, transparent), transparent 70%),
+                radial-gradient(50% 50% at 15% 80%, color-mix(in oklab, var(--purple) 18%, transparent), transparent 70%);
+  }
+}
+
+@utility ambient-warm {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -10% -5%;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(55% 50% at 30% 30%, color-mix(in oklab, var(--orange) 16%, transparent), transparent 70%),
+                radial-gradient(55% 50% at 75% 80%, color-mix(in oklab, var(--pink) 18%, transparent), transparent 70%);
+  }
+}
+
+@utility eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
 }
