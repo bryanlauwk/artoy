@@ -1,54 +1,53 @@
-# Cohesive artwork-driven refresh
+# Reference-alignment pass
 
-Comparing the current preview against the reference, the hero now blends well, but the rest of the page still reads as stacked "panel cards" on a flat background. Several artwork assets render but feel under-used (cropped, hidden behind dark overlays, or framed inside heavy borders). The waitlist section is missing the two mascot artworks that frame the form in the reference. The plan tightens visual cohesion so the whole page feels like one continuous painted canvas — like the hero does now.
+Comparing the latest reference (ARTOY_LP-3.png) with the live build, the reference is actually more **contained and tighter** than what I built in the last pass — most sections sit inside a single soft dark panel with denser padding, and the section bodies are more minimal. Cohesion comes from the painted artwork inside the panels, not from edge-to-edge layouts. I'll re-introduce that pattern where the reference uses it, simplify several sections, and add a few small interaction affordances visible in the reference.
 
-## Section-by-section changes
+## Changes
 
-**Global / page shell**
-- Replace the repeating "rounded panel container" wrapper with edge-to-edge sections separated by soft ambient gradients (radial pink/purple/cyan glows that bleed between sections).
-- Add a faint vignette + grain layer on `<body>` so the painted artwork sits on texture instead of pure flat dark.
-- Standardize section vertical rhythm (consistent top/bottom padding, consistent eyebrow + title typography).
+**Section container pattern**
+- Reintroduce a unified `panel-surface` wrapper for: How It Works, Playable Experiences, Why Creators, Testimonials.
+- Keep Hero, Creator Universes, and Waitlist edge-to-edge (matches reference).
+- Tighten vertical padding so the page is denser and the eye flows faster to the waitlist.
 
 **How It Works**
-- Rebuild the 4-step row to match the reference: each step is a wide preview card (artwork on top, number + label + caption below), with arrow connectors between them.
-- Use distinct visuals per step (upload → analyze → generate → launch) instead of reusing small circular thumbs.
+- Drop the per-step card bordering — steps live flat inside one panel.
+- Big light-purple numerals "1 2 3 4" instead of "01"-style with accent colors.
+- Step layout: small thumbnail(s) on top → number → uppercase title → caption.
+- Step 3 ("Generate experiences") shows 4 mini thumbs in a row with GAME / TOY / PET / CARD labels (matches reference exactly).
+- Plain arrow connectors between steps.
+- Centered title only — drop the subtitle line.
 
 **Creator Universes**
-- Make the character portrait the dominant element: full-bleed top image (~360px) with a gradient scrim so the name/verified badge sits cleanly on top.
-- Tighten the 4-icon feature row (smaller chips, single row, no card-in-card border).
-- Scene preview becomes a flush-bottom image with the title overlaid top-left and the Play Now pill bottom-right (no inner border).
-- Add a subtle outer glow per card tinted to that universe's accent (pink / amber / cyan).
+- Keep current card style (portrait-dominant, feature chips, scene preview, accent glow).
+- Add left/right carousel arrows flanking the cards (visual control, scrolls the row).
+- Tighten the scene preview height; move title to a translucent top strip and Play Now to a smaller pill.
+- Eyebrow goes back to small uppercase "CREATOR UNIVERSES" with thin subtitle "Real art. AI-generated experiences." (drop the bold large heading I added).
 
 **Playable Experiences**
-- Ensure all 5 tiles render their artwork (currently several look empty). Force consistent aspect (4:5), add a soft inner gradient and a centered play button that scales on hover.
-- Replace the boxed section wrapper with an open horizontal strip so the tiles feel like a gallery, not a panel.
+- Wrap in panel-surface, eyebrow + thin subtitle (drop the bold large heading).
+- Tile aspect closer to 1:1 (was 4:5 — too tall).
+- Keep hover play button and accent glows.
 
-**Why Creators Love Artoy**
-- Keep the 4-up icon grid but drop the outer panel; use icon tiles with a subtle gradient fill matching the brand accents (heart=pink, users=purple, sparkles=cyan, bag=amber).
+**Why Creators Love ARTOY**
+- Wrap in panel-surface, centered eyebrow title.
+- Layout each item icon-LEFT, text-RIGHT (currently icon-on-top stacked).
+- Smaller icon tiles; remove the over-large blurred accent blob behind each card.
 
 **Testimonials**
-- Replace the boxed container with a free-floating row on the ambient background.
-- Use circular avatar artwork with a thin gradient ring; quote text larger, handle + role smaller.
+- Wrap in panel-surface, centered eyebrow title.
+- Avatar LEFT, quote text RIGHT (currently big quote mark on top with avatar below).
+- Add left/right carousel arrows on the outside of the row.
 
-**Waitlist (primary conversion target)**
-- Restore the mascot framing from the reference: black cat artwork bleeding in from the left, Nova-with-cat artwork bleeding in from the right, form centered.
-- Brighter purple→pink gradient background section with soft painted edges (not a hard rounded box).
-- Add a "Let's build your universe together" handwritten-style accent near the right mascot.
-- Keep benefit chips (Early Access / Exclusive Rewards / Priority Support / Creator Community) under the CTA.
+**Waitlist**
+- Keep current mascot-flanked layout; reduce inner padding so it feels less ballooned.
+- Slightly smaller heading.
 
-**Nav + Footer**
-- Nav: add a subtle backdrop blur + bottom hairline so it sits on the artwork without a hard bar.
-- Footer: simplify to brand + socials + copyright on the ambient bg, no panel.
-
-## Technical notes
-
-- All work stays in `src/components/artoy/*` and `src/styles.css`. No new dependencies.
-- Add reusable utility classes in `styles.css` for the ambient section glow and grain overlay so each section can opt in consistently.
-- Reuse existing assets in `src/assets/artoy/`; no new image generation needed.
-- Verify on desktop (1528px), tablet, and mobile after each section using browser screenshots.
+**Hero**
+- Slightly reduce the headline clamp top so the hero fits in viewport without scrolling on 1366×768.
 
 ## Out of scope
 
-- No backend / waitlist submission wiring changes.
-- No new copy beyond minor caption tweaks needed for layout.
-- No new artwork generation unless a section is visibly missing a needed asset after implementation.
+- No new artwork generation.
+- No new components.
+- No copy rewrites beyond the small heading/eyebrow swaps above.
+- No functional carousel logic (arrows are visual to match reference; can be wired later).
