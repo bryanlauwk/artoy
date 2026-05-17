@@ -175,6 +175,7 @@ export function Universes() {
               </div>
             </article>
           ))}
+          </div>
         </div>
 
         <div className="mt-7 flex justify-center gap-1.5">
