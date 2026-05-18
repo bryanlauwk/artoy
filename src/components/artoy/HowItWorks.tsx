@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { ArrowRight } from "lucide-react";
 import upload from "@/assets/artoy/lunarie.png";
 import analyze from "@/assets/artoy/exp-pet.png";
-import launch from "@/assets/artoy/scene-boss.png";
+import launch from "@/assets/artoy/step-launch.png";
 import gameThumb from "@/assets/artoy/exp-game.png";
 import toyThumb from "@/assets/artoy/exp-toy.png";
 import petThumb from "@/assets/artoy/exp-pet.png";
