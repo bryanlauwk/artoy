@@ -4,8 +4,7 @@ import { Hero } from "@/components/artoy/Hero";
 import { HowItWorks } from "@/components/artoy/HowItWorks";
 import { Universes } from "@/components/artoy/Universes";
 import { Experiences } from "@/components/artoy/Experiences";
-import { WhyCreators } from "@/components/artoy/WhyCreators";
-import { Testimonials } from "@/components/artoy/Testimonials";
+import { TryItNow } from "@/components/artoy/TryItNow";
 import { Waitlist } from "@/components/artoy/Waitlist";
 import { SiteFooter } from "@/components/artoy/SiteFooter";
 
@@ -41,8 +40,7 @@ function Index() {
         <HowItWorks />
         <Universes />
         <Experiences />
-        <WhyCreators />
-        <Testimonials />
+        <TryItNow />
         <Waitlist />
       </main>
       <SiteFooter />

@@ -1,53 +1,71 @@
-# Reference-alignment pass
+# Replace social-proof sections with an Upload Mockup + Viral Unlock Popup
 
-Comparing the latest reference (ARTOY_LP-3.png) with the live build, the reference is actually more **contained and tighter** than what I built in the last pass — most sections sit inside a single soft dark panel with denser padding, and the section bodies are more minimal. Cohesion comes from the painted artwork inside the panels, not from edge-to-edge layouts. I'll re-introduce that pattern where the reference uses it, simplify several sections, and add a few small interaction affordances visible in the reference.
+Drop the made-up Testimonials and "Why creators love ARTOY" sections. Replace with a single, action-oriented section that mocks the actual product flow: upload art → see preview → click "Generate" → a popup blocks with two paths (Pay to unlock OR Refer 3 friends to unlock free). This is the viral loop and the core value demo.
 
 ## Changes
 
-**Section container pattern**
-- Reintroduce a unified `panel-surface` wrapper for: How It Works, Playable Experiences, Why Creators, Testimonials.
-- Keep Hero, Creator Universes, and Waitlist edge-to-edge (matches reference).
-- Tighten vertical padding so the page is denser and the eye flows faster to the waitlist.
+### 1. Remove from landing
+- Delete `src/components/artoy/Testimonials.tsx`
+- Delete `src/components/artoy/WhyCreators.tsx`
+- Remove their imports + usage from `src/routes/index.tsx`
 
-**How It Works**
-- Drop the per-step card bordering — steps live flat inside one panel.
-- Big light-purple numerals "1 2 3 4" instead of "01"-style with accent colors.
-- Step layout: small thumbnail(s) on top → number → uppercase title → caption.
-- Step 3 ("Generate experiences") shows 4 mini thumbs in a row with GAME / TOY / PET / CARD labels (matches reference exactly).
-- Plain arrow connectors between steps.
-- Centered title only — drop the subtitle line.
+### 2. New section: `TryItNow.tsx` (Upload Mockup + Key Features)
 
-**Creator Universes**
-- Keep current card style (portrait-dominant, feature chips, scene preview, accent glow).
-- Add left/right carousel arrows flanking the cards (visual control, scrolls the row).
-- Tighten the scene preview height; move title to a translucent top strip and Play Now to a smaller pill.
-- Eyebrow goes back to small uppercase "CREATOR UNIVERSES" with thin subtitle "Real art. AI-generated experiences." (drop the bold large heading I added).
+Layout: two-column inside a `panel-surface` (matches existing pattern).
 
-**Playable Experiences**
-- Wrap in panel-surface, eyebrow + thin subtitle (drop the bold large heading).
-- Tile aspect closer to 1:1 (was 4:5 — too tall).
-- Keep hover play button and accent glows.
+**Left column — Upload mockup (interactive)**
+- Big dashed drop-zone card with cloud-upload icon, "Drop your character art" + "PNG, JPG up to 20MB" + "Browse files" pill.
+- Below it, a thumbnail strip of 3 sample characters ("Try a sample") — Nova / Mochi / Hexx using existing avatar assets.
+- When user clicks Browse, drops a file, or clicks a sample → switch to **Preview state**:
+  - Shows the chosen character on the left
+  - Shows 4 auto-generated experience tiles on the right with shimmer/loading then revealed (reuse exp-game / exp-pet / exp-toy / exp-cards thumbnails as the "AI generated" output)
+  - Big primary button: **"Generate my universe →"**
+- Clicking "Generate my universe" opens the **Unlock dialog** (see #3).
 
-**Why Creators Love ARTOY**
-- Wrap in panel-surface, centered eyebrow title.
-- Layout each item icon-LEFT, text-RIGHT (currently icon-on-top stacked).
-- Smaller icon tiles; remove the over-large blurred accent blob behind each card.
+**Right column — Key value features (4 items, icon-left text-right)**
+Replaces the WhyCreators content but reframed around the demo:
+1. **Upload once, get 5 experiences** — Game, pet, toy, cards, wallpaper auto-generated in your art style.
+2. **Your IP, your revenue** — Every drop is yours. Sell digital or physical without inventory.
+3. **Built-in fandom loop** — Fans play, collect, and refer friends to unlock more.
+4. **Ship in minutes, not months** — No code, no 3D, no studio. Just upload.
 
-**Testimonials**
-- Wrap in panel-surface, centered eyebrow title.
-- Avatar LEFT, quote text RIGHT (currently big quote mark on top with avatar below).
-- Add left/right carousel arrows on the outside of the row.
+### 3. New component: `UnlockDialog.tsx` (the viral popup)
 
-**Waitlist**
-- Keep current mascot-flanked layout; reduce inner padding so it feels less ballooned.
-- Slightly smaller heading.
+Uses existing shadcn `Dialog`. Opens after clicking "Generate my universe".
 
-**Hero**
-- Slightly reduce the headline clamp top so the hero fits in viewport without scrolling on 1366×768.
+Headline: **"Your universe is ready ✨"**
+Sub: "Unlock all 5 experiences + HD downloads"
+
+Two side-by-side option cards:
+
+- **Pay to unlock** — `$9` one-time, "Instant access. No referrals needed." Primary CTA: "Unlock with payment".
+- **Refer 3 friends, unlock free** — Shows a referral link `artoy.app/r/nova-7421` with a Copy button, plus Share-to-X / IG / TikTok / WhatsApp icons. Progress bar `0 / 3 friends joined`. Caption: "When 3 friends join the waitlist with your link, your universe unlocks free — and you get added to the Founders' wall."
+
+Footer microcopy: "Either way, you keep 100% of your IP."
+
+No real payment or referral backend — both buttons are visual/mock for now (Pay → toast "Payments coming soon, you've been notified"; Copy link → toast "Link copied"; Share icons → `window.open` to share URLs with prefilled text).
+
+### 4. Page order in `src/routes/index.tsx`
+```
+Hero
+HowItWorks
+Universes
+Experiences
+TryItNow          ← NEW (replaces WhyCreators + Testimonials)
+Waitlist
+```
+
+## Technical notes
+
+- New files: `src/components/artoy/TryItNow.tsx`, `src/components/artoy/UnlockDialog.tsx`.
+- Reuse existing assets: `avatar-1/2/3.png` for samples, `exp-game/pet/toy/cards.png` for generated output.
+- Dialog: `@/components/ui/dialog`, toast: `sonner`.
+- File-upload state managed locally with `useState` — accept image via `<input type="file" accept="image/*">` and render with `URL.createObjectURL`. No upload to server.
+- Share intents use plain `window.open` URLs for X/WhatsApp/Telegram; IG/TikTok fall back to copy-link toast (no public share intent).
+- Mobile: stack columns; dialog stays single-column.
 
 ## Out of scope
-
-- No new artwork generation.
-- No new components.
-- No copy rewrites beyond the small heading/eyebrow swaps above.
-- No functional carousel logic (arrows are visual to match reference; can be wired later).
+- Real payment integration (Stripe) — placeholder only.
+- Real referral tracking — placeholder link + mock progress.
+- Backend storage of uploads.
+- Animations beyond the existing shimmer/fade utilities.
