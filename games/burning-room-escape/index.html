@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Burning Room Escape – ARTOY Mini Game</title>
+  <style>
+    /* =========================================================
+       ARTOY Burning Room Escape – Stylesheet
+       Color palette: dark bg, purple accent, orange fire
+    ========================================================= */
+    :root {
+      --bg:        #0d0b14;
+      --surface:   #1a1628;
+      --purple:    #7c3aed;
+      --purple-lt: #a855f7;
+      --orange:    #ea580c;
+      --orange-lt: #fb923c;
+      --gold:      #d97706;
+      --gold-lt:   #fbbf24;
+      --white:     #f5f0ff;
+      --muted:     #6b7280;
+      --danger:    #dc2626;
+      --green:     #16a34a;
+      --radius:    12px;
+      --font:      'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* ---- SCREENS ---- */
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity .35s ease;
+    }
+    .screen.hidden { opacity: 0; pointer-events: none; }
+
+    /* =========================================================
+       START SCREEN
+    ========================================================= */
+    #start-screen {
+      background: radial-gradient(ellipse at 60% 40%, #3b1f6a 0%, #0d0b14 70%);
+      gap: 0;
+    }
+
+    .start-art {
+      position: relative;
+      width: min(340px, 90vw);
+      height: min(220px, 55vw);
+      margin-bottom: 28px;
+    }
+
+    /* CSS-drawn burning room thumbnail */
+    .room-thumb {
+      width: 100%; height: 100%;
+      background: linear-gradient(160deg, #1a0a00 0%, #2d1000 40%, #1a0a00 100%);
+      border-radius: var(--radius);
+      border: 2px solid #7c3aed66;
+      position: relative;
+      overflow: hidden;
+    }
+    .room-thumb::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60px 80px at 15% 80%, #ea580c88 0%, transparent 70%),
+        radial-gradient(ellipse 80px 60px at 80% 90%, #ea580c66 0%, transparent 70%),
+        radial-gradient(ellipse 40px 40px at 50% 20%, #d9770633 0%, transparent 70%);
+    }
+    .room-thumb .flame {
+      position: absolute;
+      bottom: 0;
+      width: 28px; height: 50px;
+      background: linear-gradient(to top, #ea580c, #fbbf24, transparent);
+      border-radius: 50% 50% 30% 30%;
+      filter: blur(3px);
+      animation: flicker 1.2s ease-in-out infinite alternate;
+    }
+    .room-thumb .flame:nth-child(1) { left: 8%; animation-delay: 0s; width: 22px; height: 44px; }
+    .room-thumb .flame:nth-child(2) { left: 72%; animation-delay: .3s; width: 32px; height: 60px; }
+    .room-thumb .flame:nth-child(3) { left: 45%; animation-delay: .6s; width: 18px; height: 36px; }
+
+    /* Luna placeholder sprite */
+    .luna-sprite {
+      position: absolute;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%);
+      width: 56px; height: 70px;
+    }
+    .luna-body {
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 32px; height: 40px;
+      background: #2d1b69;
+      border-radius: 8px 8px 4px 4px;
+    }
+    .luna-head {
+      position: absolute;
+      bottom: 36px; left: 50%; transform: translateX(-50%);
+      width: 28px; height: 28px;
+      background: #f9c8b0;
+      border-radius: 50%;
+    }
+    .luna-head::before { /* hair */
+      content: '';
+      position: absolute; top: -8px; left: -6px;
+      width: 40px; height: 24px;
+      background: #4c1d95;
+      border-radius: 50% 50% 0 0;
+    }
+    .luna-head::after { /* eyes */
+      content: '';
+      position: absolute; top: 10px; left: 4px;
+      width: 6px; height: 6px;
+      background: #7c3aed;
+      border-radius: 50%;
+      box-shadow: 10px 0 0 #7c3aed;
+    }
+    .luna-ears {
+      position: absolute;
+      bottom: 58px; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 14px;
+    }
+    .luna-ears::before, .luna-ears::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 14px;
+      background: #4c1d95;
+      border-radius: 50% 50% 0 0;
+    }
+    .luna-ears::before { left: 2px; }
+    .luna-ears::after  { right: 2px; }
+
+    .start-badge {
+      position: absolute; top: 8px; left: 8px;
+      background: var(--purple);
+      font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+    }
+
+    #start-screen h1 {
+      font-size: clamp(26px, 7vw, 38px);
+      font-weight: 900; line-height: 1.1;
+      text-align: center;
+      letter-spacing: -1px;
+    }
+    #start-screen h1 span { color: var(--purple-lt); }
+
+    #start-screen .tagline {
+      font-size: clamp(13px, 3.5vw, 16px);
+      color: #c4b5fd; margin-top: 8px; text-align: center;
+    }
+
+    .feature-row {
+      display: flex; gap: 18px;
+      margin: 22px 0 28px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .feature-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: #1a1628; border: 1px solid #7c3aed44;
+      border-radius: 99px; padding: 6px 14px;
+      font-size: 12px; color: #c4b5fd;
+    }
+    .feature-pill .icon { font-size: 15px; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), #5b21b6);
+      color: #fff; border: none; border-radius: var(--radius);
+      font-size: clamp(16px, 4.5vw, 20px); font-weight: 700;
+      padding: 16px 48px; cursor: pointer;
+      box-shadow: 0 4px 24px #7c3aed55;
+      transition: transform .12s, box-shadow .12s;
+      letter-spacing: .5px;
+    }
+    .btn-primary:active { transform: scale(.96); box-shadow: 0 2px 12px #7c3aed44; }
+
+    .artoy-label {
+      margin-top: 20px;
+      font-size: 11px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+    }
+
+    /* =========================================================
+       GAME SCREEN
+    ========================================================= */
+    #game-screen {
+      background: #0d0b14;
+      justify-content: flex-start;
+      padding: 0;
+    }
+
+    /* HUD */
+    #hud {
+      width: 100%; display: flex;
+      align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: #11091e;
+      border-bottom: 1px solid #7c3aed33;
+      z-index: 10; flex-shrink: 0;
+    }
+    #timer-display {
+      display: flex; align-items: center; gap: 8px;
+      background: #1a1628; border: 1.5px solid var(--purple);
+      border-radius: 8px; padding: 6px 14px;
+      font-size: clamp(18px, 5vw, 24px); font-weight: 800; letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+    }
+    #timer-display .timer-icon { font-size: 18px; }
+    #timer-display.urgent { border-color: var(--danger); color: #fca5a5; animation: pulse-red .6s ease infinite alternate; }
+    #timer-display.warning { border-color: var(--orange); color: var(--orange-lt); }
+
+    #health-display {
+      display: flex; gap: 5px;
+    }
+    .heart { font-size: 22px; transition: opacity .3s; }
+    .heart.lost { opacity: .25; filter: grayscale(1); }
+
+    /* ROOM */
+    #room-container {
+      flex: 1; width: 100%;
+      position: relative; overflow: hidden;
+      cursor: pointer;
+    }
+
+    #room-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, #120800 0%, #2d1200 45%, #1a0900 100%);
+    }
+
+    /* Smoke overlay */
+    #smoke-overlay {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #555566aa 0%, transparent 60%);
+      opacity: .4;
+      transition: opacity 2s;
+      pointer-events: none; z-index: 2;
+    }
+
+    /* Fire layers */
+    .fire-strip {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 55px;
+      background: linear-gradient(to top, #ea580c, #d97706 40%, transparent);
+      filter: blur(8px);
+      animation: fire-flicker 1s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 1;
+    }
+    .fire-strip.top-fire {
+      bottom: auto; top: 0; height: 20px;
+      background: linear-gradient(to bottom, #ea580c88, transparent);
+      animation-delay: .5s;
+    }
+
+    @keyframes fire-flicker {
+      from { transform: scaleY(.95) scaleX(1.01); opacity: .9; }
+      to   { transform: scaleY(1.05) scaleX(.99); opacity: 1; }
+    }
+    @keyframes flicker {
+      from { transform: scaleY(.9) skewX(-2deg); opacity: .8; }
+      to   { transform: scaleY(1.1) skewX(2deg); opacity: 1; }
+    }
+    @keyframes pulse-red {
+      from { box-shadow: 0 0 6px #dc262666; }
+      to   { box-shadow: 0 0 16px #dc2626cc; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(-6px); }
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50%       { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slide-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+    @keyframes pop      { 0% { transform:scale(0); } 70% { transform:scale(1.15); } 100% { transform:scale(1); } }
+
+    /* --- Room furniture (CSS art) --- */
+    /* Bookshelf (back wall, top-left) */
+    .bookshelf {
+      position: absolute; top: 8%; left: 3%;
+      width: 20%; max-width: 80px;
+      height: 35%; max-height: 130px;
+      background: #3b1f06; border: 2px solid #5c3d11;
+      border-radius: 2px;
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 4px 3px;
+    }
+    .book { flex: 1; border-radius: 2px; }
+
+    /* Window (center-top, orange glow from fire outside) */
+    .window {
+      position: absolute; top: 4%; left: 50%; transform: translateX(-50%);
+      width: 22%; max-width: 90px; height: 22%;
+      background: linear-gradient(160deg, #f97316 0%, #ea580c 60%, #7c2d12 100%);
+      border: 3px solid #5c3d11; border-radius: 4px;
+      box-shadow: 0 0 30px #ea580c88, inset 0 0 14px #f97316aa;
+    }
+    .window::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 48%, #5c3d1166 48%, #5c3d1166 52%, transparent 52%),
+                  linear-gradient(0deg,  transparent 48%, #5c3d1166 48%, #5c3d1166 52%, transparent 52%);
+    }
+
+    /* Door (right side) */
+    #door-hotspot {
+      position: absolute; top: 15%; right: 4%;
+      width: 16%; max-width: 65px; height: 50%;
+      background: linear-gradient(180deg, #5c3d11 0%, #3b2506 100%);
+      border: 3px solid #8b5e2a;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      transition: box-shadow .2s;
+      z-index: 3;
+    }
+    #door-hotspot:hover, #door-hotspot:active {
+      box-shadow: 0 0 20px #7c3aedaa;
+    }
+    #door-hotspot::before { /* door knob */
+      content: '';
+      position: absolute; top: 45%; left: 12%;
+      width: 10px; height: 10px;
+      background: radial-gradient(circle at 35% 35%, #fbbf24, #d97706);
+      border-radius: 50%;
+    }
+    #door-hotspot::after { /* door panel lines */
+      content: '';
+      position: absolute; top: 10%; left: 20%; right: 20%; bottom: 10%;
+      border: 1.5px solid #8b5e2a44;
+      border-radius: 3px;
+    }
+    #door-label {
+      position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--muted); white-space: nowrap;
+    }
+    #door-hotspot.unlocked { border-color: #22c55e; box-shadow: 0 0 16px #22c55e88; }
+    #door-hotspot.unlocked #door-label { color: #4ade80; }
+
+    /* Desk (bottom-left area) */
+    #desk-hotspot {
+      position: absolute; bottom: 18%; left: 4%;
+      width: 28%; max-width: 110px; height: 24%;
+      cursor: pointer; z-index: 3;
+    }
+    .desk-surface {
+      position: absolute; bottom: 30%; left: 0; right: 0;
+      height: 55%; background: linear-gradient(180deg, #5c3d11, #3b2506);
+      border-radius: 4px 4px 0 0; border: 2px solid #8b5e2a;
+    }
+    .desk-leg {
+      position: absolute; bottom: 0;
+      width: 14%; height: 30%;
+      background: #3b2506; border: 1px solid #5c3d11;
+    }
+    .desk-leg.left { left: 5%; }
+    .desk-leg.right { right: 5%; }
+    .desk-drawer {
+      position: absolute; bottom: 32%; left: 15%; right: 15%; height: 28%;
+      background: #3b2506; border: 1.5px solid #8b5e2a44;
+      border-radius: 2px; display: flex; align-items: center; justify-content: center;
+    }
+    .drawer-handle { width: 30%; height: 4px; background: #8b5e2a; border-radius: 2px; }
+    #desk-hotspot .hotspot-label {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--muted); white-space: nowrap;
+    }
+
+    /* Sofa (bottom-center) */
+    #sofa-hotspot {
+      position: absolute; bottom: 14%; left: 34%; right: 26%;
+      height: 22%; cursor: pointer; z-index: 3;
+    }
+    .sofa-back {
+      position: absolute; top: 0; left: 0; right: 0; height: 55%;
+      background: linear-gradient(180deg, #4c1d95, #2e1065);
+      border-radius: 6px 6px 0 0; border: 2px solid #7c3aed66;
+    }
+    .sofa-seat {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+      background: linear-gradient(180deg, #3b0764, #1e0442);
+      border-radius: 0 0 6px 6px; border: 2px solid #7c3aed44;
+    }
+    .sofa-arm {
+      position: absolute; bottom: 0;
+      width: 14%; height: 80%;
+      background: #3b0764; border: 1.5px solid #7c3aed44;
+      border-radius: 4px;
+    }
+    .sofa-arm.left { left: -5%; }
+    .sofa-arm.right { right: -5%; }
+    #sofa-hotspot .hotspot-label {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--muted); white-space: nowrap;
+    }
+
+    /* Picture frame (top-right of back wall) */
+    #frame-hotspot {
+      position: absolute; top: 8%; right: 25%;
+      width: 14%; max-width: 56px; height: 16%;
+      cursor: pointer; z-index: 3;
+    }
+    .frame-border {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #5c3d11, #8b5e2a);
+      border-radius: 3px; border: 2px solid #d97706;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .frame-inner {
+      width: 70%; height: 70%;
+      background: linear-gradient(135deg, #1a0a00, #3b1f06);
+      border-radius: 1px;
+    }
+    #frame-hotspot .hotspot-label {
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--muted); white-space: nowrap;
+    }
+
+    /* Glow ring on undiscovered hotspots */
+    .hotspot-ring {
+      position: absolute; inset: -4px;
+      border-radius: inherit;
+      border: 2px dashed #fbbf2488;
+      animation: rotate-ring 4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes rotate-ring {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .discovered .hotspot-ring { display: none; }
+
+    /* Luna in game */
+    #luna-game {
+      position: absolute; bottom: 36%; left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      animation: float 3s ease-in-out infinite;
+      z-index: 4; pointer-events: none;
+    }
+    #luna-game .luna-body  { width: 30px; height: 38px; background: #2d1b69; border-radius: 8px 8px 4px 4px; position: relative; margin: 0 auto; }
+    #luna-game .luna-head  { width: 26px; height: 26px; background: #f9c8b0; border-radius: 50%; margin: 0 auto; position: relative; top: -4px; }
+    #luna-game .luna-head::before { content:''; position:absolute; top:-7px; left:-5px; width:36px; height:22px; background:#4c1d95; border-radius:50% 50% 0 0; }
+    #luna-game .luna-head::after  { content:''; position:absolute; top:9px; left:4px; width:5px; height:5px; background:#7c3aed; border-radius:50%; box-shadow: 9px 0 0 #7c3aed; }
+    #luna-game .luna-ears  { width:38px; height:13px; position:relative; margin:0 auto; }
+    #luna-game .luna-ears::before, #luna-game .luna-ears::after { content:''; position:absolute; width:9px; height:13px; background:#4c1d95; border-radius:50% 50% 0 0; }
+    #luna-game .luna-ears::before { left:2px; }
+    #luna-game .luna-ears::after  { right:2px; }
+
+    /* Dialogue bubble */
+    #dialogue {
+      position: absolute; bottom: 62%; left: 50%;
+      transform: translateX(-50%);
+      background: #ffffffee; color: #1a1628;
+      font-size: clamp(11px, 3vw, 14px); font-weight: 600;
+      border-radius: 12px; padding: 10px 14px;
+      max-width: min(240px, 75vw); text-align: center;
+      z-index: 10; box-shadow: 0 4px 20px #0008;
+      pointer-events: none;
+      animation: slide-up .25s ease;
+    }
+    #dialogue::after {
+      content: '';
+      position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: #ffffffee;
+    }
+    #dialogue.hidden { display: none; }
+
+    /* Item pop notification */
+    #item-toast {
+      position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: #fff; border-radius: 99px;
+      padding: 8px 20px; font-size: 13px; font-weight: 700;
+      z-index: 20; box-shadow: 0 4px 20px #7c3aed88;
+      animation: pop .35s cubic-bezier(.34,1.56,.64,1);
+      white-space: nowrap;
+    }
+    #item-toast.hidden { display: none; }
+
+    /* INVENTORY */
+    #inventory {
+      width: 100%; flex-shrink: 0;
+      background: #11091e;
+      border-top: 1px solid #7c3aed33;
+      padding: 10px 12px 12px;
+    }
+    #inventory .inv-label {
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    #inv-slots {
+      display: flex; gap: 10px; justify-content: center;
+    }
+    .inv-slot {
+      width: 54px; height: 54px;
+      background: #1a1628; border: 1.5px solid #7c3aed44;
+      border-radius: 10px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; font-size: 9px; color: var(--muted);
+      position: relative; transition: border-color .3s, background .3s;
+    }
+    .inv-slot.filled {
+      border-color: var(--purple-lt);
+      background: #1e1040;
+    }
+    .inv-slot.filled .slot-icon { filter: none !important; }
+    .slot-icon { font-size: 22px; filter: grayscale(1) opacity(.3); transition: filter .3s; }
+    .inv-slot.filled .slot-icon { filter: none; }
+    .slot-name { font-size: 8px; color: var(--purple-lt); font-weight: 600; text-align: center; line-height: 1.2; }
+    .inv-slot.filled::after { /* sparkle */
+      content: '✦';
+      position: absolute; top: -5px; right: -5px;
+      font-size: 10px; color: var(--gold-lt);
+      animation: sparkle 1.5s ease infinite;
+    }
+
+    /* =========================================================
+       END SCREEN
+    ========================================================= */
+    #end-screen {
+      background: radial-gradient(ellipse at 50% 30%, #3b1f6a 0%, #0d0b14 70%);
+      gap: 0; padding: 20px;
+    }
+
+    #end-badge {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      padding: 5px 16px; border-radius: 99px; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    #end-badge.secret  { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+    #end-badge.normal  { background: linear-gradient(135deg, #d97706, #ea580c); }
+    #end-badge.timeout { background: linear-gradient(135deg, #dc2626, #991b1b); }
+
+    #end-title {
+      font-size: clamp(24px, 7vw, 36px); font-weight: 900;
+      text-align: center; line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    #end-subtitle {
+      font-size: clamp(13px, 3.5vw, 16px);
+      color: #c4b5fd; text-align: center;
+      margin-bottom: 20px; max-width: 320px;
+    }
+
+    #end-time-box {
+      background: #1a1628; border: 1.5px solid #7c3aed;
+      border-radius: 12px; padding: 14px 32px;
+      text-align: center; margin-bottom: 24px;
+    }
+    #end-time-box .label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    #end-time-value { font-size: clamp(32px, 9vw, 48px); font-weight: 900; letter-spacing: 2px; }
+    #end-time-value.secret  { color: var(--purple-lt); }
+    #end-time-value.normal  { color: var(--gold-lt); }
+    #end-time-value.timeout { color: #fca5a5; }
+
+    .star-row { display: flex; gap: 6px; justify-content: center; margin-bottom: 24px; font-size: 28px; }
+
+    /* Reward card */
+    #reward-card {
+      background: linear-gradient(135deg, #2e1065, #1e0442);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius); padding: 16px 24px;
+      text-align: center; margin-bottom: 24px;
+      max-width: 280px; width: 100%;
+      animation: pop .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    #reward-card .r-title { font-size: 11px; color: var(--gold-lt); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+    #reward-card .r-name { font-size: 18px; font-weight: 800; color: var(--white); }
+    #reward-card .r-icon { font-size: 36px; margin: 8px 0; }
+    #reward-card.hidden { display: none; }
+
+    .btn-secondary {
+      background: transparent; color: var(--purple-lt);
+      border: 2px solid var(--purple-lt); border-radius: var(--radius);
+      font-size: 16px; font-weight: 700; padding: 14px 40px;
+      cursor: pointer; transition: background .2s, color .2s;
+    }
+    .btn-secondary:active { background: var(--purple); color: #fff; }
+
+    /* =========================================================
+       MODALS & OVERLAYS
+    ========================================================= */
+    #pause-btn {
+      background: none; border: none; color: var(--muted);
+      font-size: 20px; cursor: pointer; padding: 4px 8px;
+    }
+
+    #hint-overlay {
+      position: absolute; inset: 0;
+      background: #000a; z-index: 30;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #hint-overlay.hidden { display: none; }
+    .hint-box {
+      background: #1a1628; border: 2px solid var(--purple);
+      border-radius: var(--radius); padding: 24px; max-width: 300px; width: 90%;
+      text-align: center;
+    }
+    .hint-box h3 { font-size: 18px; margin-bottom: 12px; color: var(--purple-lt); }
+    .hint-box p  { font-size: 13px; color: #c4b5fd; line-height: 1.6; }
+    .hint-box button { margin-top: 16px; }
+
+    /* Glow tap ripple */
+    .tap-ripple {
+      position: absolute; border-radius: 50%;
+      width: 48px; height: 48px;
+      background: #fbbf2444;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ripple .5s ease-out forwards;
+      pointer-events: none; z-index: 5;
+    }
+    @keyframes ripple {
+      to { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+
+    /* Responsive tweak for tall phones */
+    @media (max-height: 650px) {
+      .start-art { height: min(160px, 42vw); margin-bottom: 16px; }
+      .feature-row { margin: 14px 0 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- =========================================================
+     GAME CONFIGURATION — edit all story/item/character data here
+========================================================= -->
+<script>
+const CONFIG = {
+  /* ── Character ─────────────────────────────────────────── */
+  character: {
+    name: "Luna",                       // ← change character name here
+    portrait: null,                     // ← swap in a character image URL here
+  },
+
+  /* ── Timer ──────────────────────────────────────────────── */
+  timerSeconds: 90,                     // ← total game time in seconds
+  warningAt:    30,                     // ← seconds left when timer turns orange
+  urgentAt:     15,                     // ← seconds left when timer turns red
+
+  /* ── Items ──────────────────────────────────────────────── */
+  // Each item: id, name, icon emoji, the hotspot that contains it,
+  // found dialogue, and whether it is required to escape.
+  items: [
+    {
+      id:       "key",
+      name:     "Brass Key",
+      icon:     "🗝️",
+      location: "desk",               // ← hotspot id where item is hidden
+      dialogue: "Found a brass key in the drawer!",
+      required: true,                 // required to open door
+    },
+    {
+      id:       "cloth",
+      name:     "Wet Cloth",
+      icon:     "🧣",
+      location: "sofa",
+      dialogue: "A wet cloth — this will help with the smoke!",
+      required: false,
+    },
+    {
+      id:       "memory",
+      name:     "Memory Card",
+      icon:     "💾",
+      location: "frame",             // ← hidden behind the picture frame
+      dialogue: "A memory card! Luna's secret is safe inside.",
+      required: false,               // triggers secret ending if carried
+    },
+  ],
+
+  /* ── Dialogue lines ──────────────────────────────────────── */
+  dialogue: {
+    start:        "I need to find the key and get out!",
+    deskEmpty:    "Nothing more in the desk…",
+    sofaEmpty:    "I already checked the sofa.",
+    frameEmpty:   "Just an empty frame now.",
+    doorLocked:   "The door is locked. I need the key!",
+    doorNoKey:    "Find the key first!",
+    doorUnlocked: "The key fits! Time to run!",
+    doorOpen:     "Almost out! Go go go!",
+    clothHelps:   "The wet cloth helps — I can breathe!",
+    urgent:       "Hurry! The fire is spreading!",
+  },
+
+  /* ── Endings ─────────────────────────────────────────────── */
+  endings: {
+    secret: {
+      badge:    "Secret Ending",
+      title:    "Luna Remembers",
+      subtitle: "You found the Memory Card and uncovered Luna's hidden story.",
+      reward:   { name: "Luna's Memory Card", icon: "💾" },
+      stars:    3,
+    },
+    normal: {
+      badge:    "Normal Ending",
+      title:    "You Escaped!",
+      subtitle: "Luna made it out — but left something important behind.",
+      reward:   null,
+      stars:    2,
+    },
+    timeout: {
+      badge:    "Time's Up",
+      title:    "Trapped in Flames",
+      subtitle: "The fire consumed the room. Try again — you can make it!",
+      reward:   null,
+      stars:    0,
+    },
+  },
+};
+</script>
+
+<!-- =========================================================
+     HTML SCREENS
+========================================================= -->
+
+<!-- START SCREEN -->
+<div id="start-screen" class="screen">
+  <div class="start-art">
+    <div class="room-thumb">
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="flame"></div>
+      <div class="luna-sprite">
+        <div class="luna-ears"></div>
+        <div class="luna-head"></div>
+        <div class="luna-body"></div>
+      </div>
+    </div>
+    <div class="start-badge">ARTOY · PROTOTYPE 1</div>
+  </div>
+
+  <h1>Burning Room<br><span>Escape</span></h1>
+  <p class="tagline">Help <span id="char-name-start"></span> escape in 90 seconds.</p>
+
+  <div class="feature-row">
+    <div class="feature-pill"><span class="icon">⏱️</span> 90 Seconds</div>
+    <div class="feature-pill"><span class="icon">🔍</span> Explore</div>
+    <div class="feature-pill"><span class="icon">🗝️</span> Solve</div>
+    <div class="feature-pill"><span class="icon">🚪</span> Escape</div>
+  </div>
+
+  <button class="btn-primary" id="start-btn">▶ Start Game</button>
+  <p class="artoy-label">ARTOY Mini Game</p>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen hidden">
+  <!-- HUD -->
+  <div id="hud">
+    <div id="timer-display">
+      <span class="timer-icon">⏱️</span>
+      <span id="timer-text">01:30</span>
+    </div>
+    <div id="health-display">
+      <span class="heart" id="h1">❤️</span>
+      <span class="heart" id="h2">❤️</span>
+      <span class="heart" id="h3">🤍</span>
+    </div>
+    <button id="pause-btn" title="Help">❓</button>
+  </div>
+
+  <!-- ROOM -->
+  <div id="room-container">
+    <div id="room-bg"></div>
+    <div id="smoke-overlay"></div>
+    <div class="fire-strip"></div>
+    <div class="fire-strip top-fire"></div>
+
+    <!-- Furniture (decorative) -->
+    <div class="bookshelf">
+      <div class="book" style="background:#7c2d12"></div>
+      <div class="book" style="background:#1d4ed8"></div>
+      <div class="book" style="background:#15803d"></div>
+      <div class="book" style="background:#7c3aed"></div>
+      <div class="book" style="background:#b45309"></div>
+    </div>
+    <div class="window"></div>
+
+    <!-- Hotspots -->
+    <div id="desk-hotspot" class="hotspot" data-id="desk" role="button" aria-label="Desk drawer">
+      <div class="hotspot-ring"></div>
+      <span class="hotspot-label">Desk</span>
+      <div class="desk-surface">
+        <div class="desk-drawer"><div class="drawer-handle"></div></div>
+      </div>
+      <div class="desk-leg left"></div>
+      <div class="desk-leg right"></div>
+    </div>
+
+    <div id="sofa-hotspot" class="hotspot" data-id="sofa" role="button" aria-label="Sofa">
+      <div class="hotspot-ring"></div>
+      <span class="hotspot-label">Sofa</span>
+      <div class="sofa-back"></div>
+      <div class="sofa-seat"></div>
+      <div class="sofa-arm left"></div>
+      <div class="sofa-arm right"></div>
+    </div>
+
+    <div id="frame-hotspot" class="hotspot" data-id="frame" role="button" aria-label="Picture frame">
+      <div class="hotspot-ring"></div>
+      <span class="hotspot-label">Frame</span>
+      <div class="frame-border"><div class="frame-inner"></div></div>
+    </div>
+
+    <div id="door-hotspot" data-id="door" role="button" aria-label="Exit door">
+      <span id="door-label">🔒 Door</span>
+    </div>
+
+    <!-- Luna character -->
+    <div id="luna-game">
+      <div class="luna-ears"></div>
+      <div class="luna-head"></div>
+      <div class="luna-body"></div>
+    </div>
+
+    <!-- Dialogue bubble -->
+    <div id="dialogue" class="hidden"></div>
+
+    <!-- Item toast -->
+    <div id="item-toast" class="hidden"></div>
+
+    <!-- Hint overlay (pause) -->
+    <div id="hint-overlay" class="hidden">
+      <div class="hint-box">
+        <h3>🔍 How to Play</h3>
+        <p>Tap objects to search them.<br>
+           Find the <strong>Brass Key</strong> to unlock the door.<br>
+           Grab the <strong>Wet Cloth</strong> to help with smoke.<br>
+           Find the <strong>Memory Card</strong> for the secret ending!</p>
+        <button class="btn-primary" id="close-hint" style="padding:10px 28px;font-size:15px;">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div id="inventory">
+    <div class="inv-label">Inventory</div>
+    <div id="inv-slots"></div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div id="end-screen" class="screen hidden">
+  <div id="end-badge"></div>
+  <div id="end-title"></div>
+  <div id="end-subtitle"></div>
+
+  <div id="end-time-box">
+    <div class="label">Completion Time</div>
+    <div id="end-time-value"></div>
+  </div>
+
+  <div class="star-row" id="star-row"></div>
+
+  <div id="reward-card" class="hidden">
+    <div class="r-title">Reward Unlocked!</div>
+    <div class="r-icon" id="reward-icon"></div>
+    <div class="r-name" id="reward-name"></div>
+  </div>
+
+  <button class="btn-secondary" id="replay-btn">↺ Play Again</button>
+  <p class="artoy-label" style="margin-top:16px">ARTOY Mini Game</p>
+</div>
+
+<!-- =========================================================
+     GAME LOGIC
+========================================================= -->
+<script>
+/* ── State ──────────────────────────────────────────────── */
+const state = {
+  timeLeft:    CONFIG.timerSeconds,
+  timerRef:    null,
+  inventory:   new Set(),
+  searched:    new Set(),
+  doorUnlocked: false,
+  gameOver:    false,
+  elapsed:     0,
+};
+
+/* ── DOM refs ───────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const startScreen  = $('start-screen');
+const gameScreen   = $('game-screen');
+const endScreen    = $('end-screen');
+const timerEl      = $('timer-display');
+const timerText    = $('timer-text');
+const dialogueEl   = $('dialogue');
+const toastEl      = $('item-toast');
+const invSlots     = $('inv-slots');
+const hintOverlay  = $('hint-overlay');
+const doorHotspot  = $('door-hotspot');
+const doorLabel    = $('door-label');
+const smokeOverlay = $('smoke-overlay');
+
+/* ── Init UI from config ───────────────────────────────── */
+function initUI() {
+  $('char-name-start').textContent = CONFIG.character.name;
+  buildInventorySlots();
+}
+
+function buildInventorySlots() {
+  invSlots.innerHTML = '';
+  CONFIG.items.forEach(item => {
+    const slot = document.createElement('div');
+    slot.className = 'inv-slot';
+    slot.id = `slot-${item.id}`;
+    slot.innerHTML = `<span class="slot-icon">${item.icon}</span><span class="slot-name">${item.name}</span>`;
+    invSlots.appendChild(slot);
+  });
+}
+
+/* ── Timer ──────────────────────────────────────────────── */
+function formatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function startTimer() {
+  state.timerRef = setInterval(() => {
+    if (state.gameOver) return;
+    state.timeLeft--;
+    state.elapsed++;
+    timerText.textContent = formatTime(state.timeLeft);
+
+    // smoke intensifies
+    smokeOverlay.style.opacity = 0.2 + (1 - state.timeLeft / CONFIG.timerSeconds) * 0.55;
+
+    if (state.timeLeft <= CONFIG.urgentAt) {
+      timerEl.className = 'urgent';
+      if (state.timeLeft === CONFIG.urgentAt) showDialogue(CONFIG.dialogue.urgent, 4000);
+    } else if (state.timeLeft <= CONFIG.warningAt) {
+      timerEl.className = 'warning';
+    }
+
+    if (state.timeLeft <= 0) {
+      endGame('timeout');
+    }
+  }, 1000);
+}
+
+/* ── Dialogue ───────────────────────────────────────────── */
+let dialogueTimer = null;
+function showDialogue(text, duration = 3000) {
+  dialogueEl.textContent = text;
+  dialogueEl.classList.remove('hidden');
+  clearTimeout(dialogueTimer);
+  dialogueTimer = setTimeout(() => dialogueEl.classList.add('hidden'), duration);
+}
+
+/* ── Toast ──────────────────────────────────────────────── */
+let toastTimer = null;
+function showToast(text) {
+  toastEl.textContent = text;
+  toastEl.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 2200);
+}
+
+/* ── Inventory ──────────────────────────────────────────── */
+function collectItem(item) {
+  state.inventory.add(item.id);
+  $(`slot-${item.id}`).classList.add('filled');
+  showDialogue(item.dialogue, 3000);
+  showToast(`${item.icon} ${item.name} collected!`);
+
+  if (item.id === 'cloth') {
+    smokeOverlay.style.transition = 'opacity 1.5s';
+    smokeOverlay.style.opacity = Math.max(0, parseFloat(smokeOverlay.style.opacity || .4) - .2);
+  }
+  if (item.id === 'key') {
+    state.doorUnlocked = true;
+    doorHotspot.classList.add('unlocked');
+    doorLabel.textContent = '🔓 Door';
+  }
+}
+
+/* ── Hotspot interaction ────────────────────────────────── */
+function handleHotspot(id) {
+  if (state.gameOver) return;
+
+  if (id === 'door') {
+    handleDoor();
+    return;
+  }
+
+  // Add ripple
+  const el = document.getElementById(`${id}-hotspot`);
+  if (el) el.classList.add('discovered');
+
+  // Find item at this location
+  const item = CONFIG.items.find(i => i.location === id && !state.inventory.has(i.id));
+
+  if (item && !state.searched.has(`${id}-${item.id}`)) {
+    state.searched.add(`${id}-${item.id}`);
+    collectItem(item);
+  } else {
+    // Empty / already searched
+    const emptyLines = {
+      desk:  CONFIG.dialogue.deskEmpty,
+      sofa:  CONFIG.dialogue.sofaEmpty,
+      frame: CONFIG.dialogue.frameEmpty,
+    };
+    if (state.searched.has(`${id}-${CONFIG.items.find(i=>i.location===id)?.id}`)) {
+      showDialogue(emptyLines[id] || "Nothing here.", 2000);
+    } else {
+      showDialogue("Hmm, nothing useful here.", 2000);
+    }
+  }
+}
+
+function handleDoor() {
+  if (!state.doorUnlocked) {
+    showDialogue(CONFIG.dialogue.doorLocked, 2500);
+    return;
+  }
+  showDialogue(CONFIG.dialogue.doorUnlocked, 1500);
+  setTimeout(() => {
+    const ending = state.inventory.has('memory') ? 'secret' : 'normal';
+    endGame(ending);
+  }, 1200);
+}
+
+/* ── Tap ripple effect ──────────────────────────────────── */
+function spawnRipple(x, y, container) {
+  const r = document.createElement('div');
+  r.className = 'tap-ripple';
+  r.style.left = x + 'px';
+  r.style.top  = y + 'px';
+  container.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+/* ── End Game ───────────────────────────────────────────── */
+function endGame(type) {
+  if (state.gameOver) return;
+  state.gameOver = true;
+  clearInterval(state.timerRef);
+
+  const ending = CONFIG.endings[type];
+  const elapsed = CONFIG.timerSeconds - state.timeLeft;
+  const timeStr = type === 'timeout' ? formatTime(CONFIG.timerSeconds) : formatTime(elapsed);
+
+  setTimeout(() => {
+    // Populate end screen
+    const badge = $('end-badge');
+    badge.textContent = ending.badge;
+    badge.className = `${type}`;
+
+    $('end-title').textContent   = ending.title;
+    $('end-subtitle').textContent = ending.subtitle;
+
+    const timeVal = $('end-time-value');
+    timeVal.textContent = timeStr;
+    timeVal.className = type;
+
+    // Stars
+    const starRow = $('star-row');
+    starRow.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const s = document.createElement('span');
+      s.textContent = i < ending.stars ? '⭐' : '☆';
+      starRow.appendChild(s);
+    }
+
+    // Reward
+    const rewardCard = $('reward-card');
+    if (ending.reward) {
+      $('reward-icon').textContent = ending.reward.icon;
+      $('reward-name').textContent = ending.reward.name;
+      rewardCard.classList.remove('hidden');
+    } else {
+      rewardCard.classList.add('hidden');
+    }
+
+    showScreen(endScreen);
+  }, 800);
+}
+
+/* ── Screen transitions ─────────────────────────────────── */
+function showScreen(target) {
+  [startScreen, gameScreen, endScreen].forEach(s => {
+    s.classList.toggle('hidden', s !== target);
+  });
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+function resetGame() {
+  clearInterval(state.timerRef);
+  state.timeLeft     = CONFIG.timerSeconds;
+  state.inventory    = new Set();
+  state.searched     = new Set();
+  state.doorUnlocked = false;
+  state.gameOver     = false;
+  state.elapsed      = 0;
+
+  timerText.textContent = formatTime(CONFIG.timerSeconds);
+  timerEl.className = '';
+  dialogueEl.classList.add('hidden');
+  toastEl.classList.add('hidden');
+  hintOverlay.classList.add('hidden');
+  smokeOverlay.style.opacity = '.4';
+  doorHotspot.classList.remove('unlocked');
+  doorLabel.textContent = '🔒 Door';
+
+  // Reset hotspot rings
+  document.querySelectorAll('.hotspot').forEach(h => h.classList.remove('discovered'));
+
+  buildInventorySlots();
+}
+
+/* ── Event listeners ────────────────────────────────────── */
+$('start-btn').addEventListener('click', () => {
+  resetGame();
+  showScreen(gameScreen);
+  showDialogue(CONFIG.dialogue.start, 3500);
+  startTimer();
+});
+
+$('replay-btn').addEventListener('click', () => {
+  showScreen(startScreen);
+});
+
+$('pause-btn').addEventListener('click', () => {
+  hintOverlay.classList.toggle('hidden');
+});
+
+$('close-hint').addEventListener('click', () => {
+  hintOverlay.classList.add('hidden');
+});
+
+// Hotspot taps
+document.querySelectorAll('.hotspot').forEach(el => {
+  el.addEventListener('click', e => {
+    const id = el.dataset.id;
+    const rect = el.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    spawnRipple(cx, cy, el);
+    handleHotspot(id);
+    e.stopPropagation();
+  });
+});
+
+doorHotspot.addEventListener('click', e => {
+  const rect = doorHotspot.getBoundingClientRect();
+  spawnRipple(e.clientX - rect.left, e.clientY - rect.top, doorHotspot);
+  handleDoor();
+});
+
+// Room background taps (ambience only)
+$('room-container').addEventListener('click', e => {
+  if (e.target === $('room-bg') || e.target === $('room-container') || e.target.id === 'smoke-overlay') {
+    spawnRipple(e.clientX - $('room-container').getBoundingClientRect().left,
+                e.clientY - $('room-container').getBoundingClientRect().top,
+                $('room-container'));
+    showDialogue(CONFIG.character.name + " scans the room nervously…", 1800);
+  }
+});
+
+/* ── Boot ───────────────────────────────────────────────── */
+initUI();
+showScreen(startScreen);
+</script>
+</body>
+</html>
