@@ -146,6 +146,7 @@ export interface CliArgs {
   excludeTools: string[] | undefined;
   authType: string | undefined;
   channel: string | undefined;
+  brandKit: string | undefined;
 }
 
 function normalizeOutputFormat(
@@ -470,6 +471,11 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           description: 'Tools to allow, will bypass confirmation',
           coerce: (tools: string[]) =>
             tools.flatMap((tool) => tool.split(',').map((t) => t.trim())),
+        })
+        .option('brand-kit', {
+          type: 'string',
+          description:
+            'Path to a brand-kit folder containing brand-brief.json + uploaded images (mascot, logo). Activates the Brand Game Studio workflow.',
         })
         .option('auth-type', {
           type: 'string',
@@ -1091,6 +1097,7 @@ export async function loadCliConfig(
       format: outputSettingsFormat,
     },
     channel: argv.channel,
+    brandKitPath: argv.brandKit,
     // Precedence: explicit CLI flag > settings file > default(true).
     // NOTE: do NOT set a yargs default for `chat-recording`, otherwise argv will
     // always be true and the settings file can never disable recording.

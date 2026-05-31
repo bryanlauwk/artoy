@@ -63,6 +63,7 @@ import { TodoWriteTool } from '../tools/todoWrite.js';
 import { ToolRegistry } from '../tools/tool-registry.js';
 import { GameTypeClassifierTool } from '../tools/game-type-classifier.js';
 import { GenerateGDDTool } from '../tools/generate-gdd.js';
+import { IpToCharacterTool } from '../tools/ip-to-character.js';
 //import { CopyTemplateTool } from '../tools/copy-template.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
 import { WebSearchTool } from '../tools/web-search/index.js';
@@ -363,6 +364,8 @@ export interface ConfigParameters {
   sdkMode?: boolean;
   sessionSubagents?: SubagentConfig[];
   channel?: string;
+  /** Path to a brand-kit folder (brand-brief.json + mascot/logo images). */
+  brandKitPath?: string;
 }
 
 function normalizeConfigOutputFormat(
@@ -504,6 +507,7 @@ export class Config {
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
   private readonly channel: string | undefined;
+  private readonly brandKitPath: string | undefined;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId ?? randomUUID();
@@ -622,6 +626,7 @@ export class Config {
     this.useSmartEdit = params.useSmartEdit ?? false;
     this.extensionManagement = params.extensionManagement ?? true;
     this.channel = params.channel;
+    this.brandKitPath = params.brandKitPath;
     this.storage = new Storage(this.targetDir);
     this.vlmSwitchMode = params.vlmSwitchMode;
     this.inputFormat = params.inputFormat ?? InputFormat.TEXT;
@@ -1181,6 +1186,10 @@ export class Config {
     return this.cliVersion;
   }
 
+  getBrandKitPath(): string | undefined {
+    return this.brandKitPath;
+  }
+
   getChannel(): string | undefined {
     return this.channel;
   }
@@ -1430,6 +1439,7 @@ export class Config {
     registerCoreTool(GenerateGDDTool, this);
     registerCoreTool(GenerateAssetsTool, this);
     registerCoreTool(GenerateTilemapTool, this);
+    registerCoreTool(IpToCharacterTool, this);
     //registerCoreTool(CopyTemplateTool, this);
 
     await registry.discoverAllTools();

@@ -24,6 +24,7 @@ import {
 } from './core/initializer.js';
 import { runNonInteractive } from './nonInteractiveCli.js';
 import { runNonInteractiveStreamJson } from './nonInteractive/session.js';
+import { loadBrandKit } from './brand/brand-kit.js';
 import { AppContainer } from './ui/AppContainer.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
 import { KeypressProvider } from './ui/contexts/KeypressContext.js';
@@ -465,6 +466,21 @@ export async function main() {
         `No input provided via stdin. Input can be provided by piping data into gemini or using the --prompt option.`,
       );
       process.exit(1);
+    }
+
+    // Brand Game Studio: prepend brand context to the prompt if --brand-kit is set
+    const brandKitPath = config.getBrandKitPath();
+    if (brandKitPath) {
+      try {
+        const brandCtx = loadBrandKit(brandKitPath);
+        console.log(`[Brand Game Studio] Loaded brand kit: ${brandCtx.ipName}`);
+        input = `${brandCtx.gddPromptPrefix}\n${input}`;
+      } catch (e) {
+        console.error(
+          `[Brand Game Studio] Failed to load brand-kit: ${(e as Error).message}`,
+        );
+        process.exit(1);
+      }
     }
 
     logUserPrompt(config, {

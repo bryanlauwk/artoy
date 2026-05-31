@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Game Studio — OpenGame</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d29922;
+    --accent4: #f78166;
+    --accent5: #bc8cff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --input-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .logo { font-size: 24px; font-weight: 800; background: linear-gradient(90deg, #58a6ff, #bc8cff, #3fb950); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .badge { background: var(--surface2); border: 1px solid var(--accent5); border-radius: 20px; padding: 3px 12px; font-size: 12px; color: var(--accent5); margin-left: auto; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 36px 24px; }
+
+  .steps { display: flex; gap: 0; margin-bottom: 36px; }
+  .step-tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; border-bottom: 2px solid var(--border); color: var(--muted); cursor: pointer; transition: all .2s; }
+  .step-tab.active { border-bottom-color: var(--accent); color: var(--text); }
+  .step-tab .num { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); line-height: 20px; font-size: 11px; margin-right: 6px; }
+  .step-tab.active .num { background: var(--accent); border-color: var(--accent); color: #000; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section { margin-bottom: 28px; }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title .icon { font-size: 18px; }
+
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  input[type=text], input[type=url], textarea, select {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 10px 12px; font-size: 14px; font-family: inherit;
+    transition: border-color .2s; outline: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--surface2); }
+
+  .field { margin-bottom: 18px; }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .color-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .color-entry { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+  .color-entry input[type=color] { width: 32px; height: 32px; border: none; background: none; cursor: pointer; padding: 0; }
+  .color-entry input[type=text] { width: 90px; font-size: 13px; padding: 6px 8px; }
+  .color-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .color-remove:hover { color: var(--accent4); }
+  .add-btn { background: var(--surface2); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 14px; color: var(--muted); font-size: 13px; cursor: pointer; transition: all .2s; }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Upload zones */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 28px;
+    text-align: center; cursor: pointer; transition: all .2s; position: relative;
+    background: var(--surface2);
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(88,166,255,.05); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-zone .uz-icon { font-size: 32px; margin-bottom: 10px; }
+  .upload-zone .uz-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .upload-zone .uz-hint { font-size: 12px; color: var(--muted); }
+  .upload-zone .uz-preview { max-height: 140px; max-width: 100%; border-radius: 8px; margin-top: 10px; object-fit: contain; }
+
+  /* Game type cards */
+  .game-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 4px; }
+  .game-type-card { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all .2s; }
+  .game-type-card:hover { border-color: var(--accent); }
+  .game-type-card.selected { border-color: var(--accent5); background: rgba(188,140,255,.1); }
+  .game-type-card input[type=radio] { display: none; }
+  .game-type-card .gt-icon { font-size: 28px; margin-bottom: 8px; }
+  .game-type-card .gt-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .game-type-card .gt-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* Config sliders */
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .slider-val { min-width: 40px; text-align: right; font-size: 14px; font-weight: 700; color: var(--accent); }
+
+  /* Audience chips */
+  .audience-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .audience-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; cursor: pointer; transition: all .2s; }
+  .audience-chip:hover { border-color: var(--accent); }
+  .audience-chip.selected { background: rgba(88,166,255,.15); border-color: var(--accent); color: var(--accent); }
+
+  /* Output panel */
+  .output-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .output-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent2); }
+  pre { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 12px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; color: #b0d4b0; }
+  .cmd-box { background: #000; border: 1px solid var(--accent2); border-radius: 8px; padding: 14px 16px; font-family: monospace; font-size: 13px; color: var(--accent2); display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .copy-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--muted); transition: all .2s; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Navigation */
+  .nav-row { display: flex; justify-content: space-between; margin-top: 32px; }
+  .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #79b8ff; }
+  .btn-generate { background: linear-gradient(90deg, #3fb950, #58a6ff); color: #000; padding: 12px 32px; font-size: 15px; }
+  .btn-download { background: var(--accent5); color: #000; }
+
+  .progress-dots { display: flex; gap: 8px; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--accent); }
+  .dot.done { background: var(--accent2); }
+
+  .tag { display: inline-block; background: rgba(88,166,255,.12); border: 1px solid rgba(88,166,255,.3); color: var(--accent); border-radius: 4px; padding: 1px 7px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">⚡ Brand Game Studio</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:2px">Powered by OpenGame · Turn your brand IP into a playable web game</div>
+  </div>
+  <div class="badge">Internal Tool</div>
+</header>
+
+<div class="container">
+
+  <!-- Step tabs -->
+  <div class="steps">
+    <div class="step-tab active" id="tab-1" onclick="goStep(1)"><span class="num">1</span> Brand Assets</div>
+    <div class="step-tab" id="tab-2" onclick="goStep(2)"><span class="num">2</span> IP Brief</div>
+    <div class="step-tab" id="tab-3" onclick="goStep(3)"><span class="num">3</span> Game Config</div>
+    <div class="step-tab" id="tab-4" onclick="goStep(4)"><span class="num">4</span> Generate</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-dots" style="margin-bottom:28px">
+    <div class="dot active" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+    <div class="dot" id="dot-3"></div>
+    <div class="dot" id="dot-4"></div>
+    <span style="font-size:12px;color:var(--muted);margin-left:4px" id="step-label">Step 1 of 4</span>
+  </div>
+
+  <!-- STEP 1: Brand Assets -->
+  <div class="panel active" id="panel-1">
+    <div class="section">
+      <div class="section-title"><span class="icon">🖼️</span> Upload Brand Assets</div>
+
+      <div class="field">
+        <label>Mascot / Key Visual <span class="tag">required</span></label>
+        <div class="upload-zone" id="zone-mascot" ondragover="handleDrag(event,'zone-mascot')" ondragleave="handleDragLeave(event,'zone-mascot')" ondrop="handleDrop(event,'zone-mascot','mascot')">
+          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleFile(event,'mascot')">
+          <div class="uz-icon">🐼</div>
+          <div class="uz-label">Drop mascot PNG here</div>
+          <div class="uz-hint">Your brand character / key visual · PNG, JPG, WebP</div>
+          <img class="uz-preview" id="preview-mascot" style="display:none">
+        </div>
+        <div class="field-hint">This will be background-removed and pixel-art re-rendered as your game character sprite.</div>
+      </div>
+
+      <div class="field">
+        <label>Brand Logo <span style="font-size:11px;color:var(--muted)">(optional)</span></label>
+        <div class="upload-zone" id="zone-logo" ondragover="handleDrag(event,'zone-logo')" ondragleave="handleDragLeave(event,'zone-logo')" ondrop="handleDrop(event,'zone-logo','logo')">
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="handleFile(event,'logo')">
+          <div class="uz-icon">🏷️</div>
+          <div class="uz-label">Drop logo here</div>
+          <div class="uz-hint">Used in game UI elements (title screen, HUD, victory screen)</div>
+          <img class="uz-preview" id="preview-logo" style="display:none">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(2)">Next: IP Brief →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: IP Brief -->
+  <div class="panel" id="panel-2">
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span> IP / Brand Brief</div>
+
+      <div class="field">
+        <label>Brand / IP Name <span class="tag">required</span></label>
+        <input type="text" id="ip-name" placeholder="e.g. Milo the Fox, Sparkle Bear, BrandoBot">
+      </div>
+
+      <div class="field">
+        <label>Tagline <span style="font-size:11px;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="tagline" placeholder="e.g. Adventures with Milo! · One click to awesome.">
+      </div>
+
+      <div class="field">
+        <label>Character Description <span class="tag">required</span></label>
+        <textarea id="character-desc" placeholder="Describe the mascot visually — what does it look like, wear, carry? What's its personality?&#10;e.g. A cheerful orange fox wearing a blue silk scarf and tiny red sneakers. Mischievous but kind, always smiling."></textarea>
+        <div class="field-hint">This description drives the pixel-art re-render and all NPC/enemy designs.</div>
+      </div>
+
+      <div class="field">
+        <label>Brand Colors</label>
+        <div class="color-row" id="color-row">
+          <!-- added dynamically -->
+        </div>
+        <button class="add-btn" onclick="addColor()">+ Add color</button>
+        <div class="field-hint">Hex values used in backgrounds, UI elements, and the style_anchor for all asset generation.</div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Next: Game Config →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Game Config -->
+  <div class="panel" id="panel-3">
+    <div class="section">
+      <div class="section-title"><span class="icon">🎮</span> Choose Game Type</div>
+      <div class="game-type-grid" id="game-type-grid">
+        <label class="game-type-card" onclick="selectGameType('platformer')">
+          <input type="radio" name="game-type" value="platformer">
+          <div class="gt-icon">🏃</div>
+          <div class="gt-name">Platformer</div>
+          <div class="gt-desc">Mascot jumps & fights through side-scrolling levels</div>
+        </label>
+        <label class="game-type-card" onclick="selectGameType('top_down')">
+          <input type="radio" name="game-type" value="top_down">
+          <div class="gt-icon">🗺️</div>
+          <div class="gt-name">Top-Down</div>
+          <div class="gt-desc">Zelda-style exploration, 8-direction movement</div>
+        </label>
+        <label class="game-type-card" onclick="selectGameType('grid_logic')">
+          <input type="radio" name="game-type" value="grid_logic">
+          <div class="gt-icon">🧩</div>
+          <div class="gt-name">Puzzle / Grid</div>
+          <div class="gt-desc">Turn-based, match-3 or tile-logic gameplay</div>
+        </label>
+        <label class="game-type-card" onclick="selectGameType('tower_defense')">
+          <input type="radio" name="game-type" value="tower_defense">
+          <div class="gt-icon">🏰</div>
+          <div class="gt-name">Tower Defense</div>
+          <div class="gt-desc">Mascot towers defend against waves of enemies</div>
+        </label>
+        <label class="game-type-card" onclick="selectGameType('ui_heavy')">
+          <input type="radio" name="game-type" value="ui_heavy">
+          <div class="gt-icon">🃏</div>
+          <div class="gt-name">Card / Trivia</div>
+          <div class="gt-desc">Card battle, trivia, visual novel — no physics</div>
+        </label>
+      </div>
+      <div class="field-hint" style="margin-top:8px">Easiest to brand first: Card/Trivia → Tower Defense → Platformer</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">⚙️</span> Game Parameters</div>
+
+      <div class="field">
+        <label>Target Audience</label>
+        <div class="audience-chips" id="audience-chips">
+          <div class="audience-chip" onclick="toggleAudience(this)">Kids 6-12</div>
+          <div class="audience-chip" onclick="toggleAudience(this)">Teens 13-17</div>
+          <div class="audience-chip" onclick="toggleAudience(this)">Young Adults 18-25</div>
+          <div class="audience-chip" onclick="toggleAudience(this)">All Ages</div>
+          <div class="audience-chip" onclick="toggleAudience(this)">Casual Gamers</div>
+          <div class="audience-chip" onclick="toggleAudience(this)">Brand Fans</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Difficulty Level</label>
+        <div class="slider-row">
+          <span style="font-size:12px;color:var(--muted)">Casual</span>
+          <input type="range" min="1" max="5" value="2" id="difficulty-slider" oninput="updateSlider('difficulty-slider','difficulty-val')">
+          <span class="slider-val" id="difficulty-val">2</span>
+          <span style="font-size:12px;color:var(--muted)">Hard</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Number of Levels / Rounds</label>
+        <div class="slider-row">
+          <span style="font-size:12px;color:var(--muted)">1</span>
+          <input type="range" min="1" max="10" value="3" id="levels-slider" oninput="updateSlider('levels-slider','levels-val')">
+          <span class="slider-val" id="levels-val">3</span>
+          <span style="font-size:12px;color:var(--muted)">10</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Extra game instructions <span style="font-size:11px;color:var(--muted)">(optional)</span></label>
+        <textarea id="extra-prompt" placeholder="Any specific mechanics, story elements, power-ups, or restrictions.&#10;e.g. Include a brand trivia mini-game between levels. No violence — defeat enemies by collecting brand items."></textarea>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-generate" onclick="goStep(4); generateOutput()">✨ Generate Brand Kit</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Output -->
+  <div class="panel" id="panel-4">
+    <div class="section">
+      <div class="section-title"><span class="icon">📦</span> Your Brand Kit is Ready</div>
+
+      <div class="output-box" style="margin-bottom:20px">
+        <h3>brand-brief.json</h3>
+        <pre id="brief-json">Generating...</pre>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-download" onclick="downloadJson()">⬇ Download brand-brief.json</button>
+          <button class="btn btn-secondary" onclick="copyJson()">Copy JSON</button>
+        </div>
+      </div>
+
+      <div class="output-box">
+        <h3>OpenGame CLI Command</h3>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+          After downloading brand-brief.json and placing your mascot/logo images in a <code style="color:var(--accent6)">brand-kit/</code> folder, run:
+        </div>
+        <div class="cmd-box">
+          <code id="cli-cmd">opengame --brand-kit ./brand-kit -p "Build the game" --yolo</code>
+          <button class="copy-btn" onclick="copyCmd()">Copy</button>
+        </div>
+
+        <div style="margin-top:16px;font-size:13px;color:var(--muted)">
+          <strong style="color:var(--text)">Folder structure expected:</strong>
+          <pre style="margin-top:8px">brand-kit/
+├── brand-brief.json     ← downloaded above
+├── mascot.png           ← your uploaded mascot
+└── logo.png             ← your uploaded logo (optional)</pre>
+        </div>
+
+        <div style="margin-top:16px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2);border-radius:8px;padding:14px;font-size:12px;color:var(--accent2)">
+          <strong>What happens next:</strong><br>
+          ① OpenGame reads your brand brief<br>
+          ② ip_to_character tool converts your mascot → pixel-art sprite frames (idle, walk, attack)<br>
+          ③ Brand colors auto-set the style_anchor for all asset generation<br>
+          ④ GDD is generated with your IP name, character, and theme<br>
+          ⑤ Agent scaffolds, codes, and debugs until index.html is playable
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(1)">🔄 New Brand Kit</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const state = {
+  mascotFile: null,
+  mascotName: 'mascot.png',
+  logoFile: null,
+  logoName: 'logo.png',
+  colors: ['#FF6B00', '#0055FF'],
+  gameType: 'platformer',
+  audience: [],
+};
+
+// ─── Step navigation ──────────────────────────────────────────────────────────
+function goStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById(`panel-${i}`).classList.toggle('active', i === n);
+    document.getElementById(`tab-${i}`).classList.toggle('active', i === n);
+    const dot = document.getElementById(`dot-${i}`);
+    dot.classList.toggle('active', i === n);
+    dot.classList.toggle('done', i < n);
+  }
+  document.getElementById('step-label').textContent = `Step ${n} of 4`;
+}
+
+// ─── Upload handling ──────────────────────────────────────────────────────────
+function handleFile(event, key) {
+  const file = event.target.files[0];
+  if (!file) return;
+  showPreview(file, key);
+}
+
+function handleDrag(event, zoneId) {
+  event.preventDefault();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+function handleDragLeave(event, zoneId) {
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+function handleDrop(event, zoneId, key) {
+  event.preventDefault();
+  document.getElementById(zoneId).classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (file) showPreview(file, key);
+}
+
+function showPreview(file, key) {
+  state[`${key}File`] = file;
+  state[`${key}Name`] = file.name;
+  const preview = document.getElementById(`preview-${key}`);
+  const zone = document.getElementById(`zone-${key}`);
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    zone.querySelector('.uz-icon').textContent = '✅';
+    zone.querySelector('.uz-label').textContent = file.name;
+    zone.querySelector('.uz-hint').textContent = `${(file.size/1024).toFixed(1)} KB`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── Color management ─────────────────────────────────────────────────────────
+function renderColors() {
+  const row = document.getElementById('color-row');
+  row.innerHTML = '';
+  state.colors.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'color-entry';
+    div.innerHTML = `
+      <input type="color" value="${c}" oninput="updateColor(${i}, this.value)">
+      <input type="text" value="${c}" maxlength="7" oninput="updateColorText(${i}, this.value)" style="width:90px">
+      <button class="color-remove" onclick="removeColor(${i})">×</button>
+    `;
+    row.appendChild(div);
+  });
+}
+function addColor() {
+  state.colors.push('#888888');
+  renderColors();
+}
+function removeColor(i) {
+  state.colors.splice(i, 1);
+  renderColors();
+}
+function updateColor(i, val) {
+  state.colors[i] = val;
+  renderColors();
+}
+function updateColorText(i, val) {
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    state.colors[i] = val;
+    renderColors();
+  }
+}
+
+// ─── Game type ────────────────────────────────────────────────────────────────
+function selectGameType(type) {
+  state.gameType = type;
+  document.querySelectorAll('.game-type-card').forEach(card => {
+    card.classList.toggle('selected', card.querySelector('input').value === type);
+  });
+}
+
+// ─── Audience chips ───────────────────────────────────────────────────────────
+function toggleAudience(chip) {
+  chip.classList.toggle('selected');
+  const label = chip.textContent.trim();
+  if (chip.classList.contains('selected')) {
+    if (!state.audience.includes(label)) state.audience.push(label);
+  } else {
+    state.audience = state.audience.filter(a => a !== label);
+  }
+}
+
+// ─── Sliders ──────────────────────────────────────────────────────────────────
+function updateSlider(sliderId, valId) {
+  document.getElementById(valId).textContent = document.getElementById(sliderId).value;
+}
+
+// ─── Generate output ──────────────────────────────────────────────────────────
+function generateOutput() {
+  const ipName = document.getElementById('ip-name').value.trim() || 'Brand Hero';
+  const tagline = document.getElementById('tagline').value.trim();
+  const charDesc = document.getElementById('character-desc').value.trim() || `${ipName} character`;
+  const extraPrompt = document.getElementById('extra-prompt').value.trim();
+  const difficulty = document.getElementById('difficulty-slider').value;
+  const levels = document.getElementById('levels-slider').value;
+  const audience = state.audience.join(', ') || 'General audience';
+
+  const difficultyMap = { '1': 'Very Easy', '2': 'Easy', '3': 'Medium', '4': 'Hard', '5': 'Very Hard' };
+
+  const brief = {
+    ipName,
+    tagline: tagline || undefined,
+    brandColors: state.colors,
+    characterDescription: charDesc,
+    gameType: state.gameType,
+    targetAudience: audience,
+    difficulty: difficultyMap[difficulty] || 'Easy',
+    levels: parseInt(levels),
+    keyVisualPath: 'brand-kit/' + state.mascotName,
+    logoPath: state.logoFile ? 'brand-kit/' + state.logoName : undefined,
+    extraPrompt: extraPrompt || undefined,
+  };
+
+  // Remove undefined fields
+  Object.keys(brief).forEach(k => brief[k] === undefined && delete brief[k]);
+
+  document.getElementById('brief-json').textContent = JSON.stringify(brief, null, 2);
+
+  // Build CLI command
+  const gamePromptParts = [
+    `Build a ${state.gameType.replace('_', '-')} game for ${ipName}`,
+    tagline ? `(tagline: "${tagline}")` : '',
+    `with ${levels} level${levels > 1 ? 's' : ''}, ${difficultyMap[difficulty]} difficulty`,
+    `targeting ${audience}`,
+    extraPrompt ? `. Additional requirements: ${extraPrompt}` : '',
+  ].filter(Boolean).join(' ');
+
+  document.getElementById('cli-cmd').textContent =
+    `opengame --brand-kit ./brand-kit -p "${gamePromptParts}" --yolo`;
+
+  // Store brief for download
+  window._briefJson = JSON.stringify(brief, null, 2);
+}
+
+function downloadJson() {
+  if (!window._briefJson) return;
+  const blob = new Blob([window._briefJson], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'brand-brief.json';
+  a.click();
+}
+
+function copyJson() {
+  if (!window._briefJson) return;
+  navigator.clipboard.writeText(window._briefJson).then(() => {
+    const btn = document.querySelector('[onclick="copyJson()"]');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function copyCmd() {
+  const cmd = document.getElementById('cli-cmd').textContent;
+  navigator.clipboard.writeText(cmd).then(() => {
+    const btn = document.querySelector('[onclick="copyCmd()"]');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderColors();
+selectGameType('platformer');
+</script>
+</body>
+</html>
