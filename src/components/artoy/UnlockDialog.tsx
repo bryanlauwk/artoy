@@ -71,10 +71,17 @@ export function UnlockDialog({ open, onOpenChange, onUnlock, isGenerating = fals
                 Instant access. No referrals needed.
               </p>
               <button
-                onClick={() => toast.success("Payments coming soon — you're on the list")}
-                className="bg-gradient-brand shadow-glow mt-auto pt-0 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white"
+                onClick={() => onUnlock?.()}
+                disabled={isGenerating}
+                className="bg-gradient-brand shadow-glow mt-auto pt-0 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-70"
               >
-                Unlock with payment
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Generating…
+                  </>
+                ) : (
+                  "Unlock with payment"
+                )}
               </button>
             </div>
 
