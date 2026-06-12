@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Copy, CreditCard, Check, Share2 } from "lucide-react";
+import { Copy, CreditCard, Check, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onUnlock?: () => void | Promise<void>;
+  isGenerating?: boolean;
 }
 
 const REF_LINK = "artoy.app/r/nova-7421";
 
-export function UnlockDialog({ open, onOpenChange }: Props) {
+export function UnlockDialog({ open, onOpenChange, onUnlock, isGenerating = false }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -69,10 +71,17 @@ export function UnlockDialog({ open, onOpenChange }: Props) {
                 Instant access. No referrals needed.
               </p>
               <button
-                onClick={() => toast.success("Payments coming soon — you're on the list")}
-                className="bg-gradient-brand shadow-glow mt-auto pt-0 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white"
+                onClick={() => onUnlock?.()}
+                disabled={isGenerating}
+                className="bg-gradient-brand shadow-glow mt-auto pt-0 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-70"
               >
-                Unlock with payment
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Generating…
+                  </>
+                ) : (
+                  "Unlock with payment"
+                )}
               </button>
             </div>
 
