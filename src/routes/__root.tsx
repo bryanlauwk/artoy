@@ -77,6 +77,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "ARTOY" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
+      { name: "twitter:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
+      { property: "og:description", content: "Turn your art into mini games, collectible toys, virtual pets and merch experiences." },
+      { name: "twitter:description", content: "Turn your art into mini games, collectible toys, virtual pets and merch experiences." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
