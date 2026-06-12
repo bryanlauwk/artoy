@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Copy, CreditCard, Check, Share2 } from "lucide-react";
+import { Copy, CreditCard, Check, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onUnlock?: () => void | Promise<void>;
+  isGenerating?: boolean;
 }
 
 const REF_LINK = "artoy.app/r/nova-7421";
 
-export function UnlockDialog({ open, onOpenChange }: Props) {
+export function UnlockDialog({ open, onOpenChange, onUnlock, isGenerating = false }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
