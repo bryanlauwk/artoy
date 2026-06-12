@@ -1,71 +1,30 @@
-# Replace social-proof sections with an Upload Mockup + Viral Unlock Popup
+## Goal
+Make the "Unlock with payment" CTA actually generate the 5 IP-universe experiences via Lovable AI image generation (prototype, no real payment).
 
-Drop the made-up Testimonials and "Why creators love ARTOY" sections. Replace with a single, action-oriented section that mocks the actual product flow: upload art → see preview → click "Generate" → a popup blocks with two paths (Pay to unlock OR Refer 3 friends to unlock free). This is the viral loop and the core value demo.
+## Backend — AI generation
+- Add `src/lib/ai-gateway.server.ts` with `createLovableAiGatewayProvider` helper (per Lovable AI Gateway pattern).
+- Add server route `src/routes/api/generate-universe.ts` (POST):
+  - Input: `{ imageDataUrl: string, characterName?: string }`.
+  - Calls Lovable AI Gateway `/v1/images/generations` with `google/gemini-3.1-flash-image-preview` (image-to-image edit) 5 times in parallel — one per experience:
+    1. Mini Game pixel sprite sheet
+    2. Virtual Pet 3D-toy render
+    3. Vinyl Toy product mockup
+    4. Trading Card with frame + stats
+    5. Wallpaper / key-art
+  - Each request passes the uploaded character as input image + a tailored prompt that preserves the character's style.
+  - Returns `{ results: [{ label, image: dataUrl }] }`. Surfaces 402/429/validation errors clearly.
+- Ensure `LOVABLE_API_KEY` is provisioned (check via secrets; create if missing).
 
-## Changes
-
-### 1. Remove from landing
-- Delete `src/components/artoy/Testimonials.tsx`
-- Delete `src/components/artoy/WhyCreators.tsx`
-- Remove their imports + usage from `src/routes/index.tsx`
-
-### 2. New section: `TryItNow.tsx` (Upload Mockup + Key Features)
-
-Layout: two-column inside a `panel-surface` (matches existing pattern).
-
-**Left column — Upload mockup (interactive)**
-- Big dashed drop-zone card with cloud-upload icon, "Drop your character art" + "PNG, JPG up to 20MB" + "Browse files" pill.
-- Below it, a thumbnail strip of 3 sample characters ("Try a sample") — Nova / Mochi / Hexx using existing avatar assets.
-- When user clicks Browse, drops a file, or clicks a sample → switch to **Preview state**:
-  - Shows the chosen character on the left
-  - Shows 4 auto-generated experience tiles on the right with shimmer/loading then revealed (reuse exp-game / exp-pet / exp-toy / exp-cards thumbnails as the "AI generated" output)
-  - Big primary button: **"Generate my universe →"**
-- Clicking "Generate my universe" opens the **Unlock dialog** (see #3).
-
-**Right column — Key value features (4 items, icon-left text-right)**
-Replaces the WhyCreators content but reframed around the demo:
-1. **Upload once, get 5 experiences** — Game, pet, toy, cards, wallpaper auto-generated in your art style.
-2. **Your IP, your revenue** — Every drop is yours. Sell digital or physical without inventory.
-3. **Built-in fandom loop** — Fans play, collect, and refer friends to unlock more.
-4. **Ship in minutes, not months** — No code, no 3D, no studio. Just upload.
-
-### 3. New component: `UnlockDialog.tsx` (the viral popup)
-
-Uses existing shadcn `Dialog`. Opens after clicking "Generate my universe".
-
-Headline: **"Your universe is ready ✨"**
-Sub: "Unlock all 5 experiences + HD downloads"
-
-Two side-by-side option cards:
-
-- **Pay to unlock** — `$9` one-time, "Instant access. No referrals needed." Primary CTA: "Unlock with payment".
-- **Refer 3 friends, unlock free** — Shows a referral link `artoy.app/r/nova-7421` with a Copy button, plus Share-to-X / IG / TikTok / WhatsApp icons. Progress bar `0 / 3 friends joined`. Caption: "When 3 friends join the waitlist with your link, your universe unlocks free — and you get added to the Founders' wall."
-
-Footer microcopy: "Either way, you keep 100% of your IP."
-
-No real payment or referral backend — both buttons are visual/mock for now (Pay → toast "Payments coming soon, you've been notified"; Copy link → toast "Link copied"; Share icons → `window.open` to share URLs with prefilled text).
-
-### 4. Page order in `src/routes/index.tsx`
-```
-Hero
-HowItWorks
-Universes
-Experiences
-TryItNow          ← NEW (replaces WhyCreators + Testimonials)
-Waitlist
-```
-
-## Technical notes
-
-- New files: `src/components/artoy/TryItNow.tsx`, `src/components/artoy/UnlockDialog.tsx`.
-- Reuse existing assets: `avatar-1/2/3.png` for samples, `exp-game/pet/toy/cards.png` for generated output.
-- Dialog: `@/components/ui/dialog`, toast: `sonner`.
-- File-upload state managed locally with `useState` — accept image via `<input type="file" accept="image/*">` and render with `URL.createObjectURL`. No upload to server.
-- Share intents use plain `window.open` URLs for X/WhatsApp/Telegram; IG/TikTok fall back to copy-link toast (no public share intent).
-- Mobile: stack columns; dialog stays single-column.
+## Frontend — wire the CTA
+- `UnlockDialog.tsx`:
+  - Add prop `onUnlock: () => void | Promise<void>` and `isGenerating: boolean`.
+  - "Unlock with payment" button → calls `onUnlock()` (no toast about "coming soon"), shows spinner while generating, closes on success.
+  - Keep referral card visual-only.
+- `TryItNow.tsx`:
+  - On upload/sample-select, store the source image as a data URL (convert sample imports + uploaded file via FileReader).
+  - "Generate my universe" still opens `UnlockDialog`.
+  - New `handleUnlock`: POSTs to `/api/generate-universe` with the data URL → on success replaces the 4 placeholder output tiles with the AI-generated images (upgrade to 5 tiles incl. Wallpaper), shows a small "✦ AI generated" badge per tile, and surfaces errors via `sonner`.
+  - Add loading shimmer state on the output grid while the request is in flight.
 
 ## Out of scope
-- Real payment integration (Stripe) — placeholder only.
-- Real referral tracking — placeholder link + mock progress.
-- Backend storage of uploads.
-- Animations beyond the existing shimmer/fade utilities.
+- Real payment, real referral tracking, persistence/storage of generations.
