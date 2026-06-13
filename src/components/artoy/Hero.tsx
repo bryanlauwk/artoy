@@ -28,10 +28,10 @@ export function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3.5">
             <a
-              href="#waitlist"
+              href="#try"
               className="bg-gradient-brand shadow-glow inline-flex items-center gap-2 rounded-xl px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white"
             >
-              Join the Waitlist <ArrowRight className="size-4" />
+              Try it now <ArrowRight className="size-4" />
             </a>
             <a
               href="#universes"
@@ -41,23 +41,10 @@ export function Hero() {
             </a>
           </div>
 
-          {/* Social proof — drives waitlist intent */}
-          <div className="mt-5 flex items-center gap-3 text-xs text-foreground/75">
-            <div className="flex -space-x-2">
-              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-pink to-purple" />
-              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-purple to-cyan" />
-              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-cyan to-orange" />
-              <span className="size-7 rounded-full border-2 border-background bg-gradient-to-br from-orange to-pink" />
-            </div>
-            <span>
-              <b className="text-foreground">2,000+ creators</b> already on the waitlist
-            </span>
-          </div>
-
           <div className="mt-6 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
-            <span>✦ For Artists</span>
-            <span>✦ For Creators</span>
-            <span>✦ For Dreamers</span>
+            <span>✦ Built for Artists</span>
+            <span>✦ Built for Creators</span>
+            <span>✦ Built for Dreamers</span>
           </div>
         </div>
 
