@@ -244,12 +244,14 @@ export function TryItNow() {
                       <span className="text-purple">3 ›</span> Generated experiences
                     </p>
                   </div>
-                  <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-5">
-                    {experiences.map((t, i) => (
+                  <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                    {experiences.map((t, i) => {
+                      const ultimate = t.label === "Pixel Social Sim";
+                      return (
                       <div
                         key={`${t.label}-${i}`}
-                        className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} 70%, transparent)` }}
+                        className={`relative overflow-hidden rounded-2xl border ${ultimate ? "border-pink/60" : "border-border"}`}
+                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} ${ultimate ? 90 : 70}%, transparent)` }}
                       >
                         {t.img ? (
                           <img src={t.img} alt={t.label} loading="lazy" className={`block aspect-[4/5] w-full object-cover ${generating ? "opacity-60" : ""}`} />
@@ -263,11 +265,17 @@ export function TryItNow() {
                             ✦ AI
                           </span>
                         )}
+                        {ultimate && (
+                          <span className="absolute right-2 top-2 rounded-full bg-pink px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white shadow-lg">
+                            ★ Ultimate
+                          </span>
+                        )}
                         <p className="px-2.5 py-2 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/80">
                           {t.label}
                         </p>
                       </div>
-                    ))}
+                      );
+                    })}
                     {generating && (
                       <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-background/40 backdrop-blur-[2px]">
                         <div className="flex items-center gap-2.5 rounded-full bg-background/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em]">
