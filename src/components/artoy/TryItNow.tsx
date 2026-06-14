@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { UploadCloud, Sparkles, Wand2, Users, Coins, Rocket, X, Loader2, RefreshCw, ShoppingBag } from "lucide-react";
+import { UploadCloud, Sparkles, Wand2, Users, Coins, Rocket, X, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
+import { PixelSocialSim } from "./PixelSocialSim";
 import a1 from "@/assets/artoy/avatar-1.png";
 import a2 from "@/assets/artoy/avatar-2.png";
 import a3 from "@/assets/artoy/avatar-3.png";
