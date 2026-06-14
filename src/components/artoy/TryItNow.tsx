@@ -232,7 +232,7 @@ export function TryItNow() {
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      5 playable experiences + 3 merch mockups in your art style
+                      6 playable experiences + 3 merch mockups in your art style
                     </p>
                   </div>
                 </div>
