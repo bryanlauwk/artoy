@@ -1,37 +1,42 @@
+## Goal
+1. Pixel Social Sim is no longer one of the AI thumbnail tiles. It gets its own section, rendered **after** the 5 experiences row and the 3 merch row.
+2. The section is an **actually playable** top-down pixel mini-game using the uploaded character as the avatar — not a static AI image.
 
-## 1. Streamline drop → generate (`TryItNow.tsx`)
-- Remove the `UnlockDialog` gate. Auto-fire `/api/generate-universe` the moment a character is uploaded or a sample is picked.
-- Replace the "Generate my universe" button with auto-trigger; show a small "Regenerate" / "Try another character" pair after results land.
-- Keep payment/referral messaging as a subtle inline note under the results (no blocking modal). Delete `UnlockDialog.tsx`.
+## Changes
 
-## 2. Add Merch Preview row
-- Extend `/api/generate-universe` with 3 additional merch prompts (Figurine, Acrylic Stand, T-Shirt) running in parallel with the 5 experiences. Tag each result `kind: "experience" | "merch"`.
-- In `TryItNow.tsx`, render results in two labeled rows inside the same panel:
-  - **Generated Experiences** — 5 tiles (existing).
-  - **Merch Preview** — 3 tiles with mock prices (RM129 / RM39 / RM89) and a "Launch Drop" CTA, matching row 4 of the reference image.
+### 1. `src/routes/api/generate-universe.ts`
+- Remove the `Pixel Social Sim` entry from `ITEMS`. API returns back to 5 experiences + 3 merch (8 assets).
 
-## 3. Remove waitlist CTA
-- Delete `<Waitlist />` from `src/routes/index.tsx` and remove `Waitlist.tsx`.
-- Hero primary CTA: "Join the Waitlist" → "Try it now" anchored to `#try`. Replace "2,000+ creators on the waitlist" with a neutral "Built for artists & creators" line.
-- Remove `#waitlist` links from `Nav.tsx`, `Universes.tsx`, `SiteFooter.tsx`.
+### 2. `src/components/artoy/TryItNow.tsx`
+- Remove `Pixel Social Sim` from `EXP_PLACEHOLDERS` and `ACCENTS`.
+- Revert experiences grid from `lg:grid-cols-6` back to `sm:grid-cols-5`. Drop the `★ Ultimate` badge logic.
+- Update header copy: "5 playable experiences + 3 merch mockups + 1 playable mini-game".
+- Below the Merch row, add a new section "5 › Ultimate playable experience" rendering `<PixelSocialSim avatarSrc={preview} />`. Only shown when `preview` is set.
 
-## 4. Unify siloed sections into one continuous Creator Universe flow
-Modeled on the attached reference (row-per-creator: upload → generate → experiences → merch).
-- Merge `Universes` + `Experiences` into a single **CreatorUniverses** component rendered as horizontal rows (one per creator). Each row: Artist portrait card | AI suggestions checklist | Generated experiences (4 tiles) | Merch preview (3 tiles with mock prices).
-- Drop the standalone `Experiences.tsx` panel — its grid duplicates what `TryItNow` shows live.
-- Wrap the whole CreatorUniverses block in a single `panel-surface` so it reads as one cohesive section.
-- Resulting page order: Hero → HowItWorks → CreatorUniverses (unified) → TryItNow (live demo + merch) → Footer.
+### 3. New: `src/components/artoy/PixelSocialSim.tsx`
+A self-contained playable mini-game (no backend). Built with a single `<canvas>` + `requestAnimationFrame` + keyboard/touch input. No new dependencies.
 
-## 5. Fix HowItWorks step 3 alignment
-- Normalize all 4 steps to identical visual shape: one hero thumbnail at `aspect-[4/3]` on top, then number + title + desc below.
-- Step 3 currently uses a 4-thumb mini-grid that breaks the rhythm. Replace it with a single composite tile showing a 2×2 mosaic of the 4 experience thumbs at the same `aspect-[4/3]` footprint — still communicates "multiple outputs", but visually aligned.
-- Move connector arrows to thumbnail vertical center (drop `pt-12`).
+**Mechanics:**
+- Top-down pixel world (logical 320×200, scaled to fit a 16:10 frame, `image-rendering: pixelated`).
+- Cozy town square: grass tiles, dirt path, 3 shop fronts (drawn from CSS rects), trees, lanterns, a fountain.
+- Player avatar = the uploaded `avatarSrc` rendered as a small circular sprite (32×32) with a tiny shadow. We do not require a real pixel sprite — using the user's source image gives the "your character in the game" payoff immediately.
+- 3 NPCs that pace short patrol loops, each with a floating heart/❤ when close.
+- 8 coin pickups scattered on the map (rotating yellow ♦).
+- HUD top-left: ❤❤❤ hearts + 🪙 coin counter; top-right: "Press E to chat".
+- Press **E** near an NPC → speech bubble cycles flavor lines ("Cute outfit!", "Trade hearts?", "Welcome to town!"). Walking over coins increments counter + small toast. Collect all 8 → confetti banner "You filled the town with joy ✨".
+- Controls: Arrow keys / WASD on desktop. On-screen D-pad + A button for touch (rendered only when `matchMedia('(pointer:coarse)')`).
+- Pause + Reset buttons in a small HUD bar above the canvas.
+
+**Implementation notes:**
+- Pure client component, no SSR concerns (window-guarded refs). All drawing in one `useEffect` with a `cancelAnimationFrame` cleanup.
+- Avatar image loaded via `new Image()`; falls back to a colored circle if not loaded yet.
+- Tilemap is a static const array; collision = AABB against shop/tree rects.
+- Keeps file under ~300 lines.
 
 ## Out of scope
-- Real payment, real referral tracking, persistent storage.
-- Hero typography / color-token redesign.
+- No multiplayer, no save state, no real sprite-sheet animation (just bobbing offset on movement).
+- No changes to merch row, FEATURES, or other landing sections.
 
-## Technical notes
-- `generate-universe` route: append 3 merch entries to the prompts array; return one flat `results` list with `kind` field. Frontend splits into two rows.
-- `CreatorUniverses` reuses existing `WORLDS` data; uses existing scene/feature thumbnails as static showcase tiles (no AI calls — only `TryItNow` is live).
-- Files changed: `TryItNow.tsx`, `routes/api/generate-universe.ts`, `Hero.tsx`, `Nav.tsx`, `SiteFooter.tsx`, `HowItWorks.tsx`, `routes/index.tsx`. New: `CreatorUniverses.tsx`. Deleted: `UnlockDialog.tsx`, `Waitlist.tsx`, `Universes.tsx`, `Experiences.tsx`.
+## Files
+- Edit: `src/routes/api/generate-universe.ts`, `src/components/artoy/TryItNow.tsx`
+- Create: `src/components/artoy/PixelSocialSim.tsx`

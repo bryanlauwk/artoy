@@ -36,12 +36,6 @@ const ITEMS: Item[] = [
       "Create a stunning phone wallpaper / key art featuring this character heroically posed, dramatic lighting, dynamic background with abstract shapes, particles and color splashes matching the character's palette. Preserve the character's identity. Cinematic, poster-quality, portrait 9:16 feel.",
   },
   {
-    label: "Pixel Social Sim",
-    kind: "experience",
-    prompt:
-      "Top-down pixel-art screenshot of a cozy social-simulator mini game (Stardew Valley / Animal Crossing energy) starring this character as the main avatar. Show the character walking through a charming pixel town square with shops, NPCs, speech bubbles, hearts and coin icons, decorated with lanterns and trees. Crisp 16-bit pixel art, vibrant palette matching the character, UI HUD with hearts/coins in the corner. Preserve the character's colors and silhouette in pixel form.",
-  },
-  {
     label: "Figurine",
     kind: "merch",
     prompt:
