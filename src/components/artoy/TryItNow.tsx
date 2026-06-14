@@ -315,6 +315,20 @@ export function TryItNow() {
                   </div>
                 </div>
 
+                {/* Pixel Social Sim — actually playable */}
+                <div className="mt-7">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
+                      <span className="text-pink">5 ›</span> Ultimate playable experience
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/20 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-pink">
+                      <Gamepad2 className="size-3" /> Live mini-game
+                    </span>
+                  </div>
+                  <PixelSocialSim avatarSrc={preview} />
+                </div>
+
+
                 {results && (
                   <div className="mt-7 flex flex-wrap gap-3">
                     <button
