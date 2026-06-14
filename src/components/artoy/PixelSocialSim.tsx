@@ -198,7 +198,7 @@ export function PixelSocialSim({ avatarSrc }: Props) {
       }
 
       // ============ DRAW ============
-      const s = stateRef.current;
+
       // Grass background
       ctx.fillStyle = "#3aa564";
       ctx.fillRect(0, 0, W, H);
