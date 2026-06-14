@@ -23,7 +23,6 @@ const EXP_PLACEHOLDERS = [
   { img: toy, label: "Vinyl Toy", accent: "var(--pink)" },
   { img: cards, label: "Trading Card", accent: "var(--orange)" },
   { img: wall, label: "Wallpaper", accent: "var(--cyan)" },
-  { img: game, label: "Pixel Social Sim", accent: "var(--pink)" },
 ];
 
 const MERCH_PLACEHOLDERS = [
@@ -38,7 +37,6 @@ const ACCENTS: Record<string, string> = {
   "Vinyl Toy": "var(--pink)",
   "Trading Card": "var(--orange)",
   Wallpaper: "var(--cyan)",
-  "Pixel Social Sim": "var(--pink)",
   Figurine: "var(--pink)",
   "Acrylic Stand": "var(--orange)",
   "T-Shirt": "var(--purple)",
