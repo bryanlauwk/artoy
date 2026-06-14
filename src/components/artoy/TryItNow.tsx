@@ -22,6 +22,7 @@ const EXP_PLACEHOLDERS = [
   { img: toy, label: "Vinyl Toy", accent: "var(--pink)" },
   { img: cards, label: "Trading Card", accent: "var(--orange)" },
   { img: wall, label: "Wallpaper", accent: "var(--cyan)" },
+  { img: game, label: "Pixel Social Sim", accent: "var(--pink)" },
 ];
 
 const MERCH_PLACEHOLDERS = [
@@ -36,6 +37,7 @@ const ACCENTS: Record<string, string> = {
   "Vinyl Toy": "var(--pink)",
   "Trading Card": "var(--orange)",
   Wallpaper: "var(--cyan)",
+  "Pixel Social Sim": "var(--pink)",
   Figurine: "var(--pink)",
   "Acrylic Stand": "var(--orange)",
   "T-Shirt": "var(--purple)",
@@ -48,7 +50,7 @@ const MERCH_PRICES: Record<string, string> = {
 };
 
 const FEATURES = [
-  { icon: Wand2, color: "var(--pink)", title: "Upload once, get a full universe", desc: "5 playable experiences + 3 merch mockups — auto-generated in your art style." },
+  { icon: Wand2, color: "var(--pink)", title: "Upload once, get a full universe", desc: "6 playable experiences + 3 merch mockups — auto-generated in your art style." },
   { icon: Coins, color: "var(--orange)", title: "Your IP, your revenue", desc: "Every drop is yours. Sell digital or physical without inventory." },
   { icon: Users, color: "var(--cyan)", title: "Built-in fandom loop", desc: "Fans play, collect and refer friends to unlock more of your world." },
   { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Just upload your character." },
@@ -230,7 +232,7 @@ export function TryItNow() {
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      5 playable experiences + 3 merch mockups in your art style
+                      6 playable experiences + 3 merch mockups in your art style
                     </p>
                   </div>
                 </div>
@@ -242,12 +244,14 @@ export function TryItNow() {
                       <span className="text-purple">3 ›</span> Generated experiences
                     </p>
                   </div>
-                  <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-5">
-                    {experiences.map((t, i) => (
+                  <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                    {experiences.map((t, i) => {
+                      const ultimate = t.label === "Pixel Social Sim";
+                      return (
                       <div
                         key={`${t.label}-${i}`}
-                        className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} 70%, transparent)` }}
+                        className={`relative overflow-hidden rounded-2xl border ${ultimate ? "border-pink/60" : "border-border"}`}
+                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} ${ultimate ? 90 : 70}%, transparent)` }}
                       >
                         {t.img ? (
                           <img src={t.img} alt={t.label} loading="lazy" className={`block aspect-[4/5] w-full object-cover ${generating ? "opacity-60" : ""}`} />
@@ -261,11 +265,17 @@ export function TryItNow() {
                             ✦ AI
                           </span>
                         )}
+                        {ultimate && (
+                          <span className="absolute right-2 top-2 rounded-full bg-pink px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white shadow-lg">
+                            ★ Ultimate
+                          </span>
+                        )}
                         <p className="px-2.5 py-2 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/80">
                           {t.label}
                         </p>
                       </div>
-                    ))}
+                      );
+                    })}
                     {generating && (
                       <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-background/40 backdrop-blur-[2px]">
                         <div className="flex items-center gap-2.5 rounded-full bg-background/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em]">
