@@ -66,6 +66,7 @@ export function PixelSocialSim({ avatarSrc }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const keysRef = useRef<Record<string, boolean>>({});
+  const activeRef = useRef(false);
   const stateRef = useRef({
     px: 310, py: 470,
     vx: 0, vy: 0,
@@ -116,32 +117,49 @@ export function PixelSocialSim({ avatarSrc }: Props) {
     }
   }, []);
 
-  // Keyboard — attached to wrapper, only acts when focused
+  // Keyboard — attached to window while the game is active so live-preview iframe focus does not swallow input.
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
     const down = (e: KeyboardEvent) => {
+      if (!activeRef.current) return;
       const k = e.key.toLowerCase();
+      if (k === "escape") {
+        activeRef.current = false;
+        keysRef.current = {};
+        setFocused(false);
+        return;
+      }
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "w", "a", "s", "d", "e"].includes(k)) {
         e.preventDefault();
       }
       keysRef.current[k] = true;
       if (k === "e") tryChat();
     };
-    const up = (e: KeyboardEvent) => { keysRef.current[e.key.toLowerCase()] = false; };
-    wrap.addEventListener("keydown", down);
-    wrap.addEventListener("keyup", up);
+    const up = (e: KeyboardEvent) => { if (activeRef.current) keysRef.current[e.key.toLowerCase()] = false; };
+    const pointerDown = (e: PointerEvent) => {
+      const wrap = wrapRef.current;
+      if (!wrap || wrap.contains(e.target as Node)) return;
+      activeRef.current = false;
+      keysRef.current = {};
+      setFocused(false);
+    };
+    const blur = () => { keysRef.current = {}; };
+    window.addEventListener("keydown", down, { passive: false });
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
+    document.addEventListener("pointerdown", pointerDown);
     return () => {
-      wrap.removeEventListener("keydown", down);
-      wrap.removeEventListener("keyup", up);
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+      document.removeEventListener("pointerdown", pointerDown);
     };
   }, []);
 
-  // Auto-focus once art loaded.
-  useEffect(() => {
-    const id = setTimeout(() => wrapRef.current?.focus(), 200);
-    return () => clearTimeout(id);
-  }, []);
+  const activateGame = () => {
+    activeRef.current = true;
+    setFocused(true);
+    requestAnimationFrame(() => wrapRef.current?.focus({ preventScroll: true }));
+  };
 
   const tryChat = () => {
     const s = stateRef.current;
