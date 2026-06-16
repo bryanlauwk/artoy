@@ -256,7 +256,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
       if (bg) ctx.drawImage(bg, 0, 0, W, H);
       else { ctx.fillStyle = "#1a0a2e"; ctx.fillRect(0, 0, W, H); }
 
-      const s = stateRef.current;
       const sp = spritesRef.current;
 
       // Coins
