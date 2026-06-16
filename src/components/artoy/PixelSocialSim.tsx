@@ -382,10 +382,10 @@ export function PixelSocialSim({ avatarSrc }: Props) {
     setChatText(null);
     setDone(false);
     setPaused(false);
-    wrapRef.current?.focus();
+    activateGame();
   };
 
-  const press = (k: string, v: boolean) => { keysRef.current[k] = v; };
+  const press = (k: string, v: boolean) => { activeRef.current = true; setFocused(true); keysRef.current[k] = v; };
 
   return (
     <div
@@ -409,7 +409,7 @@ export function PixelSocialSim({ avatarSrc }: Props) {
             Click game · WASD/Arrows · E to chat
           </span>
           <button
-            onClick={() => { setPaused((p) => !p); wrapRef.current?.focus(); }}
+            onClick={() => { setPaused((p) => !p); activateGame(); }}
             className="inline-flex items-center gap-1 rounded-lg border border-border bg-white/[0.04] px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] hover:bg-white/[0.1]"
           >
             {paused ? <Play className="size-3" /> : <Pause className="size-3" />} {paused ? "Resume" : "Pause"}
@@ -427,11 +427,11 @@ export function PixelSocialSim({ avatarSrc }: Props) {
       <div
         ref={wrapRef}
         tabIndex={0}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onClick={() => wrapRef.current?.focus()}
+        onFocus={activateGame}
+        onPointerDown={activateGame}
+        onClick={activateGame}
         className="relative overflow-hidden rounded-xl border border-pink/30 outline-none ring-pink/60 focus:ring-2"
-        style={{ aspectRatio: "1 / 1" }}
+        style={{ aspectRatio: "1 / 1", touchAction: "none" }}
       >
         <canvas
           ref={canvasRef}
