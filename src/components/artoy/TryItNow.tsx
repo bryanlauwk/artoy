@@ -55,15 +55,6 @@ const FEATURES = [
   { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Just upload your character." },
 ];
 
-async function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
-  });
-}
-
 async function urlToDataUrl(url: string): Promise<string> {
   const res = await fetch(url);
   const blob = await res.blob();
