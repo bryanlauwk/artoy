@@ -293,7 +293,7 @@ export function TryItNow() {
                       <Gamepad2 className="size-3" /> Live mini-game · click to play
                     </span>
                   </div>
-                  <PixelSocialSim avatarSrc={preview} />
+                  <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
                 </div>
 
 
