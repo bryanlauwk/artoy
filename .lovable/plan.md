@@ -1,69 +1,64 @@
-## Diagnosis
+# Simplify the live demo & make the mini-game character-aware
 
-The current `PixelSocialSim` has two real problems:
+## Goals
 
-1. **Not playable in practice.** Keyboard listeners live on `window`, but until the user clicks somewhere on the page (or the canvas), focus stays in the upload control. There's no "click to start" affordance, no `tabIndex` on the canvas, no auto-focus, and the canvas competes with page scroll on arrow keys. End user effect: dropped art, scrolled down, mashed arrow keys → nothing moves.
-2. **Looks half-baked.** Town visuals are drawn with raw `ctx.fillRect` primitives in generic crayon colors (green grass, sky blue, brown path, basic house silhouettes). It does not read as "the same universe" as the AI-generated experiences above it — it reads as a placeholder.
+1. Remove the "Drop your character art" upload CTA — the live demo pipeline becomes **sample-only** (Nova / Mochi / Hexx).
+2. Tie the Pixel Social Sim to the selected sample so the **world art changes** when the user switches character — without regenerating anything at runtime.
+3. Keep the orchestration single-path and predictable: pick sample → universe generates (existing API) → mini-game loads the matching pre-baked scene with that avatar.
 
-Plus a structural concern the user called out: regenerating the entire scene from scratch each time is wasteful. The scene should be a **stable base layer**; only the avatar should be the per-session swap-in.
+## Section-by-section changes
 
-## Goal
+### 1. `src/components/artoy/TryItNow.tsx`
 
-Mini-game becomes a polished, on-brand, instantly-playable demo. The world is pre-baked art (one beautifully crafted background + a pre-rendered sprite pack), not procedural rectangles. The avatar is the only thing that comes from the user's upload.
+- Delete the file-upload block entirely: remove `fileRef`, `<input type="file">`, the dashed dropzone button, `fileToDataUrl`, and the `onFile` handler.
+- Replace the empty state with a clean "Pick a character to start" panel that shows only the 3 sample cards (Nova / Mochi / Hexx), each larger and clearly clickable. Copy: "Tap a character — your full universe + playable mini-game generate instantly."
+- Track which sample is active via a new `selectedSampleId: "nova" | "mochi" | "hexx" | null` state alongside `preview`. `onSample` sets both, then runs generation.
+- "Try another character" button resets `selectedSampleId` and `preview` back to the picker (keeps current behavior, just without the upload path).
+- Update the section copy from "Drop your art. Get your universe." → "Pick a character. Get your universe." and tweak the sub-copy line that mentions "drop" / "upload".
+- Pass `sampleId={selectedSampleId}` into `<PixelSocialSim />` alongside `avatarSrc`.
+- The `5 ›` section header still reads "Ultimate playable experience", but the side chip changes to "Live mini-game · {name}'s town".
 
-## Changes
+### 2. Pre-baked per-sample mini-game assets
 
-### 1. Pre-generate the game art ONCE — bake into the repo
+Generate **3 backgrounds + 3 NPC sprite strips**, one set per sample, so the sim world visibly matches the chosen character without any runtime AI:
 
-Generate two static assets via the imagegen tool and commit them under `src/assets/artoy/sim/`:
+```
+src/assets/artoy/sim/
+  nova-bg.png         (cyan/violet sci-fi plaza)
+  nova-npcs.png       (3 NPCs styled to Nova's universe + coin)
+  mochi-bg.png        (pink/peach pastel town — current baked look)
+  mochi-npcs.png
+  hexx-bg.png         (orange/magenta neon arcade alley)
+  hexx-npcs.png
+```
 
-- `sim-bg.png` (1024×640, 16:10) — top-down cozy plaza scene matching ARTOY's neon-pop universe: vibrant pink / purple / cyan palette, deep night-sky gradient, three glowing storefronts (Cafe / Shop / Inn) with neon signage, lantern-lit dirt path, a glowing fountain, soft bloom, painterly-pixel hybrid (Eastward / Sea of Stars vibe — not flat 8-bit). This is the **single base layer**.
-- `sim-npcs.png` (512×128, transparent) — a 4-frame sprite strip: 3 NPC chibi characters + 1 coin sprite, each 128×128, on-brand colors (pink/cyan/yellow), painterly with crisp outline. Standalone PNG with transparent background.
+- All 6 files generated with the same 1280×800 / 1920×1080 layout grid and the same sprite-cell coordinates already used in `PixelSocialSim.tsx` so existing `COLLIDERS`, `SPR_*` rects, and walk band don't need recalibration.
+- The current `sim-bg.png` / `sim-npcs.png` are kept as the `mochi-*` variant (renamed) so we don't redo working art.
 
-These ship in the bundle, so the mini-game loads instantly and does not consume AI credits on every play.
+### 3. `src/components/artoy/PixelSocialSim.tsx`
 
-A collision map is hand-authored in code as a list of rects calibrated to the baked background coordinates (storefront footprints, fountain, trees). No procedural drawing of world geometry.
-
-### 2. Rewrite `src/components/artoy/PixelSocialSim.tsx`
-
-Visual layer:
-- Logical canvas 640×400 (2× current). Draw order: `sim-bg.png` (full-bleed, `image-rendering: pixelated` off — we want the painterly look), then dynamic entities (coins, NPCs, avatar) on top.
-- NPCs and coins are drawn from `sim-npcs.png` sprite strip via `ctx.drawImage` slice, with a subtle bob + soft drop shadow. No more rectangle bodies.
-- Avatar: render the user's uploaded image inside a soft circular mask with a neon-pink rim glow matching the brand (`var(--pink)`). Light walk-bob when moving.
-- Coin pickup → small particle burst (4 sparkle dots fading out) instead of just disappearing.
-- NPC proximity → painted speech-bubble (rounded rect, tail, on-brand pink border) rather than a text label.
-
-Playability fixes:
-- Canvas gets `tabIndex={0}` and a wrapper that auto-focuses on mount + on click. Keyboard listeners attach to the canvas wrapper, not `window`, so arrow keys don't fight page scroll.
-- On first render, show a soft "Click / tap to play" overlay until the user focuses the game. Once focused, overlay fades.
-- `preventDefault` on arrow/WASD only while the canvas wrapper is the active element (so page scroll still works elsewhere).
-- Movement uses a small acceleration + max-speed model (feels less stiff than the current constant 1.2 px/frame). Diagonal still normalized.
-- Collision rects come from a single hand-tuned `COLLIDERS` array tied to the baked background; player is clamped to a walkable polygon (sky band still off-limits).
-- D-pad + A button for touch keep working, but restyled to match the brand (pink/cyan, rounded-square, active glow).
-- Goal feedback: HUD coin counter animates on pickup; on completion the existing "Quest complete" panel stays, but with a brand-matched gradient and confetti-particle burst from the player position.
-
-Orchestration / base-layer design:
-- All world state (NPC patrol params, coin positions, colliders, speech lines) lives in a single `WORLD` const at the top of the file. Avatar is the only injected dependency. Treat the scene as a frozen base layer the user can re-skin by swapping characters — no per-session regeneration.
-- File stays a single self-contained client component, ~350 lines, no new deps.
-
-### 3. `src/components/artoy/TryItNow.tsx`
-
-- No structural changes to layout. The "5 › Ultimate playable experience" section remains exactly where it is.
-- Update its sub-copy from "WASD / ARROWS · E TO CHAT" hint to also mention "Click the game to focus" so users understand the focus model.
-- Keep the section visible even when `preview` is null, using a default sample avatar (`a1`) so visitors who haven't uploaded yet can still try the playable demo. (Avatar still swaps to the user's upload the moment they drop art.)
+- Add `sampleId?: "nova" | "mochi" | "hexx" | null` to `Props` (default `"mochi"` so a fallback always renders).
+- Replace the static `import bgUrl / spritesUrl` with a lookup map:
+  ```
+  const SCENES = {
+    nova:  { bg: novaBg,  sp: novaNpcs,  npcNames: ["Vex","Lume","Ori"], accent: "var(--cyan)" },
+    mochi: { bg: mochiBg, sp: mochiNpcs, npcNames: ["Mochi","Pip","Juno"], accent: "var(--pink)" },
+    hexx:  { bg: hexxBg,  sp: hexxNpcs,  npcNames: ["Bolt","Ash","Riko"], accent: "var(--orange)" },
+  }
+  ```
+- `NPCS_INIT()` becomes a function of `sampleId` — same positions/sprite rects, but `name`, `lines`, and `accent` swap so dialog feels native to that universe.
+- When `sampleId` changes, reload `bgRef` / `spritesRef` images and call the existing `reset()` flow so the new world appears fresh (coins refilled, player at spawn).
+- HUD glow ring color and quest-complete card gradient pull from the active scene's `accent` instead of being hard-coded pink.
+- Everything else (collisions, input, particles, mobile D-pad) stays untouched.
 
 ### 4. Out of scope
 
-- No multiplayer, save state, or real animated walk cycles (still bob-based).
-- No changes to the AI generation API (`generate-universe.ts` stays 5 + 3 = 8 assets).
-- No changes to Hero, HowItWorks, CreatorUniverses, or other sections.
+- No changes to `generate-universe.ts`, `Hero`, `HowItWorks`, `CreatorUniverses`, `Nav`, or copy outside `TryItNow`.
+- No multiplayer / save state / animated walk cycles.
+- No new AI calls — the per-sample sim art is generated once at build-time via `imagegen` and committed as static assets.
 
-## Files
+## Result
 
-- Create: `src/assets/artoy/sim/sim-bg.png`, `src/assets/artoy/sim/sim-npcs.png`
-- Rewrite: `src/components/artoy/PixelSocialSim.tsx`
-- Edit (minor): `src/components/artoy/TryItNow.tsx`
-
-## Acceptance check
-
-After build I will load the preview, focus the canvas, press arrow keys, and confirm: (a) avatar moves immediately, (b) page does not scroll while game is focused, (c) background is the baked on-brand scene (not the current crayon look), (d) sprites are the pre-rendered NPC pack, (e) collecting all 8 coins triggers the brand-styled completion panel.
+- One input surface: 3 sample cards. No upload, no failure path for bad files.
+- Selecting a sample drives **both** the AI-generated experience/merch rows **and** the mini-game's background, NPCs, dialog accents, and avatar — so the demo visibly responds to the character choice end-to-end.
+- Mini-game stays a fixed base layer (no per-play regeneration); only the scene set swaps.
