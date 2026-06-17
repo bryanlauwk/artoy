@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
-import { UploadCloud, Sparkles, Wand2, Users, Coins, Rocket, X, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
-import { PixelSocialSim } from "./PixelSocialSim";
+import { useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
+import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
 import a1 from "@/assets/artoy/avatar-1.png";
 import a2 from "@/assets/artoy/avatar-2.png";
 import a3 from "@/assets/artoy/avatar-3.png";
@@ -11,10 +11,10 @@ import cards from "@/assets/artoy/exp-cards.png";
 import wall from "@/assets/artoy/exp-wall.png";
 import { toast } from "sonner";
 
-const SAMPLES = [
-  { src: a1, name: "Nova" },
-  { src: a2, name: "Mochi" },
-  { src: a3, name: "Hexx" },
+const SAMPLES: { id: SampleId; src: string; name: string; tagline: string; accent: string }[] = [
+  { id: "nova",  src: a1, name: "Nova",  tagline: "Sci-fi pilot · cyan plaza",     accent: "var(--cyan)" },
+  { id: "mochi", src: a2, name: "Mochi", tagline: "Pastel mascot · pink town",    accent: "var(--pink)" },
+  { id: "hexx",  src: a3, name: "Hexx",  tagline: "Neon punk · arcade alley",     accent: "var(--orange)" },
 ];
 
 const EXP_PLACEHOLDERS = [
@@ -55,15 +55,6 @@ const FEATURES = [
   { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Just upload your character." },
 ];
 
-async function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
-  });
-}
-
 async function urlToDataUrl(url: string): Promise<string> {
   const res = await fetch(url);
   const blob = await res.blob();
@@ -79,9 +70,9 @@ type Result = { label: string; kind: "experience" | "merch"; image: string | nul
 
 export function TryItNow() {
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedSampleId, setSelectedSampleId] = useState<SampleId | null>(null);
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const runGeneration = async (sourceDataUrl: string) => {
     setGenerating(true);
@@ -111,17 +102,11 @@ export function TryItNow() {
     }
   };
 
-  const onFile = async (f: File | undefined) => {
-    if (!f) return;
-    const dataUrl = await fileToDataUrl(f);
-    setPreview(dataUrl);
-    await runGeneration(dataUrl);
-  };
-
-  const onSample = async (src: string) => {
-    setPreview(src);
+  const onSample = async (sample: typeof SAMPLES[number]) => {
+    setSelectedSampleId(sample.id);
+    setPreview(sample.src);
     try {
-      const dataUrl = await urlToDataUrl(src);
+      const dataUrl = await urlToDataUrl(sample.src);
       await runGeneration(dataUrl);
     } catch {
       toast.error("Couldn't load sample image");
@@ -130,6 +115,7 @@ export function TryItNow() {
 
   const reset = () => {
     setPreview(null);
+    setSelectedSampleId(null);
     setResults(null);
   };
 
@@ -151,14 +137,16 @@ export function TryItNow() {
     ? results.filter((r) => r.kind === "merch").map((r) => ({ label: r.label, img: r.image, price: MERCH_PRICES[r.label] ?? "—", accent: ACCENTS[r.label] ?? "var(--pink)", aiGenerated: true, error: r.error }))
     : MERCH_PLACEHOLDERS.map((p) => ({ label: p.label, img: p.img as string, price: p.price, accent: p.accent, aiGenerated: false, error: undefined as string | undefined }));
 
+  const activeSample = SAMPLES.find((s) => s.id === selectedSampleId);
+
   return (
     <section id="try" className="relative py-20">
       <div className="mx-auto w-[min(1400px,96vw)] panel-surface px-6 py-14 md:px-12">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">Try it now</p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Drop your art. Get your universe.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">No sign-up, no payment — generates instantly.</p>
+            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Pick a character. Get your universe.</h2>
+            <p className="mt-2 text-sm text-muted-foreground">No sign-up, no payment — tap a sample and the full universe + playable mini-game build themselves.</p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
             <Sparkles className="size-4 text-pink" /> Live demo
@@ -169,63 +157,43 @@ export function TryItNow() {
           {/* LEFT */}
           <div className="rounded-3xl border border-border bg-white/[0.03] p-6 md:p-8">
             {!preview ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="group flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-background/40 px-6 py-16 text-center transition-colors hover:border-pink/60 hover:bg-white/[0.04]"
-                >
-                  <span
-                    className="grid size-20 place-items-center rounded-2xl"
-                    style={{
-                      background: "linear-gradient(135deg, color-mix(in oklab, var(--pink) 28%, transparent), color-mix(in oklab, var(--purple) 28%, transparent))",
-                      border: "1px solid color-mix(in oklab, var(--pink) 40%, transparent)",
-                    }}
-                  >
-                    <UploadCloud className="size-8 text-white" />
-                  </span>
-                  <p className="mt-5 text-lg font-extrabold tracking-tight">Drop your character art</p>
-                  <p className="mt-1.5 text-sm text-muted-foreground">PNG or JPG · up to 20MB · auto-generates instantly</p>
-                  <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-foreground/90 px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-background group-hover:bg-foreground">
-                    Browse files
-                  </span>
-                </button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
-
-                <div className="mt-6">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Or try a sample</p>
-                  <div className="mt-3 flex gap-3">
-                    {SAMPLES.map((s) => (
-                      <button
-                        key={s.name}
-                        onClick={() => onSample(s.src)}
-                        className="group relative overflow-hidden rounded-2xl border border-border transition-transform hover:-translate-y-1"
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Pick a character to start</p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {SAMPLES.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => onSample(s)}
+                      className="group relative overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-transform hover:-translate-y-1"
+                      style={{ boxShadow: `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)` }}
+                    >
+                      <img src={s.src} alt={s.name} loading="lazy" className="block aspect-square w-full object-cover" />
+                      <div className="px-3 py-3">
+                        <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: s.accent }}>{s.name}</p>
+                        <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">{s.tagline}</p>
+                      </div>
+                      <span
+                        className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                        style={{ background: `color-mix(in oklab, ${s.accent} 80%, black 20%)` }}
                       >
-                        <img src={s.src} alt={s.name} loading="lazy" className="block size-24 object-cover" />
-                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5 text-xs font-extrabold uppercase tracking-[0.14em] text-white">
-                          {s.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                        ✦ Generate universe
+                      </span>
+                    </button>
+                  ))}
                 </div>
-              </>
+                <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  3 sample characters · each loads a unique mini-game world
+                </p>
+              </div>
             ) : (
               <div>
                 <div className="flex items-start gap-5">
                   <div className="relative shrink-0">
                     <img src={preview} alt="Your character" className="size-36 rounded-2xl border border-border object-cover md:size-44" />
-                    <button
-                      onClick={reset}
-                      aria-label="Reset"
-                      className="absolute -right-2.5 -top-2.5 grid size-7 place-items-center rounded-full border border-border bg-background text-foreground/80 hover:text-foreground"
-                    >
-                      <X className="size-3.5" />
-                    </button>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
-                      {generating ? "✦ Generating…" : results ? "✦ AI generated for you" : "✦ Preview"}
+                      {generating ? "✦ Generating…" : results ? `✦ ${activeSample?.name ?? ""}'s universe` : "✦ Preview"}
                     </p>
                     <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
@@ -322,10 +290,10 @@ export function TryItNow() {
                       <span className="text-pink">5 ›</span> Ultimate playable experience
                     </p>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/20 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-pink">
-                      <Gamepad2 className="size-3" /> Live mini-game · click to play
+                      <Gamepad2 className="size-3" /> Live mini-game · {activeSample?.name ?? "Demo"}'s town
                     </span>
                   </div>
-                  <PixelSocialSim avatarSrc={preview} />
+                  <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
                 </div>
 
 

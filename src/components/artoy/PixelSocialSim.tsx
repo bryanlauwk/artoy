@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Heart, Coins, Pause, Play, RotateCcw, MessageCircle, MousePointerClick } from "lucide-react";
-import bgUrl from "@/assets/artoy/sim/sim-bg.png";
-import spritesUrl from "@/assets/artoy/sim/sim-npcs.png";
+import novaBg from "@/assets/artoy/sim/nova-bg.png";
+import novaNpcs from "@/assets/artoy/sim/nova-npcs.png";
+import mochiBg from "@/assets/artoy/sim/mochi-bg.png";
+import mochiNpcs from "@/assets/artoy/sim/mochi-npcs.png";
+import hexxBg from "@/assets/artoy/sim/hexx-bg.png";
+import hexxNpcs from "@/assets/artoy/sim/hexx-npcs.png";
 
-type Props = { avatarSrc: string | null };
+export type SampleId = "nova" | "mochi" | "hexx";
+
+type Props = { avatarSrc: string | null; sampleId?: SampleId | null };
 
 // Logical canvas (matches bg aspect, displayed responsively).
 const W = 640;
@@ -13,24 +19,70 @@ type Rect = { x: number; y: number; w: number; h: number };
 type SpriteRect = Rect;
 
 // Source rects in the sprite strip (1920x1080, 4 cells horizontally).
-const SPR_PINK: SpriteRect = { x: 120, y: 300, w: 330, h: 620 };
-const SPR_BOY: SpriteRect = { x: 580, y: 290, w: 320, h: 640 };
-const SPR_WITCH: SpriteRect = { x: 1050, y: 280, w: 360, h: 640 };
+const SPR_A: SpriteRect = { x: 120, y: 300, w: 330, h: 620 };
+const SPR_B: SpriteRect = { x: 580, y: 290, w: 320, h: 640 };
+const SPR_C: SpriteRect = { x: 1050, y: 280, w: 360, h: 640 };
 const SPR_COIN: SpriteRect = { x: 1530, y: 400, w: 360, h: 360 };
 
-// World colliders calibrated to the baked sim-bg.png (logical 640x640 space).
-// The bg is rendered full-bleed; rects target the storefronts + fountain footprint.
+// World colliders calibrated to the baked plaza backgrounds (logical 640x640 space).
 const COLLIDERS: Rect[] = [
-  { x: 28, y: 100, w: 170, h: 200 },   // CAFE
-  { x: 215, y: 70, w: 210, h: 220 },   // SHOP
-  { x: 440, y: 100, w: 175, h: 200 },  // INN
-  { x: 268, y: 410, w: 104, h: 90 },   // Fountain
-  { x: 10, y: 510, w: 130, h: 130 },   // Left magenta tree (foliage)
-  { x: 510, y: 510, w: 130, h: 130 },  // Right teal tree (foliage)
+  { x: 28, y: 100, w: 170, h: 200 },
+  { x: 215, y: 70, w: 210, h: 220 },
+  { x: 440, y: 100, w: 175, h: 200 },
+  { x: 268, y: 410, w: 104, h: 90 },
+  { x: 10, y: 510, w: 130, h: 130 },
+  { x: 510, y: 510, w: 130, h: 130 },
 ];
-// Walkable band (y range)
 const WALK_TOP = 320;
 const WALK_BOTTOM = 612;
+
+type SceneDef = {
+  bg: string;
+  sp: string;
+  accent: string;
+  rim: string;
+  npcs: { name: string; lines: string[]; accent: string }[];
+  title: string;
+};
+
+const SCENES: Record<SampleId, SceneDef> = {
+  nova: {
+    bg: novaBg,
+    sp: novaNpcs,
+    accent: "#22d3ee",
+    rim: "#22d3ee",
+    title: "Nova's plaza",
+    npcs: [
+      { name: "Vex", lines: ["The stars are loud tonight ✦", "Charge up at the inn!", "Welcome to Nova-town."], accent: "#22d3ee" },
+      { name: "Lume", lines: ["Stat-link is online.", "Collect the star-coins!", "Cute build, pilot."], accent: "#a78bfa" },
+      { name: "Ori", lines: ["The fountain hums in C#.", "Mind the violet trees.", "Let's sync, friend."], accent: "#c4b5fd" },
+    ],
+  },
+  mochi: {
+    bg: mochiBg,
+    sp: mochiNpcs,
+    accent: "#ff5fa8",
+    rim: "#ff5fa8",
+    title: "Mochi's town",
+    npcs: [
+      { name: "Mochi", lines: ["Cute outfit today!", "Want to trade hearts?", "The cafe just opened ☕"], accent: "#ff5fa8" },
+      { name: "Pip", lines: ["Found all the coins yet?", "I love your style ✦", "Come visit the shop!"], accent: "#22d3ee" },
+      { name: "Juno", lines: ["The fountain is lucky 🍀", "Welcome to town!", "Let's be friends 💖"], accent: "#a78bfa" },
+    ],
+  },
+  hexx: {
+    bg: hexxBg,
+    sp: hexxNpcs,
+    accent: "#fb923c",
+    rim: "#fb923c",
+    title: "Hexx alley",
+    npcs: [
+      { name: "Bolt", lines: ["The arcade is poppin' 🎮", "Beat my high score?", "Welcome to the alley."], accent: "#fb923c" },
+      { name: "Ash", lines: ["Ramen's hot, friend.", "Grab the ember tokens!", "Nice fit."], accent: "#f472b6" },
+      { name: "Riko", lines: ["Spinning vinyl tonight 🎧", "Mind the magenta trees.", "Stay neon."], accent: "#ec4899" },
+    ],
+  },
+};
 
 type NPC = {
   x: number; y: number; baseX: number; range: number; dir: 1 | -1; speed: number;
@@ -41,11 +93,14 @@ type Coin = { x: number; y: number; taken: boolean; bob: number };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string };
 
-const NPCS_INIT = (): NPC[] => [
-  { x: 130, y: 470, baseX: 130, range: 60, dir: 1, speed: 0.35, sprite: SPR_PINK, name: "Mochi", lines: ["Cute outfit today!", "Want to trade hearts?", "The cafe just opened ☕"], accent: "#ff5fa8" },
-  { x: 320, y: 540, baseX: 320, range: 70, dir: -1, speed: 0.30, sprite: SPR_BOY, name: "Pip", lines: ["Found all the coins yet?", "I love your style ✦", "Come visit the shop!"], accent: "#22d3ee" },
-  { x: 510, y: 470, baseX: 510, range: 60, dir: 1, speed: 0.32, sprite: SPR_WITCH, name: "Juno", lines: ["The fountain is lucky 🍀", "Welcome to town!", "Let's be friends 💖"], accent: "#a78bfa" },
-];
+const NPCS_INIT = (id: SampleId): NPC[] => {
+  const s = SCENES[id];
+  return [
+    { x: 130, y: 470, baseX: 130, range: 60, dir: 1, speed: 0.35, sprite: SPR_A, ...s.npcs[0] },
+    { x: 320, y: 540, baseX: 320, range: 70, dir: -1, speed: 0.30, sprite: SPR_B, ...s.npcs[1] },
+    { x: 510, y: 470, baseX: 510, range: 60, dir: 1, speed: 0.32, sprite: SPR_C, ...s.npcs[2] },
+  ];
+};
 
 const COINS_INIT = (): Coin[] => [
   { x: 90, y: 380, taken: false, bob: 0 },
@@ -62,7 +117,10 @@ function aabb(ax: number, ay: number, aw: number, ah: number, b: Rect) {
   return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
 }
 
-export function PixelSocialSim({ avatarSrc }: Props) {
+export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
+  const activeId: SampleId = sampleId ?? "mochi";
+  const scene = SCENES[activeId];
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const keysRef = useRef<Record<string, boolean>>({});
@@ -70,7 +128,7 @@ export function PixelSocialSim({ avatarSrc }: Props) {
   const stateRef = useRef({
     px: 310, py: 470,
     vx: 0, vy: 0,
-    npcs: NPCS_INIT(),
+    npcs: NPCS_INIT(activeId),
     coins: COINS_INIT(),
     particles: [] as Particle[],
     chatNpcIndex: -1,
@@ -86,21 +144,33 @@ export function PixelSocialSim({ avatarSrc }: Props) {
   const [coinCount, setCoinCount] = useState(0);
   const [hearts] = useState(3);
   const [chatText, setChatText] = useState<string | null>(null);
-  const [chatAccent, setChatAccent] = useState<string>("#ff5fa8");
+  const [chatAccent, setChatAccent] = useState<string>(scene.accent);
   const [paused, setPaused] = useState(false);
   const [done, setDone] = useState(false);
   const [touch, setTouch] = useState(false);
   const [focused, setFocused] = useState(false);
 
-  // Preload static art
+  // Load scene art whenever the sample changes — and reset world state.
   useEffect(() => {
     const bg = new Image();
     bg.onload = () => { bgRef.current = bg; };
-    bg.src = bgUrl;
+    bg.src = scene.bg;
     const sp = new Image();
     sp.onload = () => { spritesRef.current = sp; };
-    sp.src = spritesUrl;
-  }, []);
+    sp.src = scene.sp;
+
+    stateRef.current = {
+      px: 310, py: 470, vx: 0, vy: 0,
+      npcs: NPCS_INIT(activeId),
+      coins: COINS_INIT(),
+      particles: [],
+      chatNpcIndex: -1, chatLineIndex: 0, chatTimer: 0, t: 0, paused: false,
+    };
+    setCoinCount(0);
+    setChatText(null);
+    setDone(false);
+    setPaused(false);
+  }, [activeId, scene.bg, scene.sp]);
 
   // Avatar
   useEffect(() => {
@@ -117,7 +187,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
     }
   }, []);
 
-  // Keyboard — attached to window while the game is active so live-preview iframe focus does not swallow input.
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (!activeRef.current) return;
@@ -187,7 +256,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
     }
   };
 
-  // Game loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -203,8 +271,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
       const s = stateRef.current;
       if (!s.paused && !done) {
         s.t += 1;
-
-        // Movement with acceleration
         const k = keysRef.current;
         let ax = 0, ay = 0;
         if (k["arrowleft"] || k["a"]) ax -= 1;
@@ -228,14 +294,12 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         if (!blocked(s.px, ny) && ny >= WALK_TOP && ny <= WALK_BOTTOM) s.py = ny;
         else s.vy = 0;
 
-        // NPC patrol
         s.npcs.forEach((n) => {
           n.x += n.speed * n.dir;
           if (n.x > n.baseX + n.range) n.dir = -1;
           if (n.x < n.baseX - n.range) n.dir = 1;
         });
 
-        // Coin pickup
         s.coins.forEach((c) => {
           c.bob += 0.08;
           if (!c.taken && Math.hypot(c.x - s.px, c.y - s.py) < 26) {
@@ -244,8 +308,8 @@ export function PixelSocialSim({ avatarSrc }: Props) {
             setCoinCount((v) => {
               const nv = v + 1;
               if (nv >= s.coins.length) {
-                spawnSparkles(s.px, s.py, "#ff5fa8");
-                spawnSparkles(s.px, s.py, "#22d3ee");
+                spawnSparkles(s.px, s.py, scene.accent);
+                spawnSparkles(s.px, s.py, "#fde047");
                 setDone(true);
               }
               return nv;
@@ -253,7 +317,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
           }
         });
 
-        // Particles
         s.particles = s.particles.filter((p) => {
           p.life += 1;
           p.x += p.vx;
@@ -268,7 +331,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         }
       }
 
-      // ============ DRAW ============
       ctx.clearRect(0, 0, W, H);
       const bg = bgRef.current;
       if (bg) ctx.drawImage(bg, 0, 0, W, H);
@@ -276,7 +338,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
 
       const sp = spritesRef.current;
 
-      // Coins
       s.coins.forEach((c) => {
         if (c.taken) return;
         const bob = Math.sin(c.bob) * 3;
@@ -292,7 +353,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         }
       });
 
-      // Build draw list (NPCs + player) sorted by y for depth.
       type Drawable = { y: number; kind: "npc" | "player"; ref?: NPC };
       const drawables: Drawable[] = [
         ...s.npcs.map((n) => ({ y: n.y, kind: "npc" as const, ref: n })),
@@ -304,14 +364,12 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         if (d.kind === "npc" && d.ref) {
           const n = d.ref;
           const bob = Math.sin(s.t * 0.12 + n.baseX) * 1.5;
-          // shadow
           ctx.fillStyle = "rgba(0,0,0,0.35)";
           ctx.beginPath(); ctx.ellipse(n.x, n.y + 24, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
           if (sp) {
             const dw = 56, dh = (n.sprite.h / n.sprite.w) * dw;
             ctx.drawImage(sp, n.sprite.x, n.sprite.y, n.sprite.w, n.sprite.h, n.x - dw / 2, n.y - dh + 22 + bob, dw, dh);
           }
-          // Proximity prompt
           const near = Math.hypot(n.x - s.px, n.y - s.py) < 70;
           if (near && s.chatNpcIndex === -1) {
             const py = n.y - 56 + Math.sin(s.t * 0.18) * 2;
@@ -323,19 +381,16 @@ export function PixelSocialSim({ avatarSrc }: Props) {
             ctx.fillText("E", n.x, py + 1);
           }
         } else {
-          // Player
           const moving = Math.abs(s.vx) + Math.abs(s.vy) > 0.2;
           const bobP = moving ? Math.sin(s.t * 0.4) * 2 : 0;
-          // shadow
           ctx.fillStyle = "rgba(0,0,0,0.4)";
           ctx.beginPath(); ctx.ellipse(s.px, s.py + 18, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
           const img = avatarImgRef.current;
           const R = 20;
-          // glow ring
           ctx.save();
-          ctx.shadowColor = "#ff5fa8";
+          ctx.shadowColor = scene.rim;
           ctx.shadowBlur = 18;
-          ctx.strokeStyle = "#ff5fa8";
+          ctx.strokeStyle = scene.rim;
           ctx.lineWidth = 2.5;
           ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R + 1, 0, Math.PI * 2); ctx.stroke();
           ctx.restore();
@@ -345,17 +400,15 @@ export function PixelSocialSim({ avatarSrc }: Props) {
             ctx.drawImage(img, s.px - R, s.py - R + bobP, R * 2, R * 2);
             ctx.restore();
           } else {
-            ctx.fillStyle = "#ec4899";
+            ctx.fillStyle = scene.rim;
             ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R, 0, Math.PI * 2); ctx.fill();
           }
-          // crisp outline
           ctx.strokeStyle = "rgba(255,255,255,0.95)";
           ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R, 0, Math.PI * 2); ctx.stroke();
         }
       });
 
-      // Particles
       s.particles.forEach((p) => {
         const a = 1 - p.life / p.max;
         ctx.fillStyle = p.color;
@@ -368,14 +421,14 @@ export function PixelSocialSim({ avatarSrc }: Props) {
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [done]);
+  }, [done, scene.accent, scene.rim]);
 
   useEffect(() => { stateRef.current.paused = paused; }, [paused]);
 
   const reset = () => {
     stateRef.current = {
       px: 310, py: 470, vx: 0, vy: 0,
-      npcs: NPCS_INIT(), coins: COINS_INIT(), particles: [],
+      npcs: NPCS_INIT(activeId), coins: COINS_INIT(), particles: [],
       chatNpcIndex: -1, chatLineIndex: 0, chatTimer: 0, t: 0, paused: false,
     };
     setCoinCount(0);
@@ -389,19 +442,25 @@ export function PixelSocialSim({ avatarSrc }: Props) {
 
   return (
     <div
-      className="rounded-2xl border border-pink/40 bg-black/40 p-3"
-      style={{ boxShadow: "0 18px 60px -30px color-mix(in oklab, var(--pink) 90%, transparent)" }}
+      className="rounded-2xl border p-3"
+      style={{
+        borderColor: `color-mix(in oklab, ${scene.accent} 40%, transparent)`,
+        background: "rgba(0,0,0,0.4)",
+        boxShadow: `0 18px 60px -30px ${scene.accent}`,
+      }}
     >
-      {/* HUD bar */}
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em]">
-          <span className="inline-flex items-center gap-1 text-pink">
+          <span className="inline-flex items-center gap-1" style={{ color: scene.accent }}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <Heart key={i} className={`size-3.5 ${i < hearts ? "fill-pink" : "opacity-30"}`} />
+              <Heart key={i} className={`size-3.5 ${i < hearts ? "fill-current" : "opacity-30"}`} />
             ))}
           </span>
           <span className="inline-flex items-center gap-1 text-yellow-300">
             <Coins className="size-3.5" /> {coinCount}/8
+          </span>
+          <span className="hidden text-[10px] font-extrabold uppercase tracking-[0.14em] text-foreground/60 md:inline">
+            · {scene.title}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -423,15 +482,18 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         </div>
       </div>
 
-      {/* Canvas wrapper — focusable */}
       <div
         ref={wrapRef}
         tabIndex={0}
         onFocus={activateGame}
         onPointerDown={activateGame}
         onClick={activateGame}
-        className="relative overflow-hidden rounded-xl border border-pink/30 outline-none ring-pink/60 focus:ring-2"
-        style={{ aspectRatio: "1 / 1", touchAction: "none" }}
+        className="relative overflow-hidden rounded-xl border outline-none focus:ring-2"
+        style={{
+          aspectRatio: "1 / 1",
+          touchAction: "none",
+          borderColor: `color-mix(in oklab, ${scene.accent} 40%, transparent)`,
+        }}
       >
         <canvas
           ref={canvasRef}
@@ -440,7 +502,6 @@ export function PixelSocialSim({ avatarSrc }: Props) {
           className="block h-full w-full"
         />
 
-        {/* Chat speech bubble */}
         {chatText && (
           <div
             className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border bg-black/85 px-3.5 py-2 text-xs font-bold text-white shadow-2xl"
@@ -451,18 +512,21 @@ export function PixelSocialSim({ avatarSrc }: Props) {
           </div>
         )}
 
-        {/* Quest complete */}
         {done && (
           <div className="absolute inset-0 grid place-items-center bg-black/70 backdrop-blur-sm">
             <div
-              className="rounded-2xl border border-pink/60 px-6 py-5 text-center"
-              style={{ background: "linear-gradient(135deg, color-mix(in oklab, var(--pink) 24%, var(--background) 76%), color-mix(in oklab, var(--purple) 24%, var(--background) 76%))" }}
+              className="rounded-2xl border px-6 py-5 text-center"
+              style={{
+                borderColor: scene.accent,
+                background: `linear-gradient(135deg, color-mix(in oklab, ${scene.accent} 24%, var(--background) 76%), color-mix(in oklab, ${scene.accent} 12%, var(--background) 88%))`,
+              }}
             >
-              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-pink">✦ Quest complete</p>
-              <p className="mt-1.5 text-lg font-black">You filled the town with joy ✨</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: scene.accent }}>✦ Quest complete</p>
+              <p className="mt-1.5 text-lg font-black">You lit up {scene.title} ✨</p>
               <button
                 onClick={reset}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-pink px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:opacity-90"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:opacity-90"
+                style={{ background: scene.accent }}
               >
                 <RotateCcw className="size-3" /> Play again
               </button>
@@ -470,18 +534,19 @@ export function PixelSocialSim({ avatarSrc }: Props) {
           </div>
         )}
 
-        {/* Paused */}
         {paused && !done && (
           <div className="absolute inset-0 grid place-items-center bg-black/55">
             <p className="rounded-lg bg-background/90 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em]">Paused</p>
           </div>
         )}
 
-        {/* Click-to-play overlay */}
         {!focused && !done && !paused && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center bg-gradient-to-t from-black/70 via-black/30 to-transparent">
-            <div className="flex flex-col items-center gap-2 rounded-2xl border border-pink/60 bg-black/80 px-5 py-4 text-center">
-              <MousePointerClick className="size-6 text-pink" />
+            <div
+              className="flex flex-col items-center gap-2 rounded-2xl border bg-black/80 px-5 py-4 text-center"
+              style={{ borderColor: scene.accent }}
+            >
+              <MousePointerClick className="size-6" style={{ color: scene.accent }} />
               <p className="text-sm font-black uppercase tracking-[0.18em] text-white">Click to play</p>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">WASD / Arrows · E to chat</p>
             </div>
@@ -489,23 +554,28 @@ export function PixelSocialSim({ avatarSrc }: Props) {
         )}
       </div>
 
-      {/* Touch controls */}
       {touch && (
         <div className="mt-3 flex items-center justify-between gap-4 select-none">
           <div className="grid grid-cols-3 gap-1.5">
             <div />
-            <DpadBtn onDown={() => press("arrowup", true)} onUp={() => press("arrowup", false)}>↑</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => press("arrowup", true)} onUp={() => press("arrowup", false)}>↑</DpadBtn>
             <div />
-            <DpadBtn onDown={() => press("arrowleft", true)} onUp={() => press("arrowleft", false)}>←</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => press("arrowleft", true)} onUp={() => press("arrowleft", false)}>←</DpadBtn>
             <div />
-            <DpadBtn onDown={() => press("arrowright", true)} onUp={() => press("arrowright", false)}>→</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => press("arrowright", true)} onUp={() => press("arrowright", false)}>→</DpadBtn>
             <div />
-            <DpadBtn onDown={() => press("arrowdown", true)} onUp={() => press("arrowdown", false)}>↓</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => press("arrowdown", true)} onUp={() => press("arrowdown", false)}>↓</DpadBtn>
             <div />
           </div>
           <button
             onPointerDown={(e) => { e.preventDefault(); tryChat(); }}
-            className="grid size-16 place-items-center rounded-full border-2 border-pink bg-pink/20 text-base font-black uppercase text-pink shadow-[0_0_24px_-4px_var(--pink)] active:scale-95"
+            className="grid size-16 place-items-center rounded-full border-2 text-base font-black uppercase active:scale-95"
+            style={{
+              borderColor: scene.accent,
+              color: scene.accent,
+              background: `color-mix(in oklab, ${scene.accent} 20%, transparent)`,
+              boxShadow: `0 0 24px -4px ${scene.accent}`,
+            }}
           >
             E
           </button>
@@ -513,20 +583,21 @@ export function PixelSocialSim({ avatarSrc }: Props) {
       )}
 
       <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-        Your character {avatarSrc ? "is" : "will be"} the avatar · explore the plaza, collect 8 star coins, press E near townsfolk to chat
+        Your character is the avatar · explore {scene.title}, collect 8 coins, press E near townsfolk to chat
       </p>
     </div>
   );
 }
 
-function DpadBtn({ children, onDown, onUp }: { children: React.ReactNode; onDown: () => void; onUp: () => void }) {
+function DpadBtn({ children, onDown, onUp, accent }: { children: React.ReactNode; onDown: () => void; onUp: () => void; accent: string }) {
   return (
     <button
       onPointerDown={(e) => { e.preventDefault(); onDown(); }}
       onPointerUp={onUp}
       onPointerLeave={onUp}
       onPointerCancel={onUp}
-      className="grid size-11 place-items-center rounded-lg border border-pink/40 bg-white/[0.06] text-base font-black text-pink active:scale-95 active:bg-pink/20"
+      className="grid size-11 place-items-center rounded-lg border bg-white/[0.06] text-base font-black active:scale-95"
+      style={{ borderColor: `color-mix(in oklab, ${accent} 40%, transparent)`, color: accent }}
     >
       {children}
     </button>
