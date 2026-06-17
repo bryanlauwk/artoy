@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
-import { UploadCloud, Sparkles, Wand2, Users, Coins, Rocket, X, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
-import { PixelSocialSim } from "./PixelSocialSim";
+import { useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
+import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
 import a1 from "@/assets/artoy/avatar-1.png";
 import a2 from "@/assets/artoy/avatar-2.png";
 import a3 from "@/assets/artoy/avatar-3.png";
@@ -11,10 +11,10 @@ import cards from "@/assets/artoy/exp-cards.png";
 import wall from "@/assets/artoy/exp-wall.png";
 import { toast } from "sonner";
 
-const SAMPLES = [
-  { src: a1, name: "Nova" },
-  { src: a2, name: "Mochi" },
-  { src: a3, name: "Hexx" },
+const SAMPLES: { id: SampleId; src: string; name: string; tagline: string; accent: string }[] = [
+  { id: "nova",  src: a1, name: "Nova",  tagline: "Sci-fi pilot · cyan plaza",     accent: "var(--cyan)" },
+  { id: "mochi", src: a2, name: "Mochi", tagline: "Pastel mascot · pink town",    accent: "var(--pink)" },
+  { id: "hexx",  src: a3, name: "Hexx",  tagline: "Neon punk · arcade alley",     accent: "var(--orange)" },
 ];
 
 const EXP_PLACEHOLDERS = [
