@@ -23,12 +23,15 @@ const IGNORE_DIRS = new Set(["node_modules", ".git", "dist", "build", ".next", "
 const ALLOWED_REF_FILES = new Set([
   "src/components/artoy/PixelSocialSim.tsx",
   "src/components/artoy/TryItNow.tsx",
+  "src/components/artoy/meccha/stages.ts",
+  "src/components/artoy/meccha/storage.ts",
+  "src/components/artoy/meccha/scoring.ts",
 ]);
 
 const ALLOWED_SIM_ASSETS = new Set([
-  "nova-paint-bg.png", "nova-seeker.png",
-  "mochi-paint-bg.png", "mochi-seeker.png",
-  "hexx-paint-bg.png", "hexx-seeker.png",
+  "nova-stage-bg.png", "nova-seeker.png",
+  "mochi-stage-bg.png", "mochi-seeker.png",
+  "hexx-stage-bg.png", "hexx-seeker.png",
 ]);
 
 const SIM_ASSET_DIR = "src/assets/artoy/sim";

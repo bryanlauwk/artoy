@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy } from "lucide-react";
 import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
+import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
+import { formatMs } from "./meccha/scoring";
 import a1 from "@/assets/artoy/avatar-1.png";
 import a2 from "@/assets/artoy/avatar-2.png";
 import a3 from "@/assets/artoy/avatar-3.png";
@@ -73,6 +75,13 @@ export function TryItNow() {
   const [selectedSampleId, setSelectedSampleId] = useState<SampleId | null>(null);
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
+  const [bests, setBests] = useState<BestsBlob>(() => loadBests());
+
+  // Refresh bests when returning to the picker (after a game) — cheap, no listener needed.
+  useEffect(() => {
+    if (!selectedSampleId) setBests(loadBests());
+  }, [selectedSampleId]);
+
 
   const runGeneration = async (sourceDataUrl: string) => {
     setGenerating(true);
@@ -103,6 +112,12 @@ export function TryItNow() {
   };
 
   const onSample = async (sample: typeof SAMPLES[number]) => {
+    if (!isUnlocked(sample.id, bests)) {
+      const prev = prevStage(sample.id);
+      const prevName = prev ? SAMPLES.find((x) => x.id === prev)?.name : "previous stage";
+      toast.error(`Clear ${prevName} first to unlock ${sample.name}.`);
+      return;
+    }
     setSelectedSampleId(sample.id);
     setPreview(sample.src);
     try {
@@ -112,6 +127,7 @@ export function TryItNow() {
       toast.error("Couldn't load sample image");
     }
   };
+
 
   const reset = () => {
     setPreview(null);
@@ -160,35 +176,61 @@ export function TryItNow() {
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Pick a character to start</p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  {SAMPLES.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => onSample(s)}
-                      className="group relative overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-transform hover:-translate-y-1"
-                      style={{ boxShadow: `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)` }}
-                    >
-                      <img src={s.src} alt={s.name} loading="lazy" className="block aspect-square w-full object-cover" />
-                      <div className="px-3 py-3">
-                        <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: s.accent }}>{s.name}</p>
-                        <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">{s.tagline}</p>
-                      </div>
-                      <span
-                        className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100"
-                        style={{ background: `color-mix(in oklab, ${s.accent} 80%, black 20%)` }}
+                  {SAMPLES.map((s) => {
+                    const unlocked = isUnlocked(s.id, bests);
+                    const myBest = bests[s.id];
+                    const needName = !unlocked && prevStage(s.id) ? SAMPLES.find((x) => x.id === prevStage(s.id))!.name : null;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => onSample(s)}
+                        className={`group relative overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-transform ${unlocked ? "hover:-translate-y-1" : "opacity-70"}`}
+                        style={{ boxShadow: unlocked ? `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)` : undefined }}
                       >
-                        ✦ Generate universe
-                      </span>
-                    </button>
-                  ))}
+                        <img src={s.src} alt={s.name} loading="lazy" className={`block aspect-square w-full object-cover ${unlocked ? "" : "grayscale"}`} />
+                        {!unlocked && (
+                          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/55">
+                            <div className="flex flex-col items-center gap-1">
+                              <Lock className="size-6" style={{ color: s.accent }} />
+                              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white">
+                                Clear {needName} first
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {myBest.bestScore > 0 && (
+                          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
+                            <Trophy className="size-3" style={{ color: s.accent }} /> {myBest.bestScore}
+                          </span>
+                        )}
+                        <div className="px-3 py-3">
+                          <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: s.accent }}>{s.name}</p>
+                          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
+                            {s.tagline}
+                            {myBest.bestMs > 0 && <span className="ml-1 text-foreground/40">· best {formatMs(myBest.bestMs)}</span>}
+                          </p>
+                        </div>
+                        {unlocked && (
+                          <span
+                            className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100"
+                            style={{ background: `color-mix(in oklab, ${s.accent} 80%, black 20%)` }}
+                          >
+                            ✦ Generate universe
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
                 <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  3 sample characters · each loads a unique mini-game world
+                  Clear each stage to unlock the next · best score & time saved on this device
                 </p>
               </div>
             ) : (
               <div>
                 <div className="flex items-start gap-5">
                   <div className="relative shrink-0">
+
                     <img src={preview} alt="Your character" className="size-36 rounded-2xl border border-border object-cover md:size-44" />
                   </div>
                   <div className="min-w-0 flex-1">
