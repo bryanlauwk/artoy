@@ -283,18 +283,43 @@ export function TryItNow() {
                   </div>
                 </div>
 
-                {/* Pixel Social Sim — actually playable */}
+                {/* Pixel Social Sim — actually playable, unlocks after universe + merch are ready */}
                 <div className="mt-7">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
                       <span className="text-pink">5 ›</span> Ultimate playable experience
                     </p>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/20 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-pink">
-                      <Gamepad2 className="size-3" /> Meccha Chameleon · {activeSample?.name ?? "Demo"}'s stage
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em]"
+                      style={{
+                        background: results && !generating ? "color-mix(in oklab, var(--pink) 22%, transparent)" : "rgba(255,255,255,0.06)",
+                        color: results && !generating ? "var(--pink)" : "rgb(255 255 255 / 0.55)",
+                      }}
+                    >
+                      <Gamepad2 className="size-3" />
+                      {results && !generating
+                        ? `Meccha Chameleon · ${activeSample?.name ?? "Demo"}'s stage`
+                        : "Locked · unlocks after steps 3 + 4"}
                     </span>
                   </div>
-                  <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
+                  {results && !generating ? (
+                    <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-border bg-white/[0.03] p-8 text-center">
+                      {generating ? (
+                        <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/70">
+                          <Loader2 className="size-4 animate-spin text-pink" />
+                          Building {activeSample?.name ?? "your"}'s universe & merch — game unlocks next…
+                        </div>
+                      ) : (
+                        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">
+                          Mini-game unlocks once steps 3 (universe) and 4 (merch preview) finish generating
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
+
 
 
                 {results && (
