@@ -93,6 +93,8 @@ type Coin = { x: number; y: number; taken: boolean; bob: number };
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string };
 
+type MoveTarget = { x: number; y: number } | null;
+
 const NPCS_INIT = (id: SampleId): NPC[] => {
   const s = SCENES[id];
   return [
@@ -117,6 +119,77 @@ function aabb(ax: number, ay: number, aw: number, ah: number, b: Rect) {
   return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
 }
 
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function drawGroundedPlayer(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | null,
+  x: number,
+  footY: number,
+  t: number,
+  moving: boolean,
+  scene: SceneDef,
+) {
+  const stepBob = moving ? Math.sin(t * 0.38) * 2 : 0;
+  const sway = moving ? Math.sin(t * 0.22) * 1.5 : 0;
+  const bodyY = footY - 35 + stepBob;
+  const headX = x + sway;
+  const headY = footY - 53 + stepBob;
+  const headR = 18;
+
+  ctx.fillStyle = "rgba(0,0,0,0.48)";
+  ctx.beginPath(); ctx.ellipse(x, footY + 4, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeStyle = "rgba(15,15,28,0.95)";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 8, bodyY + 22); ctx.lineTo(x - 13, footY - 2);
+  ctx.moveTo(x + 8, bodyY + 22); ctx.lineTo(x + 13, footY - 2);
+  ctx.stroke();
+
+  ctx.fillStyle = scene.accent;
+  ctx.strokeStyle = "rgba(255,255,255,0.82)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, bodyY - 2);
+  ctx.lineTo(x + 18, bodyY + 15);
+  ctx.lineTo(x + 12, bodyY + 35);
+  ctx.lineTo(x - 12, bodyY + 35);
+  ctx.lineTo(x - 18, bodyY + 15);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  ctx.save();
+  ctx.shadowColor = scene.rim;
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = "rgba(8,8,18,0.94)";
+  ctx.beginPath(); ctx.arc(headX, headY, headR + 4, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath(); ctx.arc(headX, headY, headR, 0, Math.PI * 2); ctx.clip();
+  if (img && img.complete && img.naturalWidth > 0) {
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const sx = (img.naturalWidth - side) / 2;
+    const sy = (img.naturalHeight - side) / 2;
+    ctx.drawImage(img, sx, sy, side, side, headX - headR, headY - headR, headR * 2, headR * 2);
+  } else {
+    ctx.fillStyle = scene.rim;
+    ctx.fillRect(headX - headR, headY - headR, headR * 2, headR * 2);
+  }
+  ctx.restore();
+
+  ctx.strokeStyle = scene.rim;
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(headX, headY, headR + 1.5, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,0.95)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(headX, headY, headR - 1, 0, Math.PI * 2); ctx.stroke();
+}
+
 export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   const activeId: SampleId = sampleId ?? "mochi";
   const scene = SCENES[activeId];
@@ -125,6 +198,8 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const keysRef = useRef<Record<string, boolean>>({});
   const activeRef = useRef(false);
+  const moveTargetRef = useRef<MoveTarget>(null);
+  const draggingRef = useRef(false);
   const stateRef = useRef({
     px: 310, py: 470,
     vx: 0, vy: 0,
