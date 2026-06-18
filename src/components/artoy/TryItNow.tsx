@@ -112,6 +112,12 @@ export function TryItNow() {
   };
 
   const onSample = async (sample: typeof SAMPLES[number]) => {
+    if (!isUnlocked(sample.id, bests)) {
+      const prev = prevStage(sample.id);
+      const prevName = prev ? SAMPLES.find((x) => x.id === prev)?.name : "previous stage";
+      toast.error(`Clear ${prevName} first to unlock ${sample.name}.`);
+      return;
+    }
     setSelectedSampleId(sample.id);
     setPreview(sample.src);
     try {
@@ -121,6 +127,7 @@ export function TryItNow() {
       toast.error("Couldn't load sample image");
     }
   };
+
 
   const reset = () => {
     setPreview(null);
