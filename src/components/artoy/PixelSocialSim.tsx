@@ -610,7 +610,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       if (bg) ctx.drawImage(bg, 0, 0, W, H);
       else { ctx.fillStyle = "#1a0a2e"; ctx.fillRect(0, 0, W, H); }
 
-      const s = stateRef.current;
+      // s already declared at the top of step()
 
       // Paint pads (drawn under everything)
       stage.paintPads.forEach((p) => {
