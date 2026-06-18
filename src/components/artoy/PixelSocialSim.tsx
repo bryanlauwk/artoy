@@ -245,6 +245,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     setChatText(null);
     setDone(false);
     setPaused(false);
+    moveTargetRef.current = null;
   }, [activeId, scene.bg, scene.sp]);
 
   // Avatar
@@ -268,6 +269,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       const k = e.key.toLowerCase();
       if (k === "escape") {
         activeRef.current = false;
+        moveTargetRef.current = null;
         keysRef.current = {};
         setFocused(false);
         return;
@@ -283,10 +285,11 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       const wrap = wrapRef.current;
       if (!wrap || wrap.contains(e.target as Node)) return;
       activeRef.current = false;
+      moveTargetRef.current = null;
       keysRef.current = {};
       setFocused(false);
     };
-    const blur = () => { keysRef.current = {}; };
+    const blur = () => { keysRef.current = {}; moveTargetRef.current = null; };
     window.addEventListener("keydown", down, { passive: false });
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
@@ -304,6 +307,29 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     setFocused(true);
     requestAnimationFrame(() => wrapRef.current?.focus({ preventScroll: true }));
   };
+
+  const setMoveTargetFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (paused || done) return;
+    activateGame();
+    draggingRef.current = true;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    const rect = e.currentTarget.getBoundingClientRect();
+    moveTargetRef.current = {
+      x: clamp(((e.clientX - rect.left) / rect.width) * W, 18, W - 18),
+      y: clamp(((e.clientY - rect.top) / rect.height) * H, WALK_TOP, WALK_BOTTOM),
+    };
+  };
+
+  const updateMoveTargetFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current || paused || done) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    moveTargetRef.current = {
+      x: clamp(((e.clientX - rect.left) / rect.width) * W, 18, W - 18),
+      y: clamp(((e.clientY - rect.top) / rect.height) * H, WALK_TOP, WALK_BOTTOM),
+    };
+  };
+
+  const endPointerMove = () => { draggingRef.current = false; };
 
   const tryChat = () => {
     const s = stateRef.current;
