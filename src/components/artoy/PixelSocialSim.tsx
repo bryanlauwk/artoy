@@ -314,10 +314,11 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   };
 
   const resetRound = () => {
+    const base: RGB = avatarPaletteRef.current[0] ?? [255, 255, 255];
     stateRef.current = {
       px: W / 2, py: H - 80,
       vx: 0, vy: 0,
-      body: [255, 255, 255],
+      body: [...base] as RGB,
       floor: [255, 255, 255],
       blend: 0,
       seekerAngle: Math.PI / 2,
@@ -336,7 +337,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     setGemCount(0);
     setBlendPct(0);
     setTimeLeft(ROUND_SECONDS);
-    setBodyCss("rgb(255,255,255)");
+    setBodyCss(rgbCss(base));
     setDone(null);
     setSpotted(false);
     setNearGem(false);
