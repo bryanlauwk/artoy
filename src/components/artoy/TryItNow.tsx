@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy } from "lucide-react";
 import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
+import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
+import { formatMs } from "./meccha/scoring";
 import a1 from "@/assets/artoy/avatar-1.png";
 import a2 from "@/assets/artoy/avatar-2.png";
 import a3 from "@/assets/artoy/avatar-3.png";
