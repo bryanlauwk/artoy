@@ -534,6 +534,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       npcs: NPCS_INIT(activeId), coins: COINS_INIT(), particles: [],
       chatNpcIndex: -1, chatLineIndex: 0, chatTimer: 0, t: 0, paused: false,
     };
+    moveTargetRef.current = null;
     setCoinCount(0);
     setChatText(null);
     setDone(false);
@@ -541,7 +542,12 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     activateGame();
   };
 
-  const press = (k: string, v: boolean) => { activeRef.current = true; setFocused(true); keysRef.current[k] = v; };
+  const press = (k: string, v: boolean) => {
+    activeRef.current = true;
+    setFocused(true);
+    if (v) moveTargetRef.current = null;
+    keysRef.current[k] = v;
+  };
 
   return (
     <div
@@ -589,8 +595,10 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         ref={wrapRef}
         tabIndex={0}
         onFocus={activateGame}
-        onPointerDown={activateGame}
-        onClick={activateGame}
+        onPointerDown={setMoveTargetFromPointer}
+        onPointerMove={updateMoveTargetFromPointer}
+        onPointerUp={endPointerMove}
+        onPointerCancel={endPointerMove}
         className="relative overflow-hidden rounded-xl border outline-none focus:ring-2"
         style={{
           aspectRatio: "1 / 1",
@@ -650,8 +658,8 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
               style={{ borderColor: scene.accent }}
             >
               <MousePointerClick className="size-6" style={{ color: scene.accent }} />
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-white">Click to play</p>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">WASD / Arrows · E to chat</p>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-white">Tap the world to move</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">WASD / Arrows also work · E to chat</p>
             </div>
           </div>
         )}
@@ -686,7 +694,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       )}
 
       <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-        Your character is the avatar · explore {scene.title}, collect 8 coins, press E near townsfolk to chat
+        Tap/click a spot or use WASD · your selected character explores {scene.title}, collects 8 coins, and chats with townsfolk
       </p>
     </div>
   );
