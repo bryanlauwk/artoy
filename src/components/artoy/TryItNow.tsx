@@ -75,6 +75,13 @@ export function TryItNow() {
   const [selectedSampleId, setSelectedSampleId] = useState<SampleId | null>(null);
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
+  const [bests, setBests] = useState<BestsBlob>(() => loadBests());
+
+  // Refresh bests when returning to the picker (after a game) — cheap, no listener needed.
+  useEffect(() => {
+    if (!selectedSampleId) setBests(loadBests());
+  }, [selectedSampleId]);
+
 
   const runGeneration = async (sourceDataUrl: string) => {
     setGenerating(true);
