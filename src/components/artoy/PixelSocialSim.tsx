@@ -520,7 +520,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       if (bg) ctx.drawImage(bg, 0, 0, W, H);
       else { ctx.fillStyle = "#1a0a2e"; ctx.fillRect(0, 0, W, H); }
 
-      const s = stateRef.current;
+      // s already declared at top of step()
 
       // Move target ring
       if (moveTargetRef.current && !done && !paused) {
