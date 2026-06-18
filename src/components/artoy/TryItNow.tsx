@@ -49,10 +49,10 @@ const MERCH_PRICES: Record<string, string> = {
 };
 
 const FEATURES = [
-  { icon: Wand2, color: "var(--pink)", title: "Upload once, get a full universe", desc: "5 experiences + 3 merch mockups + 1 playable mini-game — auto-generated in your art style." },
+  { icon: Wand2, color: "var(--pink)", title: "Pick once, get a full universe", desc: "5 experiences + 3 merch mockups + 1 playable mini-game — all synced to the selected character." },
   { icon: Coins, color: "var(--orange)", title: "Your IP, your revenue", desc: "Every drop is yours. Sell digital or physical without inventory." },
   { icon: Users, color: "var(--cyan)", title: "Built-in fandom loop", desc: "Fans play, collect and refer friends to unlock more of your world." },
-  { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Just upload your character." },
+  { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Start from a character and prove the loop instantly." },
 ];
 
 async function urlToDataUrl(url: string): Promise<string> {
