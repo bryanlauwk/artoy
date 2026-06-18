@@ -657,33 +657,79 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
             ctx.beginPath(); ctx.arc(s.px, s.py + 2, 26, 0, Math.PI * 2); ctx.stroke();
             ctx.globalAlpha = 1;
           }
-          ctx.fillStyle = "rgba(0,0,0,0.42)";
-          ctx.beginPath(); ctx.ellipse(s.px, s.py + 14, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+          const palette = avatarPaletteRef.current;
+          const accent2 = palette[1] ? rgbCss(palette[1]) : scene.accent;
+          const accent3 = palette[2] ? rgbCss(palette[2]) : scene.accent;
+
+          // Ground shadow
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.beginPath(); ctx.ellipse(s.px, s.py + 18, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+          // Body (chameleon-shaped, larger so the avatar reads as the character)
           ctx.fillStyle = bodyColor;
           ctx.strokeStyle = "rgba(15,15,28,0.85)";
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.ellipse(s.px, s.py + 2, 18, 14, 0, 0, Math.PI * 2);
+          ctx.ellipse(s.px, s.py + 4, 22, 17, 0, 0, Math.PI * 2);
           ctx.fill(); ctx.stroke();
+
+          // Back saddle (avatar accent stripe) — shows character identity even when fully blended
+          ctx.save();
+          ctx.beginPath(); ctx.ellipse(s.px, s.py + 4, 22, 17, 0, 0, Math.PI * 2); ctx.clip();
+          ctx.fillStyle = accent2;
+          ctx.globalAlpha = 0.55;
+          ctx.beginPath(); ctx.ellipse(s.px - 2, s.py - 4, 16, 8, 0, 0, Math.PI * 2); ctx.fill();
+          // accent spots
+          ctx.globalAlpha = 0.75;
+          ctx.fillStyle = accent3;
+          [[-10, -2], [4, -6], [10, 4], [-4, 8]].forEach(([dx, dy]) => {
+            ctx.beginPath(); ctx.arc(s.px + dx, s.py + dy, 2.4, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.restore();
+
+          // Curly tail with accent tip
           ctx.beginPath();
-          ctx.moveTo(s.px - 14, s.py + 4);
-          ctx.quadraticCurveTo(s.px - 28, s.py + 16, s.px - 22, s.py + 22);
-          ctx.quadraticCurveTo(s.px - 14, s.py + 14, s.px - 8, s.py + 12);
+          ctx.moveTo(s.px - 18, s.py + 6);
+          ctx.quadraticCurveTo(s.px - 34, s.py + 18, s.px - 28, s.py + 24);
+          ctx.quadraticCurveTo(s.px - 18, s.py + 16, s.px - 10, s.py + 14);
           ctx.fillStyle = bodyColor;
           ctx.fill(); ctx.stroke();
+          ctx.fillStyle = accent2;
+          ctx.beginPath(); ctx.arc(s.px - 30, s.py + 22, 3, 0, Math.PI * 2); ctx.fill();
+
+          // Legs
           ctx.fillStyle = bodyColor;
-          [[-12,12],[12,12],[-10,-6],[10,-6]].forEach(([dx, dy]) => {
+          [[-14, 12], [14, 12], [-12, -6], [12, -6]].forEach(([dx, dy]) => {
             ctx.beginPath();
-            ctx.ellipse(s.px + dx, s.py + dy + 6, 5, 4, 0, 0, Math.PI * 2);
+            ctx.ellipse(s.px + dx, s.py + dy + 8, 6, 5, 0, 0, Math.PI * 2);
             ctx.fill(); ctx.stroke();
           });
-          const headX = s.px + 8;
-          const headY = s.py - 10;
-          const headR = 14;
+
+          // Head — larger and avatar-faced
+          const headX = s.px + 14;
+          const headY = s.py - 12;
+          const headR = 19;
           ctx.fillStyle = bodyColor;
           ctx.beginPath(); ctx.arc(headX, headY, headR + 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+          // Crest spikes in accent color
+          ctx.fillStyle = accent2;
+          ctx.globalAlpha = 0.85;
+          [-0.5, 0, 0.5].forEach((off) => {
+            ctx.beginPath();
+            const cx = headX + Math.cos(-Math.PI / 2 + off) * (headR + 2);
+            const cy = headY + Math.sin(-Math.PI / 2 + off) * (headR + 2);
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(-Math.PI / 2 + off) * 6, cy + Math.sin(-Math.PI / 2 + off) * 6);
+            ctx.lineTo(cx + Math.cos(-Math.PI / 2 + off + 0.3) * 3, cy + Math.sin(-Math.PI / 2 + off + 0.3) * 3);
+            ctx.closePath();
+            ctx.fill();
+          });
+          ctx.globalAlpha = 1;
+
+          // Avatar face inset
           ctx.save();
-          ctx.beginPath(); ctx.arc(headX, headY, headR - 1, 0, Math.PI * 2); ctx.clip();
+          ctx.beginPath(); ctx.arc(headX, headY, headR - 2, 0, Math.PI * 2); ctx.clip();
           const av = avatarImgRef.current;
           if (av && av.complete && av.naturalWidth > 0) {
             const side = Math.min(av.naturalWidth, av.naturalHeight);
@@ -691,12 +737,20 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
             const sy = (av.naturalHeight - side) / 2;
             ctx.drawImage(av, sx, sy, side, side, headX - headR, headY - headR, headR * 2, headR * 2);
           } else {
-            ctx.fillStyle = "#fff";
+            ctx.fillStyle = bodyColor;
             ctx.fillRect(headX - headR, headY - headR, headR * 2, headR * 2);
           }
+          // Subtle color-shift tint so the avatar reads as paint-blended too
+          ctx.globalAlpha = clamp(1 - s.blend, 0.15, 0.55) * 0.35;
+          ctx.fillStyle = rgbCss(s.floor);
+          ctx.fillRect(headX - headR, headY - headR, headR * 2, headR * 2);
+          ctx.globalAlpha = 1;
           ctx.restore();
-          ctx.fillStyle = "#0a0a14";
-          ctx.beginPath(); ctx.arc(headX + 8, headY - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+
+          // Face ring
+          ctx.strokeStyle = "rgba(15,15,28,0.7)";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(headX, headY, headR - 2, 0, Math.PI * 2); ctx.stroke();
         }
 
         if (s.painting) {
