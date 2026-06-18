@@ -456,7 +456,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
           s.spottedFlash = 36;
           s.shake = 18;
           s.invuln = 90;
-          s.body = [255, 255, 255];
+          s.body = [...(avatarPaletteRef.current[0] ?? [255, 255, 255])] as RGB;
           setHearts(s.hearts);
           setSpotted(true);
           sfxRef.current.spotted();
