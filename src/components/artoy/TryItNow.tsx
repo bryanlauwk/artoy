@@ -290,7 +290,7 @@ export function TryItNow() {
                       <span className="text-pink">5 ›</span> Ultimate playable experience
                     </p>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/20 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-pink">
-                      <Gamepad2 className="size-3" /> Live mini-game · {activeSample?.name ?? "Demo"}'s town
+                      <Gamepad2 className="size-3" /> Meccha Chameleon · {activeSample?.name ?? "Demo"}'s stage
                     </span>
                   </div>
                   <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
