@@ -139,6 +139,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   const bgRef = useRef<HTMLImageElement | null>(null);
   const seekerImgRef = useRef<HTMLImageElement | null>(null);
   const avatarImgRef = useRef<HTMLImageElement | null>(null);
+  const avatarPaletteRef = useRef<RGB[]>([]);
   const samplerRef = useRef<HTMLCanvasElement | null>(null);
   const samplerCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
