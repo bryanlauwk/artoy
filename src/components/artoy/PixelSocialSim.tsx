@@ -363,7 +363,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     let raf = 0;
-    const PW = 28, PH = 28;
+    const PW = 24, PH = 18;
     const MAX_SPEED = 2.4;
     const ACCEL = 0.35;
     const FRIC = 0.78;
@@ -378,6 +378,21 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         if (k["arrowright"] || k["d"]) ax += 1;
         if (k["arrowup"] || k["w"]) ay -= 1;
         if (k["arrowdown"] || k["s"]) ay += 1;
+        if (ax || ay) {
+          moveTargetRef.current = null;
+        } else if (moveTargetRef.current) {
+          const dx = moveTargetRef.current.x - s.px;
+          const dy = moveTargetRef.current.y - s.py;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 8) {
+            moveTargetRef.current = null;
+            s.vx *= 0.35;
+            s.vy *= 0.35;
+          } else {
+            ax = dx / dist;
+            ay = dy / dist;
+          }
+        }
         if (ax && ay) { ax *= 0.7071; ay *= 0.7071; }
         s.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, s.vx + ax * ACCEL));
         s.vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, s.vy + ay * ACCEL));
@@ -389,11 +404,11 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         const nx = s.px + s.vx;
         const ny = s.py + s.vy;
         const blocked = (x: number, y: number) =>
-          COLLIDERS.some((r) => aabb(x - PW / 2, y - PH / 2, PW, PH, r));
+          COLLIDERS.some((r) => aabb(x - PW / 2, y - PH, PW, PH, r));
         if (!blocked(nx, s.py) && nx >= 18 && nx <= W - 18) s.px = nx;
-        else s.vx = 0;
+        else { s.vx = 0; moveTargetRef.current = null; }
         if (!blocked(s.px, ny) && ny >= WALK_TOP && ny <= WALK_BOTTOM) s.py = ny;
-        else s.vy = 0;
+        else { s.vy = 0; moveTargetRef.current = null; }
 
         s.npcs.forEach((n) => {
           n.x += n.speed * n.dir;
@@ -439,6 +454,16 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
 
       const sp = spritesRef.current;
 
+      if (moveTargetRef.current && !done && !s.paused) {
+        const mt = moveTargetRef.current;
+        const pulse = 0.55 + Math.sin(s.t * 0.18) * 0.18;
+        ctx.strokeStyle = scene.accent;
+        ctx.globalAlpha = 0.8;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(mt.x, mt.y + 3, 15 + pulse * 4, 6 + pulse * 2, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
       s.coins.forEach((c) => {
         if (c.taken) return;
         const bob = Math.sin(c.bob) * 3;
@@ -483,30 +508,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
           }
         } else {
           const moving = Math.abs(s.vx) + Math.abs(s.vy) > 0.2;
-          const bobP = moving ? Math.sin(s.t * 0.4) * 2 : 0;
-          ctx.fillStyle = "rgba(0,0,0,0.4)";
-          ctx.beginPath(); ctx.ellipse(s.px, s.py + 18, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
-          const img = avatarImgRef.current;
-          const R = 20;
-          ctx.save();
-          ctx.shadowColor = scene.rim;
-          ctx.shadowBlur = 18;
-          ctx.strokeStyle = scene.rim;
-          ctx.lineWidth = 2.5;
-          ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R + 1, 0, Math.PI * 2); ctx.stroke();
-          ctx.restore();
-          if (img && img.complete && img.naturalWidth > 0) {
-            ctx.save();
-            ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-            ctx.drawImage(img, s.px - R, s.py - R + bobP, R * 2, R * 2);
-            ctx.restore();
-          } else {
-            ctx.fillStyle = scene.rim;
-            ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R, 0, Math.PI * 2); ctx.fill();
-          }
-          ctx.strokeStyle = "rgba(255,255,255,0.95)";
-          ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.arc(s.px, s.py + bobP, R, 0, Math.PI * 2); ctx.stroke();
+          drawGroundedPlayer(ctx, avatarImgRef.current, s.px, s.py, s.t, moving, scene);
         }
       });
 
