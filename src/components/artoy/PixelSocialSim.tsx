@@ -1,193 +1,67 @@
 import { useEffect, useRef, useState } from "react";
-import { Heart, Coins, Pause, Play, RotateCcw, MessageCircle, MousePointerClick } from "lucide-react";
-import novaBg from "@/assets/artoy/sim/nova-bg.png";
-import novaNpcs from "@/assets/artoy/sim/nova-npcs.png";
-import mochiBg from "@/assets/artoy/sim/mochi-bg.png";
-import mochiNpcs from "@/assets/artoy/sim/mochi-npcs.png";
-import hexxBg from "@/assets/artoy/sim/hexx-bg.png";
-import hexxNpcs from "@/assets/artoy/sim/hexx-npcs.png";
+import { Heart, Gem, Pause, Play, RotateCcw, Paintbrush, Eye, Timer } from "lucide-react";
+import novaBg from "@/assets/artoy/sim/nova-paint-bg.png";
+import novaSeeker from "@/assets/artoy/sim/nova-seeker.png";
+import mochiBg from "@/assets/artoy/sim/mochi-paint-bg.png";
+import mochiSeeker from "@/assets/artoy/sim/mochi-seeker.png";
+import hexxBg from "@/assets/artoy/sim/hexx-paint-bg.png";
+import hexxSeeker from "@/assets/artoy/sim/hexx-seeker.png";
 
 export type SampleId = "nova" | "mochi" | "hexx";
 
 type Props = { avatarSrc: string | null; sampleId?: SampleId | null };
 
-// Logical canvas (matches bg aspect, displayed responsively).
 const W = 640;
 const H = 640;
 
-type Rect = { x: number; y: number; w: number; h: number };
-type SpriteRect = Rect;
-
-// Source rects in the sprite strip (1920x1080, 4 cells horizontally).
-const SPR_A: SpriteRect = { x: 120, y: 300, w: 330, h: 620 };
-const SPR_B: SpriteRect = { x: 580, y: 290, w: 320, h: 640 };
-const SPR_C: SpriteRect = { x: 1050, y: 280, w: 360, h: 640 };
-const SPR_COIN: SpriteRect = { x: 1530, y: 400, w: 360, h: 360 };
-
-// World colliders calibrated to the baked plaza backgrounds (logical 640x640 space).
-const COLLIDERS: Rect[] = [
-  { x: 28, y: 100, w: 170, h: 200 },
-  { x: 215, y: 70, w: 210, h: 220 },
-  { x: 440, y: 100, w: 175, h: 200 },
-  { x: 268, y: 410, w: 104, h: 90 },
-  { x: 10, y: 510, w: 130, h: 130 },
-  { x: 510, y: 510, w: 130, h: 130 },
-];
-const WALK_TOP = 320;
-const WALK_BOTTOM = 612;
-
 type SceneDef = {
   bg: string;
-  sp: string;
+  seeker: string;
   accent: string;
-  rim: string;
-  npcs: { name: string; lines: string[]; accent: string }[];
   title: string;
 };
 
 const SCENES: Record<SampleId, SceneDef> = {
-  nova: {
-    bg: novaBg,
-    sp: novaNpcs,
-    accent: "#22d3ee",
-    rim: "#22d3ee",
-    title: "Nova's plaza",
-    npcs: [
-      { name: "Vex", lines: ["The stars are loud tonight ✦", "Charge up at the inn!", "Welcome to Nova-town."], accent: "#22d3ee" },
-      { name: "Lume", lines: ["Stat-link is online.", "Collect the star-coins!", "Cute build, pilot."], accent: "#a78bfa" },
-      { name: "Ori", lines: ["The fountain hums in C#.", "Mind the violet trees.", "Let's sync, friend."], accent: "#c4b5fd" },
-    ],
-  },
-  mochi: {
-    bg: mochiBg,
-    sp: mochiNpcs,
-    accent: "#ff5fa8",
-    rim: "#ff5fa8",
-    title: "Mochi's town",
-    npcs: [
-      { name: "Mochi", lines: ["Cute outfit today!", "Want to trade hearts?", "The cafe just opened ☕"], accent: "#ff5fa8" },
-      { name: "Pip", lines: ["Found all the coins yet?", "I love your style ✦", "Come visit the shop!"], accent: "#22d3ee" },
-      { name: "Juno", lines: ["The fountain is lucky 🍀", "Welcome to town!", "Let's be friends 💖"], accent: "#a78bfa" },
-    ],
-  },
-  hexx: {
-    bg: hexxBg,
-    sp: hexxNpcs,
-    accent: "#fb923c",
-    rim: "#fb923c",
-    title: "Hexx alley",
-    npcs: [
-      { name: "Bolt", lines: ["The arcade is poppin' 🎮", "Beat my high score?", "Welcome to the alley."], accent: "#fb923c" },
-      { name: "Ash", lines: ["Ramen's hot, friend.", "Grab the ember tokens!", "Nice fit."], accent: "#f472b6" },
-      { name: "Riko", lines: ["Spinning vinyl tonight 🎧", "Mind the magenta trees.", "Stay neon."], accent: "#ec4899" },
-    ],
-  },
+  nova:  { bg: novaBg,  seeker: novaSeeker,  accent: "#22d3ee", title: "Nova stage" },
+  mochi: { bg: mochiBg, seeker: mochiSeeker, accent: "#ff5fa8", title: "Mochi stage" },
+  hexx:  { bg: hexxBg,  seeker: hexxSeeker,  accent: "#fb923c", title: "Hexx stage" },
 };
 
-type NPC = {
-  x: number; y: number; baseX: number; range: number; dir: 1 | -1; speed: number;
-  sprite: SpriteRect; name: string; lines: string[]; accent: string;
-};
-
-type Coin = { x: number; y: number; taken: boolean; bob: number };
-
+type RGB = [number, number, number];
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string };
+type Gem = { x: number; y: number; taken: boolean; bob: number };
 
-type MoveTarget = { x: number; y: number } | null;
+const ROUND_SECONDS = 60;
+const PLAYER_RADIUS = 16;
 
-const NPCS_INIT = (id: SampleId): NPC[] => {
-  const s = SCENES[id];
-  return [
-    { x: 130, y: 470, baseX: 130, range: 60, dir: 1, speed: 0.35, sprite: SPR_A, ...s.npcs[0] },
-    { x: 320, y: 540, baseX: 320, range: 70, dir: -1, speed: 0.30, sprite: SPR_B, ...s.npcs[1] },
-    { x: 510, y: 470, baseX: 510, range: 60, dir: 1, speed: 0.32, sprite: SPR_C, ...s.npcs[2] },
-  ];
-};
-
-const COINS_INIT = (): Coin[] => [
-  { x: 90, y: 380, taken: false, bob: 0 },
-  { x: 220, y: 370, taken: false, bob: 0.4 },
-  { x: 420, y: 370, taken: false, bob: 0.8 },
-  { x: 560, y: 380, taken: false, bob: 1.2 },
-  { x: 170, y: 600, taken: false, bob: 1.6 },
-  { x: 320, y: 615, taken: false, bob: 2.0 },
-  { x: 470, y: 600, taken: false, bob: 2.4 },
-  { x: 320, y: 360, taken: false, bob: 2.8 },
+const GEMS_INIT = (): Gem[] => [
+  { x: 130, y: 180, taken: false, bob: 0 },
+  { x: 510, y: 200, taken: false, bob: 1.2 },
+  { x: 320, y: 500, taken: false, bob: 2.4 },
 ];
-
-function aabb(ax: number, ay: number, aw: number, ah: number, b: Rect) {
-  return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
-}
 
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-function drawGroundedPlayer(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement | null,
-  x: number,
-  footY: number,
-  t: number,
-  moving: boolean,
-  scene: SceneDef,
-) {
-  const stepBob = moving ? Math.sin(t * 0.38) * 2 : 0;
-  const sway = moving ? Math.sin(t * 0.22) * 1.5 : 0;
-  const bodyY = footY - 35 + stepBob;
-  const headX = x + sway;
-  const headY = footY - 53 + stepBob;
-  const headR = 18;
+function colorDistance(a: RGB, b: RGB): number {
+  const dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
 
-  ctx.fillStyle = "rgba(0,0,0,0.48)";
-  ctx.beginPath(); ctx.ellipse(x, footY + 4, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+function lerpColor(a: RGB, b: RGB, t: number): RGB {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
 
-  ctx.strokeStyle = "rgba(15,15,28,0.95)";
-  ctx.lineWidth = 5;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x - 8, bodyY + 22); ctx.lineTo(x - 13, footY - 2);
-  ctx.moveTo(x + 8, bodyY + 22); ctx.lineTo(x + 13, footY - 2);
-  ctx.stroke();
+function rgbCss(c: RGB) { return `rgb(${c[0]|0}, ${c[1]|0}, ${c[2]|0})`; }
 
-  ctx.fillStyle = scene.accent;
-  ctx.strokeStyle = "rgba(255,255,255,0.82)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x, bodyY - 2);
-  ctx.lineTo(x + 18, bodyY + 15);
-  ctx.lineTo(x + 12, bodyY + 35);
-  ctx.lineTo(x - 12, bodyY + 35);
-  ctx.lineTo(x - 18, bodyY + 15);
-  ctx.closePath();
-  ctx.fill(); ctx.stroke();
-
-  ctx.save();
-  ctx.shadowColor = scene.rim;
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = "rgba(8,8,18,0.94)";
-  ctx.beginPath(); ctx.arc(headX, headY, headR + 4, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-
-  ctx.save();
-  ctx.beginPath(); ctx.arc(headX, headY, headR, 0, Math.PI * 2); ctx.clip();
-  if (img && img.complete && img.naturalWidth > 0) {
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
-    const sx = (img.naturalWidth - side) / 2;
-    const sy = (img.naturalHeight - side) / 2;
-    ctx.drawImage(img, sx, sy, side, side, headX - headR, headY - headR, headR * 2, headR * 2);
-  } else {
-    ctx.fillStyle = scene.rim;
-    ctx.fillRect(headX - headR, headY - headR, headR * 2, headR * 2);
-  }
-  ctx.restore();
-
-  ctx.strokeStyle = scene.rim;
-  ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(headX, headY, headR + 1.5, 0, Math.PI * 2); ctx.stroke();
-  ctx.strokeStyle = "rgba(255,255,255,0.95)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(headX, headY, headR - 1, 0, Math.PI * 2); ctx.stroke();
+function pointInTriangle(px: number, py: number, ax: number, ay: number, bx: number, by: number, cx: number, cy: number) {
+  const d1 = (px - bx) * (ay - by) - (ax - bx) * (py - by);
+  const d2 = (px - cx) * (by - cy) - (bx - cx) * (py - cy);
+  const d3 = (px - ax) * (cy - ay) - (cx - ax) * (py - ay);
+  const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+  const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+  return !(hasNeg && hasPos);
 }
 
 export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
@@ -196,59 +70,71 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const keysRef = useRef<Record<string, boolean>>({});
-  const activeRef = useRef(false);
-  const moveTargetRef = useRef<MoveTarget>(null);
-  const draggingRef = useRef(false);
-  const stateRef = useRef({
-    px: 310, py: 470,
-    vx: 0, vy: 0,
-    npcs: NPCS_INIT(activeId),
-    coins: COINS_INIT(),
-    particles: [] as Particle[],
-    chatNpcIndex: -1,
-    chatLineIndex: 0,
-    chatTimer: 0,
-    t: 0,
-    paused: false,
-  });
   const bgRef = useRef<HTMLImageElement | null>(null);
-  const spritesRef = useRef<HTMLImageElement | null>(null);
+  const seekerImgRef = useRef<HTMLImageElement | null>(null);
   const avatarImgRef = useRef<HTMLImageElement | null>(null);
+  const samplerRef = useRef<HTMLCanvasElement | null>(null);
+  const samplerCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  const [coinCount, setCoinCount] = useState(0);
-  const [hearts] = useState(3);
-  const [chatText, setChatText] = useState<string | null>(null);
-  const [chatAccent, setChatAccent] = useState<string>(scene.accent);
+  const keysRef = useRef<Record<string, boolean>>({});
+  const paintHoldRef = useRef(false);
+  const moveTargetRef = useRef<{ x: number; y: number } | null>(null);
+
+  const stateRef = useRef({
+    px: W / 2, py: H / 2,
+    vx: 0, vy: 0,
+    body: [255, 255, 255] as RGB,
+    floor: [255, 255, 255] as RGB,
+    blend: 0,
+    seekerAngle: 0,
+    seekerCx: W / 2,
+    seekerCy: 90,
+    seekerDir: 1,
+    spottedFlash: 0,
+    invuln: 0,
+    particles: [] as Particle[],
+    gems: GEMS_INIT(),
+    t: 0,
+    timeLeft: ROUND_SECONDS * 60, // ticks at 60fps
+    hearts: 3,
+    painting: false,
+    spotted: false,
+  });
+
+  const [hearts, setHearts] = useState(3);
+  const [gemCount, setGemCount] = useState(0);
+  const [blendPct, setBlendPct] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
   const [paused, setPaused] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<null | "win" | "lose">(null);
+  const [spotted, setSpotted] = useState(false);
   const [touch, setTouch] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [bodyCss, setBodyCss] = useState("rgb(255,255,255)");
 
-  // Load scene art whenever the sample changes — and reset world state.
+  // Load scene assets + reset
   useEffect(() => {
     const bg = new Image();
-    bg.onload = () => { bgRef.current = bg; };
-    bg.src = scene.bg;
-    const sp = new Image();
-    sp.onload = () => { spritesRef.current = sp; };
-    sp.src = scene.sp;
-
-    stateRef.current = {
-      px: 310, py: 470, vx: 0, vy: 0,
-      npcs: NPCS_INIT(activeId),
-      coins: COINS_INIT(),
-      particles: [],
-      chatNpcIndex: -1, chatLineIndex: 0, chatTimer: 0, t: 0, paused: false,
+    bg.onload = () => {
+      bgRef.current = bg;
+      const off = document.createElement("canvas");
+      off.width = W; off.height = H;
+      const oc = off.getContext("2d", { willReadFrequently: true });
+      if (oc) {
+        oc.drawImage(bg, 0, 0, W, H);
+        samplerRef.current = off;
+        samplerCtxRef.current = oc;
+      }
     };
-    setCoinCount(0);
-    setChatText(null);
-    setDone(false);
-    setPaused(false);
-    moveTargetRef.current = null;
-  }, [activeId, scene.bg, scene.sp]);
+    bg.src = scene.bg;
+    const sk = new Image();
+    sk.onload = () => { seekerImgRef.current = sk; };
+    sk.src = scene.seeker;
 
-  // Avatar
+    resetRound();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
+
   useEffect(() => {
     if (!avatarSrc) { avatarImgRef.current = null; return; }
     const img = new Image();
@@ -258,260 +144,373 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   }, [avatarSrc]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setTouch(window.matchMedia("(pointer: coarse)").matches);
-    }
+    if (typeof window !== "undefined") setTouch(window.matchMedia("(pointer: coarse)").matches);
   }, []);
 
+  // Global keyboard listeners — always active. Page has no other key context here.
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (!activeRef.current) return;
       const k = e.key.toLowerCase();
-      if (k === "escape") {
-        activeRef.current = false;
-        moveTargetRef.current = null;
-        keysRef.current = {};
-        setFocused(false);
-        return;
-      }
-      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " ", "w", "a", "s", "d", "e"].includes(k)) {
+      const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+      if (["arrowup","arrowdown","arrowleft","arrowright","w","a","s","d"," "].includes(k)) {
         e.preventDefault();
+        setFocused(true);
       }
+      if (k === " ") paintHoldRef.current = true;
       keysRef.current[k] = true;
-      if (k === "e") tryChat();
     };
-    const up = (e: KeyboardEvent) => { if (activeRef.current) keysRef.current[e.key.toLowerCase()] = false; };
-    const pointerDown = (e: PointerEvent) => {
-      const wrap = wrapRef.current;
-      if (!wrap || wrap.contains(e.target as Node)) return;
-      activeRef.current = false;
-      moveTargetRef.current = null;
-      keysRef.current = {};
-      setFocused(false);
+    const up = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (k === " ") paintHoldRef.current = false;
+      keysRef.current[k] = false;
     };
-    const blur = () => { keysRef.current = {}; moveTargetRef.current = null; };
+    const blur = () => { keysRef.current = {}; paintHoldRef.current = false; };
     window.addEventListener("keydown", down, { passive: false });
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
-    document.addEventListener("pointerdown", pointerDown);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
-      document.removeEventListener("pointerdown", pointerDown);
     };
   }, []);
 
-  const activateGame = () => {
-    activeRef.current = true;
-    setFocused(true);
-    requestAnimationFrame(() => wrapRef.current?.focus({ preventScroll: true }));
-  };
-
-  const setMoveTargetFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointer = (e: React.PointerEvent<HTMLDivElement>) => {
     if (paused || done) return;
-    activateGame();
-    draggingRef.current = true;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setFocused(true);
     const rect = e.currentTarget.getBoundingClientRect();
     moveTargetRef.current = {
-      x: clamp(((e.clientX - rect.left) / rect.width) * W, 18, W - 18),
-      y: clamp(((e.clientY - rect.top) / rect.height) * H, WALK_TOP, WALK_BOTTOM),
+      x: clamp(((e.clientX - rect.left) / rect.width) * W, PLAYER_RADIUS, W - PLAYER_RADIUS),
+      y: clamp(((e.clientY - rect.top) / rect.height) * H, PLAYER_RADIUS, H - PLAYER_RADIUS),
     };
   };
 
-  const updateMoveTargetFromPointer = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!draggingRef.current || paused || done) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    moveTargetRef.current = {
-      x: clamp(((e.clientX - rect.left) / rect.width) * W, 18, W - 18),
-      y: clamp(((e.clientY - rect.top) / rect.height) * H, WALK_TOP, WALK_BOTTOM),
+  const resetRound = () => {
+    stateRef.current = {
+      px: W / 2, py: H - 80,
+      vx: 0, vy: 0,
+      body: [255, 255, 255],
+      floor: [255, 255, 255],
+      blend: 0,
+      seekerAngle: Math.PI / 2,
+      seekerCx: 120, seekerCy: 90, seekerDir: 1,
+      spottedFlash: 0, invuln: 0,
+      particles: [],
+      gems: GEMS_INIT(),
+      t: 0,
+      timeLeft: ROUND_SECONDS * 60,
+      hearts: 3,
+      painting: false,
+      spotted: false,
     };
+    moveTargetRef.current = null;
+    setHearts(3);
+    setGemCount(0);
+    setBlendPct(0);
+    setTimeLeft(ROUND_SECONDS);
+    setBodyCss("rgb(255,255,255)");
+    setDone(null);
+    setSpotted(false);
+    setPaused(false);
   };
 
-  const endPointerMove = () => { draggingRef.current = false; };
-
-  const tryChat = () => {
-    const s = stateRef.current;
-    const nearIdx = s.npcs.findIndex((n) => Math.hypot(n.x - s.px, n.y + 4 - s.py) < 70);
-    if (nearIdx === -1) return;
-    if (s.chatNpcIndex !== nearIdx) {
-      s.chatNpcIndex = nearIdx;
-      s.chatLineIndex = 0;
-    } else {
-      s.chatLineIndex = (s.chatLineIndex + 1) % s.npcs[nearIdx].lines.length;
-    }
-    s.chatTimer = 220;
-    setChatText(`${s.npcs[nearIdx].name}: ${s.npcs[nearIdx].lines[s.chatLineIndex]}`);
-    setChatAccent(s.npcs[nearIdx].accent);
-  };
-
-  const spawnSparkles = (x: number, y: number, color: string) => {
-    const s = stateRef.current;
-    for (let i = 0; i < 8; i++) {
-      const a = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
-      s.particles.push({
-        x, y, vx: Math.cos(a) * (1 + Math.random() * 1.5), vy: Math.sin(a) * (1 + Math.random() * 1.5) - 0.5,
-        life: 0, max: 30 + Math.random() * 10, color,
-      });
-    }
-  };
-
+  // Main loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     let raf = 0;
-    const PW = 24, PH = 18;
-    const MAX_SPEED = 2.4;
-    const ACCEL = 0.35;
+
+    const MAX_SPEED = 2.6;
+    const ACCEL = 0.4;
     const FRIC = 0.78;
 
     const step = () => {
       const s = stateRef.current;
-      if (!s.paused && !done) {
+      if (!paused && !done) {
         s.t += 1;
+
+        // Movement
         const k = keysRef.current;
         let ax = 0, ay = 0;
-        if (k["arrowleft"] || k["a"]) ax -= 1;
+        if (k["arrowleft"]  || k["a"]) ax -= 1;
         if (k["arrowright"] || k["d"]) ax += 1;
-        if (k["arrowup"] || k["w"]) ay -= 1;
-        if (k["arrowdown"] || k["s"]) ay += 1;
+        if (k["arrowup"]    || k["w"]) ay -= 1;
+        if (k["arrowdown"]  || k["s"]) ay += 1;
         if (ax || ay) {
           moveTargetRef.current = null;
         } else if (moveTargetRef.current) {
           const dx = moveTargetRef.current.x - s.px;
           const dy = moveTargetRef.current.y - s.py;
           const dist = Math.hypot(dx, dy);
-          if (dist < 8) {
+          if (dist < 6) {
             moveTargetRef.current = null;
-            s.vx *= 0.35;
-            s.vy *= 0.35;
           } else {
             ax = dx / dist;
             ay = dy / dist;
           }
         }
         if (ax && ay) { ax *= 0.7071; ay *= 0.7071; }
-        s.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, s.vx + ax * ACCEL));
-        s.vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, s.vy + ay * ACCEL));
+        s.vx = clamp(s.vx + ax * ACCEL, -MAX_SPEED, MAX_SPEED);
+        s.vy = clamp(s.vy + ay * ACCEL, -MAX_SPEED, MAX_SPEED);
         if (!ax) s.vx *= FRIC;
         if (!ay) s.vy *= FRIC;
         if (Math.abs(s.vx) < 0.05) s.vx = 0;
         if (Math.abs(s.vy) < 0.05) s.vy = 0;
+        s.px = clamp(s.px + s.vx, PLAYER_RADIUS, W - PLAYER_RADIUS);
+        s.py = clamp(s.py + s.vy, PLAYER_RADIUS + 40, H - PLAYER_RADIUS);
 
-        const nx = s.px + s.vx;
-        const ny = s.py + s.vy;
-        const blocked = (x: number, y: number) =>
-          COLLIDERS.some((r) => aabb(x - PW / 2, y - PH, PW, PH, r));
-        if (!blocked(nx, s.py) && nx >= 18 && nx <= W - 18) s.px = nx;
-        else { s.vx = 0; moveTargetRef.current = null; }
-        if (!blocked(s.px, ny) && ny >= WALK_TOP && ny <= WALK_BOTTOM) s.py = ny;
-        else { s.vy = 0; moveTargetRef.current = null; }
+        // Sample floor color under feet
+        const sc = samplerCtxRef.current;
+        if (sc) {
+          try {
+            const d = sc.getImageData(s.px | 0, (s.py + 6) | 0, 1, 1).data;
+            s.floor = [d[0], d[1], d[2]];
+          } catch { /* CORS-safe — same-origin asset */ }
+        }
 
-        s.npcs.forEach((n) => {
-          n.x += n.speed * n.dir;
-          if (n.x > n.baseX + n.range) n.dir = -1;
-          if (n.x < n.baseX - n.range) n.dir = 1;
-        });
-
-        s.coins.forEach((c) => {
-          c.bob += 0.08;
-          if (!c.taken && Math.hypot(c.x - s.px, c.y - s.py) < 26) {
-            c.taken = true;
-            spawnSparkles(c.x, c.y, "#fde047");
-            setCoinCount((v) => {
-              const nv = v + 1;
-              if (nv >= s.coins.length) {
-                spawnSparkles(s.px, s.py, scene.accent);
-                spawnSparkles(s.px, s.py, "#fde047");
-                setDone(true);
-              }
-              return nv;
+        // Paint when held
+        s.painting = paintHoldRef.current;
+        if (s.painting) {
+          s.body = lerpColor(s.body, s.floor, 0.12);
+          if (s.t % 6 === 0) {
+            s.particles.push({
+              x: s.px + (Math.random() - 0.5) * 18,
+              y: s.py + 4 + (Math.random() - 0.5) * 10,
+              vx: (Math.random() - 0.5) * 0.6,
+              vy: -0.4 - Math.random() * 0.6,
+              life: 0, max: 26 + Math.random() * 10,
+              color: rgbCss(s.floor),
             });
+          }
+        }
+
+        // Blend %
+        const dC = colorDistance(s.body, s.floor);
+        const blend = clamp(1 - dC / 220, 0, 1);
+        s.blend = blend;
+
+        // Seeker sweep (figure-8-ish horizontal patrol + cone rotation)
+        s.seekerCx += 0.9 * s.seekerDir;
+        if (s.seekerCx > W - 90) s.seekerDir = -1;
+        if (s.seekerCx < 90) s.seekerDir = 1;
+        s.seekerAngle = Math.PI / 2 + Math.sin(s.t * 0.018) * 0.9;
+
+        // Cone vertices
+        const coneLen = 360;
+        const coneHalf = 0.55; // radians
+        const a1 = s.seekerAngle - coneHalf;
+        const a2 = s.seekerAngle + coneHalf;
+        const ax1 = s.seekerCx + Math.cos(a1) * coneLen;
+        const ay1 = s.seekerCy + Math.sin(a1) * coneLen;
+        const ax2 = s.seekerCx + Math.cos(a2) * coneLen;
+        const ay2 = s.seekerCy + Math.sin(a2) * coneLen;
+
+        const inCone = pointInTriangle(s.px, s.py, s.seekerCx, s.seekerCy, ax1, ay1, ax2, ay2);
+
+        // Detection
+        if (s.invuln > 0) s.invuln -= 1;
+        if (inCone && blend < 0.78 && s.invuln === 0) {
+          s.hearts -= 1;
+          s.spottedFlash = 30;
+          s.invuln = 90;
+          s.body = [255, 255, 255]; // wash off paint
+          setHearts(s.hearts);
+          setSpotted(true);
+          setTimeout(() => setSpotted(false), 600);
+          // knockback
+          const dx = s.px - s.seekerCx;
+          const dy = s.py - s.seekerCy;
+          const m = Math.hypot(dx, dy) || 1;
+          s.vx += (dx / m) * 4;
+          s.vy += (dy / m) * 4;
+          if (s.hearts <= 0) {
+            setDone("lose");
+          }
+        }
+        if (s.spottedFlash > 0) s.spottedFlash -= 1;
+
+        // Gems
+        s.gems.forEach((g) => {
+          g.bob += 0.08;
+          if (!g.taken && Math.hypot(g.x - s.px, g.y - s.py) < 24 && blend > 0.72) {
+            g.taken = true;
+            for (let i = 0; i < 14; i++) {
+              const a = (Math.PI * 2 * i) / 14;
+              s.particles.push({
+                x: g.x, y: g.y,
+                vx: Math.cos(a) * 2, vy: Math.sin(a) * 2,
+                life: 0, max: 40, color: scene.accent,
+              });
+            }
+            const taken = s.gems.filter((x) => x.taken).length;
+            setGemCount(taken);
+            if (taken >= s.gems.length) setDone("win");
           }
         });
 
+        // Timer
+        s.timeLeft -= 1;
+        if (s.timeLeft <= 0) {
+          setDone("win"); // surviving to 0 = win
+          s.timeLeft = 0;
+        }
+
+        // Particles
         s.particles = s.particles.filter((p) => {
           p.life += 1;
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.08;
+          p.vy += 0.05;
           return p.life < p.max;
         });
 
-        if (s.chatTimer > 0) {
-          s.chatTimer -= 1;
-          if (s.chatTimer === 0) { setChatText(null); s.chatNpcIndex = -1; }
+        // Sync UI state at intervals
+        if (s.t % 4 === 0) {
+          setBlendPct(Math.round(blend * 100));
+          setBodyCss(rgbCss(s.body));
+          setTimeLeft(Math.ceil(s.timeLeft / 60));
         }
       }
 
+      // ---------- DRAW ----------
       ctx.clearRect(0, 0, W, H);
       const bg = bgRef.current;
       if (bg) ctx.drawImage(bg, 0, 0, W, H);
       else { ctx.fillStyle = "#1a0a2e"; ctx.fillRect(0, 0, W, H); }
 
-      const sp = spritesRef.current;
-
-      if (moveTargetRef.current && !done && !s.paused) {
+      // Move target ring
+      if (moveTargetRef.current && !done && !paused) {
         const mt = moveTargetRef.current;
         const pulse = 0.55 + Math.sin(s.t * 0.18) * 0.18;
         ctx.strokeStyle = scene.accent;
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.85;
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.ellipse(mt.x, mt.y + 3, 15 + pulse * 4, 6 + pulse * 2, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(mt.x, mt.y, 10 + pulse * 4, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.globalAlpha = 1;
       }
 
-      s.coins.forEach((c) => {
-        if (c.taken) return;
-        const bob = Math.sin(c.bob) * 3;
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
+      // Seeker cone
+      {
+        const coneLen = 360;
+        const coneHalf = 0.55;
+        const a1 = s.seekerAngle - coneHalf;
+        const a2 = s.seekerAngle + coneHalf;
+        const ax1 = s.seekerCx + Math.cos(a1) * coneLen;
+        const ay1 = s.seekerCy + Math.sin(a1) * coneLen;
+        const ax2 = s.seekerCx + Math.cos(a2) * coneLen;
+        const ay2 = s.seekerCy + Math.sin(a2) * coneLen;
+        const grad = ctx.createRadialGradient(s.seekerCx, s.seekerCy, 10, s.seekerCx, s.seekerCy, coneLen);
+        grad.addColorStop(0, `${scene.accent}cc`);
+        grad.addColorStop(0.5, `${scene.accent}55`);
+        grad.addColorStop(1, `${scene.accent}00`);
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.ellipse(c.x, c.y + 10, 9, 3, 0, 0, Math.PI * 2);
+        ctx.moveTo(s.seekerCx, s.seekerCy);
+        ctx.lineTo(ax1, ay1);
+        ctx.lineTo(ax2, ay2);
+        ctx.closePath();
         ctx.fill();
-        if (sp) {
-          ctx.drawImage(sp, SPR_COIN.x, SPR_COIN.y, SPR_COIN.w, SPR_COIN.h, c.x - 14, c.y - 14 + bob, 28, 28);
+
+        // Seeker sprite
+        const sk = seekerImgRef.current;
+        const skSize = 64;
+        if (sk) {
+          ctx.drawImage(sk, s.seekerCx - skSize / 2, s.seekerCy - skSize / 2, skSize, skSize);
         } else {
-          ctx.fillStyle = "#fde047";
-          ctx.beginPath(); ctx.arc(c.x, c.y + bob, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#222";
+          ctx.beginPath(); ctx.arc(s.seekerCx, s.seekerCy, 20, 0, Math.PI * 2); ctx.fill();
         }
+      }
+
+      // Gems
+      s.gems.forEach((g) => {
+        if (g.taken) return;
+        const bob = Math.sin(g.bob) * 4;
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath(); ctx.ellipse(g.x, g.y + 12, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.translate(g.x, g.y + bob);
+        ctx.fillStyle = scene.accent;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = scene.accent;
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.moveTo(0, -10); ctx.lineTo(8, 0); ctx.lineTo(0, 12); ctx.lineTo(-8, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
       });
 
-      type Drawable = { y: number; kind: "npc" | "player"; ref?: NPC };
-      const drawables: Drawable[] = [
-        ...s.npcs.map((n) => ({ y: n.y, kind: "npc" as const, ref: n })),
-        { y: s.py, kind: "player" as const },
-      ];
-      drawables.sort((a, b) => a.y - b.y);
-
-      drawables.forEach((d) => {
-        if (d.kind === "npc" && d.ref) {
-          const n = d.ref;
-          const bob = Math.sin(s.t * 0.12 + n.baseX) * 1.5;
-          ctx.fillStyle = "rgba(0,0,0,0.35)";
-          ctx.beginPath(); ctx.ellipse(n.x, n.y + 24, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
-          if (sp) {
-            const dw = 56, dh = (n.sprite.h / n.sprite.w) * dw;
-            ctx.drawImage(sp, n.sprite.x, n.sprite.y, n.sprite.w, n.sprite.h, n.x - dw / 2, n.y - dh + 22 + bob, dw, dh);
-          }
-          const near = Math.hypot(n.x - s.px, n.y - s.py) < 70;
-          if (near && s.chatNpcIndex === -1) {
-            const py = n.y - 56 + Math.sin(s.t * 0.18) * 2;
-            ctx.fillStyle = n.accent;
-            ctx.beginPath(); ctx.arc(n.x, py, 9, 0, Math.PI * 2); ctx.fill();
+      // Chameleon (player)
+      {
+        const blink = s.invuln > 0 && (s.t % 8 < 4);
+        if (!blink) {
+          const bodyColor = rgbCss(s.body);
+          // shadow
+          ctx.fillStyle = "rgba(0,0,0,0.42)";
+          ctx.beginPath(); ctx.ellipse(s.px, s.py + 14, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+          // body blob
+          ctx.fillStyle = bodyColor;
+          ctx.strokeStyle = "rgba(15,15,28,0.85)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(s.px, s.py + 2, 18, 14, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // tail
+          ctx.beginPath();
+          ctx.moveTo(s.px - 14, s.py + 4);
+          ctx.quadraticCurveTo(s.px - 28, s.py + 16, s.px - 22, s.py + 22);
+          ctx.quadraticCurveTo(s.px - 14, s.py + 14, s.px - 8, s.py + 12);
+          ctx.fillStyle = bodyColor;
+          ctx.fill(); ctx.stroke();
+          // legs
+          ctx.fillStyle = bodyColor;
+          [[-12,12],[12,12],[-10,-6],[10,-6]].forEach(([dx, dy]) => {
+            ctx.beginPath();
+            ctx.ellipse(s.px + dx, s.py + dy + 6, 5, 4, 0, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+          });
+          // head with avatar
+          const headX = s.px + 8;
+          const headY = s.py - 10;
+          const headR = 14;
+          ctx.fillStyle = bodyColor;
+          ctx.beginPath(); ctx.arc(headX, headY, headR + 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.save();
+          ctx.beginPath(); ctx.arc(headX, headY, headR - 1, 0, Math.PI * 2); ctx.clip();
+          const av = avatarImgRef.current;
+          if (av && av.complete && av.naturalWidth > 0) {
+            const side = Math.min(av.naturalWidth, av.naturalHeight);
+            const sx = (av.naturalWidth - side) / 2;
+            const sy = (av.naturalHeight - side) / 2;
+            ctx.drawImage(av, sx, sy, side, side, headX - headR, headY - headR, headR * 2, headR * 2);
+          } else {
             ctx.fillStyle = "#fff";
-            ctx.font = "bold 11px ui-monospace, monospace";
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText("E", n.x, py + 1);
+            ctx.fillRect(headX - headR, headY - headR, headR * 2, headR * 2);
           }
-        } else {
-          const moving = Math.abs(s.vx) + Math.abs(s.vy) > 0.2;
-          drawGroundedPlayer(ctx, avatarImgRef.current, s.px, s.py, s.t, moving, scene);
+          ctx.restore();
+          // eye
+          ctx.fillStyle = "#0a0a14";
+          ctx.beginPath(); ctx.arc(headX + 8, headY - 4, 2.5, 0, Math.PI * 2); ctx.fill();
         }
-      });
 
+        // Paint glow
+        if (s.painting) {
+          ctx.strokeStyle = rgbCss(s.floor);
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.7 + Math.sin(s.t * 0.4) * 0.2;
+          ctx.beginPath(); ctx.arc(s.px, s.py + 2, 24, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Particles
       s.particles.forEach((p) => {
         const a = 1 - p.life / p.max;
         ctx.fillStyle = p.color;
@@ -520,33 +519,27 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         ctx.globalAlpha = 1;
       });
 
+      // Spotted flash
+      if (s.spottedFlash > 0) {
+        ctx.fillStyle = `rgba(255,80,80,${(s.spottedFlash / 30) * 0.45})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [done, scene.accent, scene.rim]);
+  }, [paused, done, scene.accent]);
 
-  useEffect(() => { stateRef.current.paused = paused; }, [paused]);
-
-  const reset = () => {
-    stateRef.current = {
-      px: 310, py: 470, vx: 0, vy: 0,
-      npcs: NPCS_INIT(activeId), coins: COINS_INIT(), particles: [],
-      chatNpcIndex: -1, chatLineIndex: 0, chatTimer: 0, t: 0, paused: false,
-    };
-    moveTargetRef.current = null;
-    setCoinCount(0);
-    setChatText(null);
-    setDone(false);
-    setPaused(false);
-    activateGame();
-  };
-
-  const press = (k: string, v: boolean) => {
-    activeRef.current = true;
+  const dpadPress = (k: string, v: boolean) => {
     setFocused(true);
     if (v) moveTargetRef.current = null;
     keysRef.current[k] = v;
+  };
+
+  const paintPress = (v: boolean) => {
+    setFocused(true);
+    paintHoldRef.current = v;
   };
 
   return (
@@ -558,32 +551,36 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         boxShadow: `0 18px 60px -30px ${scene.accent}`,
       }}
     >
+      {/* HUD */}
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3 text-xs font-extrabold uppercase tracking-[0.14em]">
           <span className="inline-flex items-center gap-1" style={{ color: scene.accent }}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <Heart key={i} className={`size-3.5 ${i < hearts ? "fill-current" : "opacity-30"}`} />
+              <Heart key={i} className={`size-3.5 ${i < hearts ? "fill-current" : "opacity-25"}`} />
             ))}
           </span>
-          <span className="inline-flex items-center gap-1 text-yellow-300">
-            <Coins className="size-3.5" /> {coinCount}/8
+          <span className="inline-flex items-center gap-1 text-foreground/80">
+            <Gem className="size-3.5" style={{ color: scene.accent }} /> {gemCount}/3
           </span>
-          <span className="hidden text-[10px] font-extrabold uppercase tracking-[0.14em] text-foreground/60 md:inline">
+          <span className="inline-flex items-center gap-1 text-foreground/70">
+            <Timer className="size-3.5" /> {timeLeft}s
+          </span>
+          <span className="hidden md:inline text-[10px] uppercase tracking-[0.14em] text-foreground/60">
             · {scene.title}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden text-[10px] font-extrabold uppercase tracking-[0.14em] text-foreground/60 sm:inline">
-            Click game · WASD/Arrows · E to chat
+          <span className="hidden sm:inline text-[10px] font-extrabold uppercase tracking-[0.14em] text-foreground/60">
+            WASD/Arrows · Hold SPACE to paint
           </span>
           <button
-            onClick={() => { setPaused((p) => !p); activateGame(); }}
+            onClick={() => setPaused((p) => !p)}
             className="inline-flex items-center gap-1 rounded-lg border border-border bg-white/[0.04] px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] hover:bg-white/[0.1]"
           >
             {paused ? <Play className="size-3" /> : <Pause className="size-3" />} {paused ? "Resume" : "Pause"}
           </button>
           <button
-            onClick={reset}
+            onClick={resetRound}
             className="inline-flex items-center gap-1 rounded-lg border border-border bg-white/[0.04] px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] hover:bg-white/[0.1]"
           >
             <RotateCcw className="size-3" /> Reset
@@ -591,35 +588,49 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         </div>
       </div>
 
+      {/* Blend meter */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-foreground/70">
+          <Eye className="size-3" /> Blend
+        </span>
+        <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="absolute inset-y-0 left-0 transition-[width] duration-100"
+            style={{
+              width: `${blendPct}%`,
+              background: `linear-gradient(90deg, ${bodyCss}, ${scene.accent})`,
+              boxShadow: `0 0 12px ${scene.accent}`,
+            }}
+          />
+          <div className="absolute inset-y-0" style={{ left: "78%", width: 2, background: "rgba(255,255,255,0.4)" }} />
+        </div>
+        <span
+          className="w-10 text-right text-[10px] font-black tabular-nums"
+          style={{ color: blendPct >= 78 ? scene.accent : "rgb(255,255,255,0.7)" }}
+        >
+          {blendPct}%
+        </span>
+      </div>
+
+      {/* Canvas */}
       <div
         ref={wrapRef}
         tabIndex={0}
-        onFocus={activateGame}
-        onPointerDown={setMoveTargetFromPointer}
-        onPointerMove={updateMoveTargetFromPointer}
-        onPointerUp={endPointerMove}
-        onPointerCancel={endPointerMove}
-        className="relative overflow-hidden rounded-xl border outline-none focus:ring-2"
+        onFocus={() => setFocused(true)}
+        onPointerDown={onPointer}
+        onPointerMove={(e) => { if (e.buttons) onPointer(e); }}
+        className={`relative overflow-hidden rounded-xl border outline-none focus:ring-2 ${spotted ? "ring-2 ring-red-500" : ""}`}
         style={{
           aspectRatio: "1 / 1",
           touchAction: "none",
           borderColor: `color-mix(in oklab, ${scene.accent} 40%, transparent)`,
         }}
       >
-        <canvas
-          ref={canvasRef}
-          width={W}
-          height={H}
-          className="block h-full w-full"
-        />
+        <canvas ref={canvasRef} width={W} height={H} className="block h-full w-full" />
 
-        {chatText && (
-          <div
-            className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border bg-black/85 px-3.5 py-2 text-xs font-bold text-white shadow-2xl"
-            style={{ borderColor: chatAccent, boxShadow: `0 0 24px -4px ${chatAccent}` }}
-          >
-            <MessageCircle className="mr-1.5 inline size-3.5" style={{ color: chatAccent }} />
-            {chatText}
+        {spotted && (
+          <div className="pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 rounded-full bg-red-500 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white shadow-2xl">
+            Spotted!
           </div>
         )}
 
@@ -628,16 +639,20 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
             <div
               className="rounded-2xl border px-6 py-5 text-center"
               style={{
-                borderColor: scene.accent,
-                background: `linear-gradient(135deg, color-mix(in oklab, ${scene.accent} 24%, var(--background) 76%), color-mix(in oklab, ${scene.accent} 12%, var(--background) 88%))`,
+                borderColor: done === "win" ? scene.accent : "#ef4444",
+                background: `linear-gradient(135deg, color-mix(in oklab, ${done === "win" ? scene.accent : "#ef4444"} 24%, var(--background) 76%), color-mix(in oklab, ${done === "win" ? scene.accent : "#ef4444"} 12%, var(--background) 88%))`,
               }}
             >
-              <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: scene.accent }}>✦ Quest complete</p>
-              <p className="mt-1.5 text-lg font-black">You lit up {scene.title} ✨</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em]" style={{ color: done === "win" ? scene.accent : "#ef4444" }}>
+                {done === "win" ? "✦ You blended in!" : "✦ Spotted out"}
+              </p>
+              <p className="mt-1.5 text-lg font-black">
+                {done === "win" ? `Meccha Chameleon mastered ${scene.title}` : "Try painting faster next round"}
+              </p>
               <button
-                onClick={reset}
+                onClick={resetRound}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-white hover:opacity-90"
-                style={{ background: scene.accent }}
+                style={{ background: done === "win" ? scene.accent : "#ef4444" }}
               >
                 <RotateCcw className="size-3" /> Play again
               </button>
@@ -654,12 +669,14 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         {!focused && !done && !paused && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center bg-gradient-to-t from-black/70 via-black/30 to-transparent">
             <div
-              className="flex flex-col items-center gap-2 rounded-2xl border bg-black/80 px-5 py-4 text-center"
+              className="flex flex-col items-center gap-2 rounded-2xl border bg-black/85 px-5 py-4 text-center"
               style={{ borderColor: scene.accent }}
             >
-              <MousePointerClick className="size-6" style={{ color: scene.accent }} />
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-white">Tap the world to move</p>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">WASD / Arrows also work · E to chat</p>
+              <Paintbrush className="size-6" style={{ color: scene.accent }} />
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-white">Paint yourself to blend in</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/70">
+                WASD / Arrows · Hold SPACE to paint · Tap to move
+              </p>
             </div>
           </div>
         )}
@@ -669,18 +686,21 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
         <div className="mt-3 flex items-center justify-between gap-4 select-none">
           <div className="grid grid-cols-3 gap-1.5">
             <div />
-            <DpadBtn accent={scene.accent} onDown={() => press("arrowup", true)} onUp={() => press("arrowup", false)}>↑</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => dpadPress("arrowup", true)} onUp={() => dpadPress("arrowup", false)}>↑</DpadBtn>
             <div />
-            <DpadBtn accent={scene.accent} onDown={() => press("arrowleft", true)} onUp={() => press("arrowleft", false)}>←</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => dpadPress("arrowleft", true)} onUp={() => dpadPress("arrowleft", false)}>←</DpadBtn>
             <div />
-            <DpadBtn accent={scene.accent} onDown={() => press("arrowright", true)} onUp={() => press("arrowright", false)}>→</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => dpadPress("arrowright", true)} onUp={() => dpadPress("arrowright", false)}>→</DpadBtn>
             <div />
-            <DpadBtn accent={scene.accent} onDown={() => press("arrowdown", true)} onUp={() => press("arrowdown", false)}>↓</DpadBtn>
+            <DpadBtn accent={scene.accent} onDown={() => dpadPress("arrowdown", true)} onUp={() => dpadPress("arrowdown", false)}>↓</DpadBtn>
             <div />
           </div>
           <button
-            onPointerDown={(e) => { e.preventDefault(); tryChat(); }}
-            className="grid size-16 place-items-center rounded-full border-2 text-base font-black uppercase active:scale-95"
+            onPointerDown={(e) => { e.preventDefault(); paintPress(true); }}
+            onPointerUp={() => paintPress(false)}
+            onPointerLeave={() => paintPress(false)}
+            onPointerCancel={() => paintPress(false)}
+            className="grid size-20 place-items-center rounded-full border-2 text-xs font-black uppercase tracking-[0.16em] active:scale-95"
             style={{
               borderColor: scene.accent,
               color: scene.accent,
@@ -688,13 +708,14 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
               boxShadow: `0 0 24px -4px ${scene.accent}`,
             }}
           >
-            E
+            <Paintbrush className="size-5" />
+            Paint
           </button>
         </div>
       )}
 
       <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-        Tap/click a spot or use WASD · your selected character explores {scene.title}, collects 8 coins, and chats with townsfolk
+        Hide-and-seek paint game · paint to match the floor, stay out of the seeker's beam, grab all 3 gems
       </p>
     </div>
   );
