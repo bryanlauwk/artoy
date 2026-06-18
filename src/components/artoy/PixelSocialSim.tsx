@@ -874,11 +874,6 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
     keysRef.current[k] = v;
   };
   const paintPress = (v: boolean) => { setFocused(true); sfxRef.current.resume(); paintHoldRef.current = v; };
-  const advanceTutorial = () => {
-    sfxRef.current.tap();
-    if (tutorialStep >= TUTORIAL_STEPS.length - 1) setTutorialOpen(false);
-    else setTutorialStep((s) => s + 1);
-  };
 
   return (
     <div
