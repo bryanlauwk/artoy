@@ -221,10 +221,50 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
   }, [activeId]);
 
   useEffect(() => {
-    if (!avatarSrc) { avatarImgRef.current = null; return; }
+    if (!avatarSrc) { avatarImgRef.current = null; avatarPaletteRef.current = []; return; }
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => { avatarImgRef.current = img; };
+    img.onload = () => {
+      avatarImgRef.current = img;
+      // Extract a 3-color palette: dominant body, secondary, accent.
+      try {
+        const sz = 48;
+        const off = document.createElement("canvas");
+        off.width = sz; off.height = sz;
+        const oc = off.getContext("2d", { willReadFrequently: true });
+        if (oc) {
+          oc.drawImage(img, 0, 0, sz, sz);
+          const data = oc.getImageData(0, 0, sz, sz).data;
+          // Bucket by 5-bit RGB (32^3) → count weighted by saturation.
+          const buckets = new Map<number, { r: number; g: number; b: number; n: number; w: number }>();
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+            if (a < 200) continue;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            if (max < 28 || max > 245) continue; // skip near-black / near-white
+            const sat = (max - min) / (max || 1);
+            const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+            const e = buckets.get(key) ?? { r: 0, g: 0, b: 0, n: 0, w: 0 };
+            e.r += r; e.g += g; e.b += b; e.n += 1; e.w += 1 + sat * 2;
+            buckets.set(key, e);
+          }
+          const top = [...buckets.values()].sort((a, b) => b.w - a.w).slice(0, 8);
+          // De-duplicate visually similar entries.
+          const palette: RGB[] = [];
+          for (const e of top) {
+            const c: RGB = [e.r / e.n, e.g / e.n, e.b / e.n];
+            if (palette.every((p) => colorDistance(p, c) > 60)) palette.push(c);
+            if (palette.length >= 3) break;
+          }
+          avatarPaletteRef.current = palette;
+          // Seed body color so the chameleon "is" the character, not a white blob.
+          if (palette[0]) {
+            stateRef.current.body = [...palette[0]] as RGB;
+            setBodyCss(rgbCss(palette[0]));
+          }
+        }
+      } catch { /* CORS-safe */ }
+    };
     img.src = avatarSrc;
   }, [avatarSrc]);
 
