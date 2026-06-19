@@ -196,12 +196,12 @@ export function CreatorUniverses() {
                   <span className="text-foreground/60">3 ›</span> Generated experiences
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">Your art, transformed</p>
-                <div className="mt-3 grid grid-cols-4 gap-2">
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {w.experiences.map((e) => (
                     <div key={e.label} className="group relative overflow-hidden rounded-xl border border-border">
                       <img src={e.img} alt={e.label} loading="lazy" className="block aspect-[3/4] w-full object-cover" />
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                      <span className="absolute inset-x-1.5 bottom-1.5 text-center text-[9px] font-extrabold uppercase tracking-[0.1em] text-white">{e.label}</span>
+                      <span className="absolute inset-x-1 bottom-1.5 truncate text-center text-[10px] font-extrabold uppercase tracking-[0.08em] text-white sm:text-[9px]">{e.label}</span>
                     </div>
                   ))}
                 </div>
