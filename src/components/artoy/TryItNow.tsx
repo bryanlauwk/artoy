@@ -162,7 +162,8 @@ export function TryItNow() {
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">Try it now</p>
             <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Pick a character. Get your universe.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">No sign-up, no payment — tap a sample and the full universe + playable mini-game build themselves.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Tap a sample — your universe and a playable mini-game build themselves.</p>
+
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
             <Sparkles className="size-4 text-pink" /> Live demo
@@ -223,15 +224,15 @@ export function TryItNow() {
                   })}
                 </div>
                 <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Clear each stage to unlock the next · best score & time saved on this device
+                  Clear a stage to unlock the next
                 </p>
+
               </div>
             ) : (
               <div>
-                <div className="flex items-start gap-5">
+                <div className="flex items-start gap-4">
                   <div className="relative shrink-0">
-
-                    <img src={preview} alt="Your character" className="size-36 rounded-2xl border border-border object-cover md:size-44" />
+                    <img src={preview} alt="Your character" className="size-24 rounded-2xl border border-border object-cover sm:size-36 md:size-44" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
@@ -240,11 +241,9 @@ export function TryItNow() {
                     <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      5 experiences + 3 merch mockups + 1 playable mini-game in your art style
-                    </p>
                   </div>
                 </div>
+
 
                 {/* Experiences row */}
                 <div className="mt-7">
@@ -341,7 +340,8 @@ export function TryItNow() {
                       <Gamepad2 className="size-3" />
                       {results && !generating
                         ? `Meccha Chameleon · ${activeSample?.name ?? "Demo"}'s stage`
-                        : "Locked · unlocks after steps 3 + 4"}
+                        : "Locked"}
+
                     </span>
                   </div>
                   {results && !generating ? (
@@ -351,13 +351,14 @@ export function TryItNow() {
                       {generating ? (
                         <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/70">
                           <Loader2 className="size-4 animate-spin text-pink" />
-                          Building {activeSample?.name ?? "your"}'s universe & merch — game unlocks next…
+                          Building {activeSample?.name ?? "your"}'s universe…
                         </div>
                       ) : (
                         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">
-                          Mini-game unlocks once steps 3 (universe) and 4 (merch preview) finish generating
+                          Mini-game unlocks once your universe finishes generating
                         </p>
                       )}
+
                     </div>
                   )}
                 </div>
@@ -381,11 +382,7 @@ export function TryItNow() {
                     </button>
                   </div>
                 )}
-                {results && (
-                  <p className="mt-3 text-center text-xs text-muted-foreground">
-                    Prototype demo · production version unlocks via payment or fan referral
-                  </p>
-                )}
+
               </div>
             )}
           </div>
