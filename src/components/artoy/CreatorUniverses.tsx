@@ -128,9 +128,8 @@ export function CreatorUniverses() {
             <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">
               Real art. AI-generated experiences.
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Each row shows how one creator's IP becomes 4 playable experiences + 3 merch products.
-            </p>
+
+
           </div>
         </div>
 

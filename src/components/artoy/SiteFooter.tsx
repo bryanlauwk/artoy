@@ -8,10 +8,8 @@ export function SiteFooter() {
           <span className="text-gradient-brand text-lg font-black tracking-[-0.04em]">
             ARTOY
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em]">
-            Playable IP for Creators
-          </span>
         </div>
+
         <div className="flex gap-5 text-foreground/70">
           <a href="#" aria-label="Discord"><MessageCircle className="size-4" /></a>
           <a href="#" aria-label="Instagram"><Instagram className="size-4" /></a>

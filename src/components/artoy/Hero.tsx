@@ -41,15 +41,14 @@ export function Hero() {
             </a>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground">
-            <span>✦ Built for Artists</span>
-            <span>✦ Built for Creators</span>
-            <span>✦ Built for Dreamers</span>
+          <div className="mt-6 hidden flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground sm:flex">
+            <span>✦ Built for Artists, Creators & Dreamers</span>
           </div>
         </div>
 
         {/* Blended hero artwork — no panel border, soft-fade into background on all sides */}
-        <div className="relative -mr-[8vw] lg:-mr-[6vw]">
+        <div className="relative lg:-mr-[6vw]">
+
           {(() => {
             const fadeMask =
               "radial-gradient(ellipse 70% 75% at 55% 50%, #000 35%, rgba(0,0,0,0.6) 60%, transparent 88%)";
