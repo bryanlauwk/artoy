@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import { ArrowRight } from "lucide-react";
 import upload from "@/assets/artoy/lunarie.png";
-import analyze from "@/assets/artoy/exp-pet.png";
 import launch from "@/assets/artoy/step-launch.png";
 import gameThumb from "@/assets/artoy/exp-game.png";
 import toyThumb from "@/assets/artoy/exp-toy.png";
@@ -18,9 +17,8 @@ type Step = {
 
 const STEPS: Step[] = [
   { n: "1", title: "Upload your art", desc: "Drop any character, illustration or key visual.", hero: upload },
-  { n: "2", title: "AI reads your character", desc: "Style, palette and IP potential — analyzed instantly.", hero: analyze },
-  { n: "3", title: "Generate experiences", desc: "Mini games, pets, toys, cards — all in your art style.", mosaic: [gameThumb, toyThumb, petThumb, cardThumb] },
-  { n: "4", title: "Launch & grow", desc: "Share, collect and sell digital + physical drops.", hero: launch },
+  { n: "2", title: "AI builds your universe", desc: "Games, pets, toys and merch — all in your art style.", mosaic: [gameThumb, toyThumb, petThumb, cardThumb] },
+  { n: "3", title: "Launch & grow", desc: "Share, collect and sell digital + physical drops.", hero: launch },
 ];
 
 export function HowItWorks() {
@@ -31,7 +29,7 @@ export function HowItWorks() {
           How it works
         </h2>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-stretch lg:gap-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-stretch lg:gap-4">
           {STEPS.map((s, i) => (
             <Fragment key={s.n}>
               <div className="flex flex-col items-start">

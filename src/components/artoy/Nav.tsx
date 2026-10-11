@@ -10,8 +10,7 @@ export function Nav() {
         </a>
         <div className="hidden gap-9 text-xs font-bold uppercase tracking-[0.14em] text-foreground/80 md:flex">
           <a href="#how" className="hover:text-foreground">How it works</a>
-          <a href="#universes" className="hover:text-foreground">Universes</a>
-          <a href="#try" className="hover:text-foreground">Try it</a>
+                    <a href="#try" className="hover:text-foreground">Try it</a>
         </div>
         <a
           href="#try"
