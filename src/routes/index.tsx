@@ -21,13 +21,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "ARTOY helps artists and creators turn their characters into mini games, collectible toys, virtual pets, trading cards and merch experiences.",
+          "Reimagine your character as AI artwork and merch concepts. Upload a drawing, explore original characters, and try a playable sample game.",
       },
       { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
       {
         property: "og:description",
         content:
-          "Upload your character. ARTOY transforms it into mini games, collectible toys, virtual pets, trading cards and merch experiences.",
+          "Upload your character, generate AI artwork and merch concepts, and download your favorites.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/" },
@@ -54,7 +54,7 @@ function Index() {
       </a>
       <Nav onCreate={() => openCreator()} />
       <main id="main">
-        <Hero onCreate={openCreator} />
+        <Hero onCreate={openCreator} hasSession={!!creatorSession.source} />
         <Transformation />
         <Community onCreate={() => openCreator()} />
         <HowItWorks onCreate={() => openCreator()} />

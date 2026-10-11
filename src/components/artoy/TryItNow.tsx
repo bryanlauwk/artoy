@@ -17,6 +17,30 @@ import { joinWaitlist } from "@/lib/waitlist.functions";
 import { PixelSocialSim } from "./PixelSocialSim";
 import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
 
+function SampleGame() {
+  const [sample, setSample] = useState(SAMPLES[0]);
+  return (
+    <div className="studio-game">
+      <p className="studio-tab-note">
+        A ready-to-play sample game. Clear Nova to unlock Mochi, then Hexx. Your generated images
+        don’t change these stages.
+      </p>
+      <div className="studio-game-options" role="group" aria-label="Choose a game stage">
+        {SAMPLES.map((option) => (
+          <button
+            key={option.id}
+            aria-pressed={sample.id === option.id}
+            onClick={() => setSample(option)}
+          >
+            {option.name}
+          </button>
+        ))}
+      </div>
+      <PixelSocialSim key={sample.id} avatarSrc={sample.src} sampleId={sample.id} />
+    </div>
+  );
+}
+
 function ResultCards({ items }: { items: Creation[] }) {
   return (
     <div className="studio-results-grid">
@@ -35,7 +59,11 @@ function ResultCards({ items }: { items: Creation[] }) {
             </div>
           )}
           <div>
-            <h3>{item.label}</h3>
+            <h3>
+              {["Mini Game", "Virtual Pet"].includes(item.label)
+                ? `${item.label} concept`
+                : item.label}
+            </h3>
             {item.image && (
               <a
                 href={item.image}
@@ -57,6 +85,8 @@ export function TryItNow({ session }: { session: CreatorSession }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [tab, setTab] = useState("creations");
+  const [showGame, setShowGame] = useState(false);
+  const [changingCharacter, setChangingCharacter] = useState(false);
   const [email, setEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -91,7 +121,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
         </h2>
         <p>
           {generating
-            ? "We’re turning your artwork into original images and merch concepts."
+            ? "We’re turning your artwork into AI images and merch concepts."
             : results
               ? "Explore your creations, download your favorites, or try the game demo."
               : "Upload your art or choose a sample. Make it a world of its own."}
@@ -210,9 +240,24 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             </button>
           </div>
           <p className="studio-footnote">
-            Creates 5 character images and 3 merch concepts. Sample games are available after
-            generation.
+            Generates up to 5 character images and 3 merch concepts with AI.
           </p>
+          <div className="studio-game-entry">
+            <button
+              className="studio-text-button"
+              aria-expanded={showGame}
+              aria-controls="sample-game"
+              onClick={() => setShowGame(!showGame)}
+            >
+              <Gamepad2 size={17} />{" "}
+              {showGame ? "Close sample game" : "Just want to play? Try the sample game"}
+            </button>
+            {showGame && (
+              <div id="sample-game">
+                <SampleGame />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -262,11 +307,31 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 </span>
               </div>
             </div>
-            <button className="studio-text-button" onClick={session.reset}>
+            <button className="studio-text-button" onClick={() => setChangingCharacter(true)}>
               <ArrowLeft size={15} />
               New character
             </button>
           </div>
+          {changingCharacter && (
+            <div className="studio-change-prompt" role="group" aria-label="Start a new character">
+              <p>Download your favorites first. Starting a new character clears these results.</p>
+              <div>
+                <button className="studio-text-button" onClick={() => setChangingCharacter(false)}>
+                  Keep exploring
+                </button>
+                <button
+                  className="artoy-cta"
+                  onClick={() => {
+                    setChangingCharacter(false);
+                    setTab("creations");
+                    session.reset();
+                  }}
+                >
+                  Start new character
+                </button>
+              </div>
+            </div>
+          )}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="studio-tabs" aria-label="Explore your universe">
               <TabsTrigger value="creations">
@@ -290,19 +355,14 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <ResultCards items={merch} />
             </TabsContent>
             <TabsContent value="play">
-              <p className="studio-tab-note">
-                Sample stages are prebuilt demos. Clear Nova to unlock Mochi, then Hexx. Custom
-                games for uploaded artwork are coming later.
-              </p>
-              <PixelSocialSim
-                key={source.sampleId ?? "custom"}
-                avatarSrc={source.image}
-                sampleId={source.sampleId}
-              />
+              <SampleGame />
             </TabsContent>
           </Tabs>
           <div className="studio-output-actions">
-            <p>Download any image using its arrow button.</p>
+            <p>
+              Download your favorites before refreshing, starting a new character, or generating a
+              new set.
+            </p>
             <button className="studio-text-button" onClick={() => void session.generate()}>
               <RefreshCw size={15} />
               Generate a new set
@@ -312,7 +372,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             <summary>
               {session.emailSaved
                 ? "You’re on the early-access list"
-                : "Want to take your universe further?"}
+                : "Get updates about publishing & merch"}
               <ArrowRight size={16} />
             </summary>
             {session.emailSaved ? (

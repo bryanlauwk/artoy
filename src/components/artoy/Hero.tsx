@@ -2,7 +2,13 @@ import { useRef, useState } from "react";
 import { ArrowRight, CloudUpload, Sparkles, X } from "lucide-react";
 import heroArt from "@/assets/artoy/hero-studio.png";
 
-export function Hero({ onCreate }: { onCreate: (file?: File) => void }) {
+export function Hero({
+  onCreate,
+  hasSession,
+}: {
+  onCreate: (file?: File) => void;
+  hasSession: boolean;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File>();
   const [error, setError] = useState("");
@@ -43,8 +49,8 @@ export function Hero({ onCreate }: { onCreate: (file?: File) => void }) {
           <span>Your universe.</span>
         </h1>
         <p className="hero-copy">
-          Turn any drawing into a playful world
-          <br className="wide-only" /> of games, collectibles, and stories.
+          Reimagine your character as AI artwork,
+          <br className="wide-only" /> toy concepts, and little worlds.
         </p>
         <div
           className={`artoy-upload ${dragging ? "is-dragging" : ""}`}
@@ -93,8 +99,15 @@ export function Hero({ onCreate }: { onCreate: (file?: File) => void }) {
                 <X size={15} />
               </button>
             )}
-            <button className="artoy-cta" onClick={() => onCreate(file)}>
-              Create my character <ArrowRight size={17} />
+            <button
+              className="artoy-cta"
+              onClick={() => {
+                onCreate(file);
+                setFile(undefined);
+              }}
+            >
+              {!file && hasSession ? "Return to my studio" : "Create my character"}{" "}
+              <ArrowRight size={17} />
             </button>
             <p className="upload-error" role="status">
               {error}

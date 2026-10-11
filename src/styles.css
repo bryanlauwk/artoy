@@ -736,7 +736,7 @@
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
 }
 .artoy-steps li {
@@ -846,57 +846,6 @@
   font-size: 12px;
   padding-inline: 20px;
 }
-.artoy-manifesto {
-  position: relative;
-  overflow: hidden;
-  background: #181924;
-  color: #faf8ff;
-  display: flex;
-  gap: 30px;
-  align-items: center;
-  padding: 31px 35px;
-  border-radius: 20px;
-  margin-top: 36px;
-}
-.artoy-manifesto .eyebrow {
-  font-size: 9px;
-  margin-bottom: 10px;
-}
-.artoy-manifesto h2 {
-  font-size: 24px;
-  letter-spacing: -0.7px;
-  line-height: 1.2;
-  font-weight: 750;
-}
-.manifesto-values {
-  display: flex;
-  gap: 25px;
-  margin-left: auto;
-  margin-right: 130px;
-  z-index: 1;
-}
-.manifesto-values > span {
-  border-left: 1px solid #626070;
-  padding-left: 24px;
-  display: flex;
-  flex-direction: column;
-  font-size: 10px;
-  gap: 4px;
-  white-space: nowrap;
-}
-.manifesto-values strong {
-  color: #f37ccb;
-  font-size: 19px;
-}
-.artoy-manifesto > img {
-  position: absolute;
-  right: -16px;
-  width: 160px;
-  height: 180px;
-  object-fit: cover;
-  transform: rotate(9deg);
-  mask-image: linear-gradient(90deg, transparent, #000 40%);
-}
 .artoy-footer {
   display: flex;
   align-items: center;
@@ -990,19 +939,6 @@
   }
   .artoy-steps li:not(:last-child)::after {
     right: -17px;
-  }
-  .manifesto-values {
-    margin-right: 90px;
-    gap: 15px;
-  }
-  .manifesto-values > span {
-    padding-left: 15px;
-  }
-  .artoy-manifesto h2 {
-    font-size: 21px;
-  }
-  .artoy-manifesto > img {
-    width: 115px;
   }
 }
 @media (max-width: 760px) {
@@ -1196,29 +1132,6 @@
   .how-cta .artoy-cta {
     font-size: 11px;
     padding: 12px 18px;
-  }
-  .artoy-manifesto {
-    padding: 25px 22px;
-    margin-top: 30px;
-    display: block;
-  }
-  .artoy-manifesto h2 {
-    font-size: 22px;
-    position: relative;
-    z-index: 1;
-  }
-  .artoy-manifesto > img {
-    display: none;
-  }
-  .manifesto-values {
-    margin: 23px 0 0;
-    gap: 25px;
-  }
-  .manifesto-values > span {
-    padding-left: 12px;
-  }
-  .manifesto-values strong {
-    font-size: 17px;
   }
   .artoy-footer {
     flex-wrap: wrap;
@@ -1886,5 +1799,109 @@
   .studio-selection {
     margin-top: 20px;
     padding-top: 16px;
+  }
+}
+
+/* Keep the journey readable at narrow widths. */
+.studio-game-entry {
+  margin-top: 20px;
+  border-top: 1px solid #ffffff20;
+  padding-top: 16px;
+}
+.studio-game-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.studio-game-options button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #ffffff30;
+  border-radius: 12px;
+}
+.studio-game-options button[aria-pressed="true"] {
+  background: #be65e833;
+  border-color: #da8ef9;
+}
+.studio-change-prompt {
+  border: 1px solid #ffffff30;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+.studio-change-prompt p {
+  color: #d1cadb;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.studio-change-prompt > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.studio-result h3 {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.studio-output-actions > p {
+  max-width: 420px;
+}
+@media (max-width: 760px) {
+  .artoy-steps {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .artoy-steps li {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    column-gap: 18px;
+    align-items: center;
+  }
+  .artoy-steps .step-illustration {
+    grid-row: span 2;
+    height: 92px;
+    margin: 0;
+  }
+  .artoy-steps .step-illustration::before {
+    width: 88px;
+    height: 65px;
+  }
+  .artoy-steps h3 {
+    align-self: end;
+  }
+  .artoy-steps p {
+    align-self: start;
+  }
+  .how-cta {
+    flex-wrap: wrap;
+  }
+}
+
+.game-toolbar button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+.game-tutorial-actions button {
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  .game-arena.tutorial-open {
+    aspect-ratio: auto !important;
+    height: 390px;
+    min-height: 390px;
+    width: 100%;
+  }
+  .game-meters {
+    grid-template-columns: 1fr;
+  }
+  .game-tutorial {
+    padding: 8px;
+  }
+  .game-tutorial > div {
+    padding: 16px 12px;
+  }
+  .game-tutorial-actions > div {
+    flex-wrap: wrap;
   }
 }
