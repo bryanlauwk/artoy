@@ -315,7 +315,7 @@ export function TryItNow() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
-                      {generating ? "✦ Generating…" : results ? `✦ ${activeSample?.name ?? ""}'s universe` : "✦ Preview"}
+                      {generating ? "✦ Generating…" : results ? `✦ ${displayName}'s universe` : "✦ Preview"}
                     </p>
                     <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
@@ -443,6 +443,60 @@ export function TryItNow() {
                 </div>
 
 
+
+                {/* Email capture — save the universe */}
+                {results && !generating && (
+                  <div className="mt-7 rounded-2xl border border-pink/40 bg-pink/[0.06] p-5 md:p-6">
+                    {emailSaved ? (
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="size-6 shrink-0 text-pink" />
+                        <div>
+                          <p className="text-sm font-extrabold uppercase tracking-[0.12em]">You're on the list</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            We'll email you when {displayName}'s universe can go live with real drops.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm font-extrabold uppercase tracking-[0.12em]">
+                          Save {displayName}'s universe
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Leave your email to keep this universe and get early access to real merch drops. Your art stays yours — never used for training.
+                        </p>
+                        <form
+                          className="mt-4 flex flex-col gap-2.5 sm:flex-row"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            void saveEmail();
+                          }}
+                        >
+                          <label className="relative flex-1">
+                            <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="you@studio.com"
+                              maxLength={255}
+                              className="w-full rounded-xl border border-border bg-background/60 py-3 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-pink/60"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            disabled={savingEmail}
+                            className="bg-gradient-brand shadow-glow inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-60"
+                          >
+                            {savingEmail ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                            Save my universe
+                          </button>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {results && (
                   <div className="mt-7 flex flex-wrap gap-3">
