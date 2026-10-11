@@ -145,7 +145,7 @@ export function PixelSocialSim({ avatarSrc, sampleId }: Props) {
       <div className="rounded-2xl border border-border bg-white/[0.03] p-8 text-center">
         <Gamepad2 className="mx-auto size-7 text-foreground/40" />
         <p className="mt-3 text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
-          Pick a character above to load the playable mini-game
+          Mini-game stages are tuned to the sample characters in this demo — custom stages for your own art arrive with early access
         </p>
       </div>
     );
