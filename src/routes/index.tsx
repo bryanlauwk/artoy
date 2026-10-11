@@ -11,6 +11,7 @@ import { HowItWorks } from "@/components/artoy/HowItWorks";
 const TryItNow = lazy(() =>
   import("@/components/artoy/TryItNow").then((module) => ({ default: module.TryItNow })),
 );
+import { useCreatorSession } from "@/components/artoy/useCreatorSession";
 import { SiteFooter } from "@/components/artoy/SiteFooter";
 
 export const Route = createFileRoute("/")({
@@ -40,6 +41,7 @@ function Index() {
   const creatorTrigger = useRef<HTMLElement | null>(null);
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [initialFile, setInitialFile] = useState<File>();
+  const creatorSession = useCreatorSession(initialFile);
   function openCreator(file?: File) {
     creatorTrigger.current = document.activeElement as HTMLElement;
     setInitialFile(file);
@@ -80,7 +82,7 @@ function Index() {
               </p>
             }
           >
-            <TryItNow initialFile={initialFile} />
+            <TryItNow session={creatorSession} />
           </Suspense>
         </DialogContent>
       </Dialog>
