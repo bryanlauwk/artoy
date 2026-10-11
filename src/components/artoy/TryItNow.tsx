@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy, ImagePlus, Mail, CheckCircle2 } from "lucide-react";
+import { joinWaitlist } from "@/lib/waitlist.functions";
 import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
 import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
 import { formatMs } from "./meccha/scoring";
@@ -76,6 +77,54 @@ export function TryItNow() {
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
   const [bests, setBests] = useState<BestsBlob>(() => loadBests());
+  const [uploadedName, setUploadedName] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_UPLOAD_MB = 8;
+
+  const onUploadFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file (PNG, JPG, WebP…)");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_UPLOAD_MB}MB`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setSelectedSampleId(null);
+      setUploadedName(file.name.replace(/\.[^.]+$/, "").slice(0, 60));
+      setPreview(dataUrl);
+      setEmailSaved(false);
+      void runGeneration(dataUrl);
+    };
+    reader.onerror = () => toast.error("Couldn't read that file");
+    reader.readAsDataURL(file);
+  };
+
+  const saveEmail = async () => {
+    const trimmed = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length > 255) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    setSavingEmail(true);
+    try {
+      await joinWaitlist({ data: { email: trimmed, characterName: uploadedName ?? activeSample?.name } });
+      setEmailSaved(true);
+      toast.success("Saved! We'll email you when your universe can go live.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save — try again");
+    } finally {
+      setSavingEmail(false);
+    }
+  };
 
   // Refresh bests when returning to the picker (after a game) — cheap, no listener needed.
   useEffect(() => {
@@ -133,6 +182,10 @@ export function TryItNow() {
     setPreview(null);
     setSelectedSampleId(null);
     setResults(null);
+    setUploadedName(null);
+    setEmail("");
+    setEmailSaved(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const regenerate = async () => {
@@ -154,6 +207,7 @@ export function TryItNow() {
     : MERCH_PLACEHOLDERS.map((p) => ({ label: p.label, img: p.img as string, price: p.price, accent: p.accent, aiGenerated: false, error: undefined as string | undefined }));
 
   const activeSample = SAMPLES.find((s) => s.id === selectedSampleId);
+  const displayName = uploadedName ?? activeSample?.name ?? "Your character";
 
   return (
     <section id="try" className="relative py-20">
@@ -161,8 +215,8 @@ export function TryItNow() {
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">Try it now</p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Pick a character. Get your universe.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Tap a sample — your universe and a playable mini-game build themselves.</p>
+            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Drop your art. Get your universe.</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Upload your own character — or tap a sample — and your universe and a playable mini-game build themselves.</p>
 
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
@@ -175,8 +229,33 @@ export function TryItNow() {
           <div className="rounded-3xl border border-border bg-white/[0.03] p-6 md:p-8">
             {!preview ? (
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Pick a character to start</p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Upload your art, or pick a sample</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onUploadFile(e.target.files?.[0])}
+                />
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group relative grid aspect-square place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-pink/50 bg-pink/[0.06] text-center transition-transform hover:-translate-y-1"
+                    style={{ boxShadow: "0 18px 50px -28px color-mix(in oklab, var(--pink) 80%, transparent)" }}
+                  >
+                    <div className="flex flex-col items-center gap-2 px-4">
+                      <span className="grid size-12 place-items-center rounded-2xl bg-pink/15">
+                        <ImagePlus className="size-6 text-pink" />
+                      </span>
+                      <p className="text-sm font-black uppercase tracking-[0.14em] text-pink">Your art</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
+                        Drop any character · PNG/JPG up to {MAX_UPLOAD_MB}MB
+                      </p>
+                    </div>
+                    <span className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg bg-pink/80 px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      ✦ Generate my universe
+                    </span>
+                  </button>
                   {SAMPLES.map((s) => {
                     const unlocked = isUnlocked(s.id, bests);
                     const myBest = bests[s.id];
@@ -236,7 +315,7 @@ export function TryItNow() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
-                      {generating ? "✦ Generating…" : results ? `✦ ${activeSample?.name ?? ""}'s universe` : "✦ Preview"}
+                      {generating ? "✦ Generating…" : results ? `✦ ${displayName}'s universe` : "✦ Preview"}
                     </p>
                     <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
                       {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
@@ -364,6 +443,60 @@ export function TryItNow() {
                 </div>
 
 
+
+                {/* Email capture — save the universe */}
+                {results && !generating && (
+                  <div className="mt-7 rounded-2xl border border-pink/40 bg-pink/[0.06] p-5 md:p-6">
+                    {emailSaved ? (
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="size-6 shrink-0 text-pink" />
+                        <div>
+                          <p className="text-sm font-extrabold uppercase tracking-[0.12em]">You're on the list</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            We'll email you when {displayName}'s universe can go live with real drops.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm font-extrabold uppercase tracking-[0.12em]">
+                          Save {displayName}'s universe
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Leave your email to keep this universe and get early access to real merch drops. Your art stays yours — never used for training.
+                        </p>
+                        <form
+                          className="mt-4 flex flex-col gap-2.5 sm:flex-row"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            void saveEmail();
+                          }}
+                        >
+                          <label className="relative flex-1">
+                            <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="you@studio.com"
+                              maxLength={255}
+                              className="w-full rounded-xl border border-border bg-background/60 py-3 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-pink/60"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            disabled={savingEmail}
+                            className="bg-gradient-brand shadow-glow inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-60"
+                          >
+                            {savingEmail ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                            Save my universe
+                          </button>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {results && (
                   <div className="mt-7 flex flex-wrap gap-3">
