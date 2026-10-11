@@ -182,6 +182,10 @@ export function TryItNow() {
     setPreview(null);
     setSelectedSampleId(null);
     setResults(null);
+    setUploadedName(null);
+    setEmail("");
+    setEmailSaved(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const regenerate = async () => {
@@ -203,6 +207,7 @@ export function TryItNow() {
     : MERCH_PLACEHOLDERS.map((p) => ({ label: p.label, img: p.img as string, price: p.price, accent: p.accent, aiGenerated: false, error: undefined as string | undefined }));
 
   const activeSample = SAMPLES.find((s) => s.id === selectedSampleId);
+  const displayName = uploadedName ?? activeSample?.name ?? "Your character";
 
   return (
     <section id="try" className="relative py-20">
