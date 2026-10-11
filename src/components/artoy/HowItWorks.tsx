@@ -1,6 +1,5 @@
-import { ArrowRight, Globe2, Gamepad2, Shirt, Crown } from "lucide-react";
+import { ArrowRight, Download, Shirt, Crown } from "lucide-react";
 import { BunnyArtwork } from "./BunnyArtwork";
-import lunarie from "@/assets/artoy/lunarie.png";
 import { Doodle } from "./Transformation";
 
 export function HowItWorks({ onCreate }: { onCreate: () => void }) {
@@ -39,19 +38,11 @@ export function HowItWorks({ onCreate }: { onCreate: () => void }) {
             <li>
               <div className="step-illustration merch-icons">
                 <span className="step-number">3</span>
-                <Gamepad2 />
+                <Download />
                 <Shirt />
               </div>
-              <h3>Play, create & expand</h3>
-              <p>Explore games, toy concepts, merch mockups, and more.</p>
-            </li>
-            <li>
-              <div className="step-illustration">
-                <span className="step-number">4</span>
-                <Globe2 strokeWidth={1.2} />
-              </div>
-              <h3>Imagine what’s next</h3>
-              <p>Join the waitlist to hear when publishing goes live.</p>
+              <h3>Explore & download</h3>
+              <p>Keep your favorite images and merch concepts. Try a sample game, too.</p>
             </li>
           </ol>
           <div className="how-cta">
@@ -66,24 +57,6 @@ export function HowItWorks({ onCreate }: { onCreate: () => void }) {
               Start creating <ArrowRight size={16} />
             </button>
           </div>
-        </div>
-        <div className="artoy-manifesto">
-          <div>
-            <p className="eyebrow">For creators, dreamers and brands</p>
-            <h2>
-              More than AI generation.
-              <br />A new playground for imagination.
-            </h2>
-          </div>
-          <div className="manifesto-values">
-            <span>
-              <strong>Your art.</strong>Your starting point
-            </span>
-            <span>
-              <strong>Your world.</strong>Endless possibilities
-            </span>
-          </div>
-          <img src={lunarie} alt="" loading="lazy" />
         </div>
       </div>
     </section>

@@ -29,4 +29,4 @@ The homepage follows the supplied “ARTOY: From Doodle to Universe” reference
 
 ## Follow-up
 
-The raster assets should be converted to responsive delivery formats in the deployment image pipeline. Creator state is local to the dialog; closing it discards in-memory work. Production publishing, pricing and external social destinations are outside this redesign.
+The raster assets should be converted to responsive delivery formats in the deployment image pipeline. The subsequent creator-journey update preserves studio state across dialog closure for the current page session. See `creator-journey.md`. Production publishing, pricing and external social destinations are outside this redesign.

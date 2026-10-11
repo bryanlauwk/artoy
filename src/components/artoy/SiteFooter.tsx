@@ -3,7 +3,7 @@ export function SiteFooter() {
     <footer className="artoy-footer">
       <a className="artoy-logo" href="#top" aria-label="ARTOY home">
         <b>ARTOY</b>
-        <span>Playable IP for creators</span>
+        <span>Your art, brought to life</span>
       </a>
       <nav aria-label="Footer navigation">
         <a href="#explore">Explore</a>

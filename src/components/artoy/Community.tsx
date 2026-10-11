@@ -11,7 +11,7 @@ import hexx from "@/assets/artoy/avatar-3.png";
 const characters = [
   {
     name: "Lunarie",
-    type: "Game + Toy + Story",
+    type: "Game + toy concepts",
     image: lunarie,
     description:
       "A pink-haired rebel with a universe of possibilities. Imagine her next adventure.",
@@ -31,7 +31,7 @@ const characters = [
   },
   {
     name: "Nova",
-    type: "Sci-fi game world",
+    type: "Sci-fi character",
     image: nova,
     description: "A sci-fi pilot exploring a cyan-lit plaza. Try the Nova sample in the creator.",
   },
@@ -39,15 +39,13 @@ const characters = [
     name: "Mochi",
     type: "Pastel character",
     image: mochi,
-    description:
-      "A pastel mascot at home in a pink town. Clear Nova’s stage in the demo to unlock Mochi.",
+    description: "A pastel mascot at home in a pink town. Choose Mochi as a sample in the studio.",
   },
   {
     name: "Hexx",
-    type: "Neon game world",
+    type: "Neon character",
     image: hexx,
-    description:
-      "Neon punk energy in an arcade alley. Clear Mochi’s stage in the demo to unlock Hexx.",
+    description: "Neon punk energy in an arcade alley. Choose Hexx as a sample in the studio.",
   },
 ];
 export function Community({ onCreate }: { onCreate: () => void }) {
@@ -61,8 +59,8 @@ export function Community({ onCreate }: { onCreate: () => void }) {
       <div className="artoy-container">
         <div className="section-heading">
           <div>
-            <h2>Explore a universe of creations</h2>
-            <p>Meet the characters. Imagine what yours could become.</p>
+            <h2>Meet the ARTOY characters</h2>
+            <p>Imagine what yours could become.</p>
           </div>
           <button
             className="artoy-text-link"
@@ -70,7 +68,7 @@ export function Community({ onCreate }: { onCreate: () => void }) {
             aria-expanded={expanded}
             aria-controls="character-gallery"
           >
-            {expanded ? "Carousel view" : "View all"} <ArrowRight size={17} />
+            {expanded ? "Show less" : "View all"} <ArrowRight size={17} />
           </button>
         </div>
         <div
@@ -102,7 +100,6 @@ export function Community({ onCreate }: { onCreate: () => void }) {
           ))}
         </div>
         <div className="gallery-bottom">
-          <p>Character showcase · A little inspiration for your next idea</p>
           <div>
             <button
               className="icon-button"

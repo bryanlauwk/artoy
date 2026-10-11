@@ -1,710 +1,417 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
-  Sparkles,
-  Wand2,
-  Users,
-  Coins,
-  Rocket,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  CloudUpload,
+  Download,
+  Gamepad2,
   Loader2,
   RefreshCw,
-  ShoppingBag,
-  Gamepad2,
-  Lock,
-  Trophy,
-  ImagePlus,
-  Mail,
+  Sparkles,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { joinWaitlist } from "@/lib/waitlist.functions";
-import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
-import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
-import { formatMs } from "./meccha/scoring";
-import a1 from "@/assets/artoy/avatar-1.png";
-import a2 from "@/assets/artoy/avatar-2.png";
-import a3 from "@/assets/artoy/avatar-3.png";
-import game from "@/assets/artoy/exp-game.png";
-import pet from "@/assets/artoy/exp-pet.png";
-import toy from "@/assets/artoy/exp-toy.png";
-import cards from "@/assets/artoy/exp-cards.png";
-import wall from "@/assets/artoy/exp-wall.png";
-import { toast } from "sonner";
+import { PixelSocialSim } from "./PixelSocialSim";
+import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
 
-const SAMPLES: { id: SampleId; src: string; name: string; tagline: string; accent: string }[] = [
-  {
-    id: "nova",
-    src: a1,
-    name: "Nova",
-    tagline: "Sci-fi pilot · cyan plaza",
-    accent: "var(--cyan)",
-  },
-  {
-    id: "mochi",
-    src: a2,
-    name: "Mochi",
-    tagline: "Pastel mascot · pink town",
-    accent: "var(--pink)",
-  },
-  {
-    id: "hexx",
-    src: a3,
-    name: "Hexx",
-    tagline: "Neon punk · arcade alley",
-    accent: "var(--orange)",
-  },
-];
-
-const EXP_PLACEHOLDERS = [
-  { img: game, label: "Mini Game", accent: "var(--cyan)" },
-  { img: pet, label: "Virtual Pet", accent: "var(--purple)" },
-  { img: toy, label: "Vinyl Toy", accent: "var(--pink)" },
-  { img: cards, label: "Trading Card", accent: "var(--orange)" },
-  { img: wall, label: "Wallpaper", accent: "var(--cyan)" },
-];
-
-const MERCH_PLACEHOLDERS = [
-  { img: toy, label: "Figurine", price: "RM129", accent: "var(--pink)" },
-  { img: cards, label: "Acrylic Stand", price: "RM39", accent: "var(--orange)" },
-  { img: wall, label: "T-Shirt", price: "RM89", accent: "var(--purple)" },
-];
-
-const ACCENTS: Record<string, string> = {
-  "Mini Game": "var(--cyan)",
-  "Virtual Pet": "var(--purple)",
-  "Vinyl Toy": "var(--pink)",
-  "Trading Card": "var(--orange)",
-  Wallpaper: "var(--cyan)",
-  Figurine: "var(--pink)",
-  "Acrylic Stand": "var(--orange)",
-  "T-Shirt": "var(--purple)",
-};
-
-const MERCH_PRICES: Record<string, string> = {
-  Figurine: "RM129",
-  "Acrylic Stand": "RM39",
-  "T-Shirt": "RM89",
-};
-
-const FEATURES = [
-  {
-    icon: Wand2,
-    color: "var(--pink)",
-    title: "Pick once, get a full universe",
-    desc: "5 experiences + 3 merch mockups + 1 playable mini-game — all synced to the selected character.",
-  },
-  {
-    icon: Coins,
-    color: "var(--orange)",
-    title: "Your IP, your revenue",
-    desc: "Every drop is yours. Sell digital or physical without inventory.",
-  },
-  {
-    icon: Users,
-    color: "var(--cyan)",
-    title: "Built-in fandom loop",
-    desc: "Fans play, collect and refer friends to unlock more of your world.",
-  },
-  {
-    icon: Rocket,
-    color: "var(--purple)",
-    title: "Ship in minutes, not months",
-    desc: "No code, no 3D pipeline, no studio. Start from a character and prove the loop instantly.",
-  },
-];
-
-async function urlToDataUrl(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(blob);
-  });
+function SampleGame() {
+  const [sample, setSample] = useState(SAMPLES[0]);
+  return (
+    <div className="studio-game">
+      <p className="studio-tab-note">
+        A ready-to-play sample game. Clear Nova to unlock Mochi, then Hexx. Your generated images
+        don’t change these stages.
+      </p>
+      <div className="studio-game-options" role="group" aria-label="Choose a game stage">
+        {SAMPLES.map((option) => (
+          <button
+            key={option.id}
+            aria-pressed={sample.id === option.id}
+            onClick={() => setSample(option)}
+          >
+            {option.name}
+          </button>
+        ))}
+      </div>
+      <PixelSocialSim key={sample.id} avatarSrc={sample.src} sampleId={sample.id} />
+    </div>
+  );
 }
 
-type Result = { label: string; kind: "experience" | "merch"; image: string | null; error?: string };
-
-export function TryItNow({ initialFile }: { initialFile?: File }) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [selectedSampleId, setSelectedSampleId] = useState<SampleId | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [results, setResults] = useState<Result[] | null>(null);
-  const [bests, setBests] = useState<BestsBlob>(() => loadBests());
-  const [uploadedName, setUploadedName] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [emailSaved, setEmailSaved] = useState(false);
-  const [savingEmail, setSavingEmail] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const MAX_UPLOAD_MB = 8;
-
-  const runGeneration = useCallback(async (sourceDataUrl: string) => {
-    setGenerating(true);
-    setResults(null);
-    try {
-      const res = await fetch("/api/generate-universe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageDataUrl: sourceDataUrl }),
-      });
-      const json = (await res.json()) as { results?: Result[]; error?: string };
-      if (!res.ok || !json.results) {
-        const msg = json.error ?? `Generation failed (${res.status})`;
-        if (res.status === 402)
-          toast.error("AI credits exhausted — add credits in Workspace settings.");
-        else if (res.status === 429) toast.error("Rate limited — try again in a moment.");
-        else toast.error(msg.slice(0, 140));
-        return;
-      }
-      setResults(json.results);
-      const failed = json.results.filter((r) => !r.image).length;
-      if (failed === 0) toast.success("Your universe is ready ✨");
-      else toast.warning(`${json.results.length - failed}/${json.results.length} assets generated`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Network error");
-    } finally {
-      setGenerating(false);
-    }
-  }, []);
-
-  const onUploadFile = useCallback(
-    (file: File | undefined) => {
-      if (!file) return;
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please choose an image file (PNG, JPG, WebP…)");
-        return;
-      }
-      if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-        toast.error(`Image must be under ${MAX_UPLOAD_MB}MB`);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setSelectedSampleId(null);
-        setUploadedName(file.name.replace(/\.[^.]+$/, "").slice(0, 60));
-        setPreview(dataUrl);
-        setEmailSaved(false);
-        void runGeneration(dataUrl);
-      };
-      reader.onerror = () => toast.error("Couldn't read that file");
-      reader.readAsDataURL(file);
-    },
-    [runGeneration],
+function ResultCards({ items }: { items: Creation[] }) {
+  return (
+    <div className="studio-results-grid">
+      {items.map((item) => (
+        <article className="studio-result" key={`${item.kind}-${item.label}`}>
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={`${item.label} generated from your character`}
+              loading="lazy"
+            />
+          ) : (
+            <div className="studio-result-missing">
+              <AlertCircle size={24} />
+              <span>Couldn’t generate this image</span>
+            </div>
+          )}
+          <div>
+            <h3>
+              {["Mini Game", "Virtual Pet"].includes(item.label)
+                ? `${item.label} concept`
+                : item.label}
+            </h3>
+            {item.image && (
+              <a
+                href={item.image}
+                download={`artoy-${item.label.toLowerCase().replaceAll(" ", "-")}.png`}
+                aria-label={`Download ${item.label}`}
+              >
+                <Download size={17} />
+              </a>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
   );
+}
 
-  useEffect(() => {
-    if (initialFile) onUploadFile(initialFile);
-  }, [initialFile, onUploadFile]);
-
-  const saveEmail = async () => {
-    const trimmed = email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length > 255) {
-      toast.error("Enter a valid email address");
-      return;
-    }
+export function TryItNow({ session }: { session: CreatorSession }) {
+  const { source, results, generating, reading, error } = session;
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [tab, setTab] = useState("creations");
+  const [showGame, setShowGame] = useState(false);
+  const [changingCharacter, setChangingCharacter] = useState(false);
+  const [email, setEmail] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const step = generating ? 2 : results ? 3 : 1;
+  const completed = results?.filter((item) => item.image).length ?? 0;
+  const experiences = results?.filter((item) => item.kind === "experience") ?? [];
+  const merch = results?.filter((item) => item.kind === "merch") ?? [];
+  async function saveEmail() {
     setSavingEmail(true);
+    setEmailError("");
     try {
-      await joinWaitlist({
-        data: { email: trimmed, characterName: uploadedName ?? activeSample?.name },
-      });
-      setEmailSaved(true);
-      toast.success("Saved! We'll email you when your universe can go live.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't save — try again");
+      await joinWaitlist({ data: { email: email.trim(), characterName: source?.name } });
+      session.setEmailSaved(true);
+    } catch {
+      setEmailError("We couldn’t add you to the waitlist. Please try again.");
     } finally {
       setSavingEmail(false);
     }
-  };
-
-  // Refresh bests when returning to the picker (after a game) — cheap, no listener needed.
-  useEffect(() => {
-    if (!selectedSampleId) setBests(loadBests());
-  }, [selectedSampleId]);
-
-  const onSample = async (sample: (typeof SAMPLES)[number]) => {
-    if (!isUnlocked(sample.id, bests)) {
-      const prev = prevStage(sample.id);
-      const prevName = prev ? SAMPLES.find((x) => x.id === prev)?.name : "previous stage";
-      toast.error(`Clear ${prevName} first to unlock ${sample.name}.`);
-      return;
-    }
-    setSelectedSampleId(sample.id);
-    setPreview(sample.src);
-    try {
-      const dataUrl = await urlToDataUrl(sample.src);
-      await runGeneration(dataUrl);
-    } catch {
-      toast.error("Couldn't load sample image");
-    }
-  };
-
-  const reset = () => {
-    setPreview(null);
-    setSelectedSampleId(null);
-    setResults(null);
-    setUploadedName(null);
-    setEmail("");
-    setEmailSaved(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const regenerate = async () => {
-    if (!preview) return;
-    try {
-      const dataUrl = preview.startsWith("data:") ? preview : await urlToDataUrl(preview);
-      await runGeneration(dataUrl);
-    } catch {
-      toast.error("Couldn't reload source image");
-    }
-  };
-
-  const experiences = results
-    ? results
-        .filter((r) => r.kind === "experience")
-        .map((r) => ({
-          label: r.label,
-          img: r.image,
-          accent: ACCENTS[r.label] ?? "var(--pink)",
-          aiGenerated: true,
-          error: r.error,
-        }))
-    : EXP_PLACEHOLDERS.map((p) => ({
-        label: p.label,
-        img: p.img as string,
-        accent: p.accent,
-        aiGenerated: false,
-        error: undefined as string | undefined,
-      }));
-
-  const merch = results
-    ? results
-        .filter((r) => r.kind === "merch")
-        .map((r) => ({
-          label: r.label,
-          img: r.image,
-          price: MERCH_PRICES[r.label] ?? "—",
-          accent: ACCENTS[r.label] ?? "var(--pink)",
-          aiGenerated: true,
-          error: r.error,
-        }))
-    : MERCH_PLACEHOLDERS.map((p) => ({
-        label: p.label,
-        img: p.img as string,
-        price: p.price,
-        accent: p.accent,
-        aiGenerated: false,
-        error: undefined as string | undefined,
-      }));
-
-  const activeSample = SAMPLES.find((s) => s.id === selectedSampleId);
-  const displayName = uploadedName ?? activeSample?.name ?? "Your character";
-
+  }
   return (
-    <section id="try" className="relative py-20">
-      <div className="mx-auto w-[min(1400px,96vw)] panel-surface px-6 py-14 md:px-12">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">
-              Try it now
-            </p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">
-              Drop your art. Get your universe.
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Upload your own character — or tap a sample — and your universe and a playable
-              mini-game build themselves.
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
-            <Sparkles className="size-4 text-pink" /> Live demo
-          </span>
-        </div>
+    <section id="try" className="creator-studio">
+      <header className="studio-header">
+        <p className="studio-eyebrow">
+          <Sparkles size={14} /> Your creative studio
+        </p>
+        <h2>
+          {generating
+            ? "A new world is taking shape."
+            : results
+              ? `${source?.name}’s universe`
+              : "Start with a character."}
+        </h2>
+        <p>
+          {generating
+            ? "We’re turning your artwork into AI images and merch concepts."
+            : results
+              ? "Explore your creations, download your favorites, or try the game demo."
+              : "Upload your art or choose a sample. Make it a world of its own."}
+        </p>
+        <ol className="studio-steps" aria-label="Creation progress">
+          {["Choose artwork", "Generate", "Explore"].map((label, index) => (
+            <li
+              key={label}
+              className={index + 1 === step ? "current" : index + 1 < step ? "complete" : ""}
+              aria-current={index + 1 === step ? "step" : undefined}
+            >
+              <span>{index + 1 < step ? <Check size={13} /> : index + 1}</span>
+              {label}
+            </li>
+          ))}
+        </ol>
+      </header>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr]">
-          {/* LEFT */}
-          <div className="rounded-3xl border border-border bg-white/[0.03] p-6 md:p-8">
-            {!preview ? (
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">
-                  Upload your art, or pick a sample
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => onUploadFile(e.target.files?.[0])}
-                />
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group relative grid aspect-square place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-pink/50 bg-pink/[0.06] text-center transition-transform hover:-translate-y-1"
-                    style={{
-                      boxShadow:
-                        "0 18px 50px -28px color-mix(in oklab, var(--pink) 80%, transparent)",
-                    }}
-                  >
-                    <div className="flex flex-col items-center gap-2 px-4">
-                      <span className="grid size-12 place-items-center rounded-2xl bg-pink/15">
-                        <ImagePlus className="size-6 text-pink" />
-                      </span>
-                      <p className="text-sm font-black uppercase tracking-[0.14em] text-pink">
-                        Your art
-                      </p>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
-                        Drop any character · PNG/JPG up to {MAX_UPLOAD_MB}MB
-                      </p>
-                    </div>
-                    <span className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg bg-pink/80 px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                      ✦ Generate my universe
-                    </span>
-                  </button>
-                  {SAMPLES.map((s) => {
-                    const unlocked = isUnlocked(s.id, bests);
-                    const myBest = bests[s.id];
-                    const needName =
-                      !unlocked && prevStage(s.id)
-                        ? SAMPLES.find((x) => x.id === prevStage(s.id))!.name
-                        : null;
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => onSample(s)}
-                        className={`group relative overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-transform ${unlocked ? "hover:-translate-y-1" : "opacity-70"}`}
-                        style={{
-                          boxShadow: unlocked
-                            ? `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)`
-                            : undefined,
-                        }}
-                      >
-                        <img
-                          src={s.src}
-                          alt={s.name}
-                          loading="lazy"
-                          className={`block aspect-square w-full object-cover ${unlocked ? "" : "grayscale"}`}
-                        />
-                        {!unlocked && (
-                          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/55">
-                            <div className="flex flex-col items-center gap-1">
-                              <Lock className="size-6" style={{ color: s.accent }} />
-                              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white">
-                                Clear {needName} first
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {myBest.bestScore > 0 && (
-                          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
-                            <Trophy className="size-3" style={{ color: s.accent }} />{" "}
-                            {myBest.bestScore}
-                          </span>
-                        )}
-                        <div className="px-3 py-3">
-                          <p
-                            className="text-sm font-black uppercase tracking-[0.14em]"
-                            style={{ color: s.accent }}
-                          >
-                            {s.name}
-                          </p>
-                          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
-                            {s.tagline}
-                            {myBest.bestMs > 0 && (
-                              <span className="ml-1 text-foreground/40">
-                                · best {formatMs(myBest.bestMs)}
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        {unlocked && (
-                          <span
-                            className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100"
-                            style={{
-                              background: `color-mix(in oklab, ${s.accent} 80%, black 20%)`,
-                            }}
-                          >
-                            ✦ Generate universe
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+      {error && (
+        <div className="studio-error" role="alert">
+          <AlertCircle size={18} />
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!generating && !results && (
+        <div className="studio-choose">
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="sr-only"
+            tabIndex={-1}
+            aria-label="Upload character artwork"
+            onChange={(event) => {
+              session.uploadFile(event.target.files?.[0]);
+              event.target.value = "";
+            }}
+          />
+          <div
+            className={`studio-drop ${dragging ? "dragging" : ""}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              session.uploadFile(event.dataTransfer.files[0]);
+            }}
+          >
+            <button
+              onClick={() => fileInput.current?.click()}
+              disabled={reading}
+              className="studio-upload-button"
+            >
+              <CloudUpload size={30} />
+              <span>
+                <strong>{reading ? "Reading your artwork…" : "Drop your artwork here"}</strong>
+                <small>or browse files · PNG, JPG, WebP · up to 8 MB</small>
+              </span>
+            </button>
+          </div>
+          <div className="studio-divider">
+            <span>or start with a sample</span>
+          </div>
+          <div className="studio-samples">
+            {SAMPLES.map((sample) => (
+              <button
+                key={sample.id}
+                aria-pressed={source?.sampleId === sample.id}
+                className={source?.sampleId === sample.id ? "selected" : ""}
+                onClick={() =>
+                  session.chooseSource({
+                    image: sample.src,
+                    name: sample.name,
+                    sampleId: sample.id,
+                  })
+                }
+              >
+                <img src={sample.src} alt="" />
+                <span>
+                  <strong>{sample.name}</strong>
+                  <small>{sample.tagline}</small>
+                </span>
+                {source?.sampleId === sample.id && (
+                  <CheckCircle2 size={21} className="sample-check" />
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="studio-selection">
+            {source ? (
+              <div className="studio-source">
+                <img src={source.image} alt="Selected artwork" />
+                <div>
+                  <strong>{source.name}</strong>
+                  <span>Ready to create</span>
                 </div>
-                <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Clear a stage to unlock the next
-                </p>
               </div>
             ) : (
-              <div>
-                <div className="flex items-start gap-4">
-                  <div className="relative shrink-0">
-                    <img
-                      src={preview}
-                      alt="Your character"
-                      className="size-24 rounded-2xl border border-border object-cover sm:size-36 md:size-44"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
-                      {generating
-                        ? "✦ Generating…"
-                        : results
-                          ? `✦ ${displayName}'s universe`
-                          : "✦ Preview"}
-                    </p>
-                    <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
-                      {generating
-                        ? "Building your universe"
-                        : results
-                          ? "Your universe is ready"
-                          : "Preparing"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Experiences row */}
-                <div className="mt-7">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
-                      <span className="text-purple">3 ›</span> Generated experiences
-                    </p>
-                  </div>
-                  <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                    {experiences.map((t, i) => (
-                      <div
-                        key={`${t.label}-${i}`}
-                        className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{
-                          boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} 70%, transparent)`,
-                        }}
-                      >
-                        {t.img ? (
-                          <img
-                            src={t.img}
-                            alt={t.label}
-                            loading="lazy"
-                            className={`block aspect-[4/5] w-full object-cover ${generating ? "opacity-60" : ""}`}
-                          />
-                        ) : (
-                          <div className="grid aspect-[4/5] w-full place-items-center bg-white/[0.03] p-3 text-center text-xs text-muted-foreground">
-                            {t.error ? "Failed" : "—"}
-                          </div>
-                        )}
-                        {t.aiGenerated && t.img && (
-                          <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
-                            ✦ AI
-                          </span>
-                        )}
-                        <p className="px-2.5 py-2 text-center text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/80">
-                          {t.label}
-                        </p>
-                      </div>
-                    ))}
-                    {generating && (
-                      <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-background/40 backdrop-blur-[2px]">
-                        <div className="flex items-center gap-2.5 rounded-full bg-background/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em]">
-                          <Loader2 className="size-4 animate-spin text-pink" /> Generating your
-                          universe…
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Merch row */}
-                <div className="mt-7">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
-                      <span className="text-orange">4 ›</span> Merch preview
-                    </p>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">
-                      <ShoppingBag className="size-3" /> Mock pricing
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {merch.map((m, i) => (
-                      <div
-                        key={`${m.label}-${i}`}
-                        className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{
-                          boxShadow: `0 18px 40px -24px color-mix(in oklab, ${m.accent} 70%, transparent)`,
-                        }}
-                      >
-                        {m.img ? (
-                          <img
-                            src={m.img}
-                            alt={m.label}
-                            loading="lazy"
-                            className={`block aspect-square w-full object-cover ${generating ? "opacity-60" : ""}`}
-                          />
-                        ) : (
-                          <div className="grid aspect-square w-full place-items-center bg-white/[0.03] p-3 text-center text-xs text-muted-foreground">
-                            {m.error ? "Failed" : "—"}
-                          </div>
-                        )}
-                        {m.aiGenerated && m.img && (
-                          <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
-                            ✦ AI
-                          </span>
-                        )}
-                        <div className="flex items-center justify-between px-2.5 py-2">
-                          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/80">
-                            {m.label}
-                          </p>
-                          <p className="text-xs font-black" style={{ color: m.accent }}>
-                            {m.price}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Pixel Social Sim — actually playable, unlocks after universe + merch are ready */}
-                <div className="mt-7">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/70">
-                      <span className="text-pink">5 ›</span> Ultimate playable experience
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em]"
-                      style={{
-                        background:
-                          results && !generating
-                            ? "color-mix(in oklab, var(--pink) 22%, transparent)"
-                            : "rgba(255,255,255,0.06)",
-                        color: results && !generating ? "var(--pink)" : "rgb(255 255 255 / 0.55)",
-                      }}
-                    >
-                      <Gamepad2 className="size-3" />
-                      {results && !generating
-                        ? `Meccha Chameleon · ${activeSample?.name ?? "Demo"}'s stage`
-                        : "Locked"}
-                    </span>
-                  </div>
-                  {results && !generating ? (
-                    <PixelSocialSim avatarSrc={preview} sampleId={selectedSampleId} />
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-border bg-white/[0.03] p-8 text-center">
-                      {generating ? (
-                        <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/70">
-                          <Loader2 className="size-4 animate-spin text-pink" />
-                          Building {activeSample?.name ?? "your"}'s universe…
-                        </div>
-                      ) : (
-                        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">
-                          Mini-game unlocks once your universe finishes generating
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Email capture — save the universe */}
-                {results && !generating && (
-                  <div className="mt-7 rounded-2xl border border-pink/40 bg-pink/[0.06] p-5 md:p-6">
-                    {emailSaved ? (
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="size-6 shrink-0 text-pink" />
-                        <div>
-                          <p className="text-sm font-extrabold uppercase tracking-[0.12em]">
-                            You're on the list
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            We'll email you when {displayName}'s universe can go live with real
-                            drops.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm font-extrabold uppercase tracking-[0.12em]">
-                          Save {displayName}'s universe
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Leave your email to keep this universe and get early access to real merch
-                          drops. Your art stays yours — never used for training.
-                        </p>
-                        <form
-                          className="mt-4 flex flex-col gap-2.5 sm:flex-row"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            void saveEmail();
-                          }}
-                        >
-                          <label className="relative flex-1">
-                            <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                              type="email"
-                              required
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              placeholder="you@studio.com"
-                              maxLength={255}
-                              className="w-full rounded-xl border border-border bg-background/60 py-3 pl-10 pr-4 text-sm outline-none placeholder:text-muted-foreground/60 focus:border-pink/60"
-                            />
-                          </label>
-                          <button
-                            type="submit"
-                            disabled={savingEmail}
-                            className="bg-gradient-brand shadow-glow inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-60"
-                          >
-                            {savingEmail ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Sparkles className="size-4" />
-                            )}
-                            Save my universe
-                          </button>
-                        </form>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {results && (
-                  <div className="mt-7 flex flex-wrap gap-3">
-                    <button
-                      onClick={regenerate}
-                      disabled={generating}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-white/[0.04] px-6 py-3.5 text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/85 hover:bg-white/[0.08] disabled:opacity-60"
-                    >
-                      <RefreshCw className="size-4" /> Regenerate
-                    </button>
-                    <button
-                      onClick={reset}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-white/[0.04] px-6 py-3.5 text-xs font-extrabold uppercase tracking-[0.14em] text-foreground/85 hover:bg-white/[0.08]"
-                    >
-                      Try another character
-                    </button>
-                  </div>
-                )}
+              <p>Select a character to get started.</p>
+            )}
+            <button
+              className="artoy-cta"
+              disabled={!source || reading}
+              onClick={() => {
+                setTab("creations");
+                void session.generate();
+              }}
+            >
+              <Sparkles size={16} />
+              {error && source ? "Try generation again" : "Generate my universe"}
+              <ArrowRight size={16} />
+            </button>
+          </div>
+          <p className="studio-footnote">
+            Generates up to 5 character images and 3 merch concepts with AI.
+          </p>
+          <div className="studio-game-entry">
+            <button
+              className="studio-text-button"
+              aria-expanded={showGame}
+              aria-controls="sample-game"
+              onClick={() => setShowGame(!showGame)}
+            >
+              <Gamepad2 size={17} />{" "}
+              {showGame ? "Close sample game" : "Just want to play? Try the sample game"}
+            </button>
+            {showGame && (
+              <div id="sample-game">
+                <SampleGame />
               </div>
             )}
           </div>
+        </div>
+      )}
 
-          {/* RIGHT */}
-          <div className="flex flex-col justify-center gap-6">
-            {FEATURES.map(({ icon: Icon, color, title, desc }) => (
-              <div key={title} className="flex items-start gap-4">
-                <div
-                  className="grid size-14 shrink-0 place-items-center rounded-2xl"
-                  style={{
-                    background: `color-mix(in oklab, ${color} 18%, transparent)`,
-                    border: `1px solid color-mix(in oklab, ${color} 40%, transparent)`,
+      {generating && source && (
+        <div className="studio-generating" aria-busy="true">
+          <div className="studio-orbit">
+            <img src={source.image} alt={`${source.name}, your selected character`} />
+            <span>
+              <Sparkles size={23} />
+            </span>
+          </div>
+          <div role="status">
+            <h3>
+              <Loader2 size={19} className="animate-spin" /> Creating your universe
+            </h3>
+            <p>
+              Generating 5 character images and 3 merch concepts.
+              <br />
+              This can take a few minutes. You can close the studio and return here.
+            </p>
+          </div>
+          <div className="studio-loading-cards" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <button className="studio-text-button" onClick={session.cancel}>
+            Stop and return to {results ? "results" : "artwork"}
+          </button>
+        </div>
+      )}
+
+      {!generating && results && source && (
+        <div className="studio-output">
+          <div className="studio-output-summary">
+            <div className="studio-source">
+              <img src={source.image} alt="Your original artwork" />
+              <div>
+                <strong>
+                  {completed} of {results.length} images ready
+                </strong>
+                <span>
+                  {completed < results.length
+                    ? "Some images didn’t finish. You can still download the completed ones."
+                    : "Your character, reimagined."}
+                </span>
+              </div>
+            </div>
+            <button className="studio-text-button" onClick={() => setChangingCharacter(true)}>
+              <ArrowLeft size={15} />
+              New character
+            </button>
+          </div>
+          {changingCharacter && (
+            <div className="studio-change-prompt" role="group" aria-label="Start a new character">
+              <p>Download your favorites first. Starting a new character clears these results.</p>
+              <div>
+                <button className="studio-text-button" onClick={() => setChangingCharacter(false)}>
+                  Keep exploring
+                </button>
+                <button
+                  className="artoy-cta"
+                  onClick={() => {
+                    setChangingCharacter(false);
+                    setTab("creations");
+                    session.reset();
                   }}
                 >
-                  <Icon className="size-6" style={{ color }} />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold tracking-tight md:text-lg">{title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-                </div>
+                  Start new character
+                </button>
               </div>
-            ))}
+            </div>
+          )}
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="studio-tabs" aria-label="Explore your universe">
+              <TabsTrigger value="creations">
+                Creations <span>{experiences.length}</span>
+              </TabsTrigger>
+              <TabsTrigger value="merch">
+                Merch <span>{merch.length}</span>
+              </TabsTrigger>
+              <TabsTrigger value="play">
+                <Gamepad2 size={16} />
+                Play demo
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="creations">
+              <ResultCards items={experiences} />
+            </TabsContent>
+            <TabsContent value="merch">
+              <p className="studio-tab-note">
+                Concept mockups for inspiration. These products are not available to purchase yet.
+              </p>
+              <ResultCards items={merch} />
+            </TabsContent>
+            <TabsContent value="play">
+              <SampleGame />
+            </TabsContent>
+          </Tabs>
+          <div className="studio-output-actions">
+            <p>
+              Download your favorites before refreshing, starting a new character, or generating a
+              new set.
+            </p>
+            <button className="studio-text-button" onClick={() => void session.generate()}>
+              <RefreshCw size={15} />
+              Generate a new set
+            </button>
           </div>
+          <details className="studio-waitlist">
+            <summary>
+              {session.emailSaved
+                ? "You’re on the early-access list"
+                : "Get updates about publishing & merch"}
+              <ArrowRight size={16} />
+            </summary>
+            {session.emailSaved ? (
+              <p>We’ll email you when publishing and real merch drops are available.</p>
+            ) : (
+              <>
+                <p>
+                  Join the early-access list for publishing and real merch drops. This doesn’t save
+                  your generated images—download the ones you want to keep.
+                </p>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void saveEmail();
+                  }}
+                >
+                  <label htmlFor="studio-email">Email address</label>
+                  <div>
+                    <input
+                      id="studio-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@studio.com"
+                      required
+                      maxLength={255}
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                    <button className="artoy-cta" disabled={savingEmail}>
+                      {savingEmail ? "Joining…" : "Join the waitlist"}
+                    </button>
+                  </div>
+                </form>
+                {emailError && <p role="alert">{emailError}</p>}
+              </>
+            )}
+          </details>
         </div>
-      </div>
+      )}
     </section>
   );
 }

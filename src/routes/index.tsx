@@ -11,6 +11,7 @@ import { HowItWorks } from "@/components/artoy/HowItWorks";
 const TryItNow = lazy(() =>
   import("@/components/artoy/TryItNow").then((module) => ({ default: module.TryItNow })),
 );
+import { useCreatorSession } from "@/components/artoy/useCreatorSession";
 import { SiteFooter } from "@/components/artoy/SiteFooter";
 
 export const Route = createFileRoute("/")({
@@ -20,13 +21,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "ARTOY helps artists and creators turn their characters into mini games, collectible toys, virtual pets, trading cards and merch experiences.",
+          "Reimagine your character as AI artwork and merch concepts. Upload a drawing, explore original characters, and try a playable sample game.",
       },
       { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
       {
         property: "og:description",
         content:
-          "Upload your character. ARTOY transforms it into mini games, collectible toys, virtual pets, trading cards and merch experiences.",
+          "Upload your character, generate AI artwork and merch concepts, and download your favorites.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "/" },
@@ -40,6 +41,7 @@ function Index() {
   const creatorTrigger = useRef<HTMLElement | null>(null);
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [initialFile, setInitialFile] = useState<File>();
+  const creatorSession = useCreatorSession(initialFile);
   function openCreator(file?: File) {
     creatorTrigger.current = document.activeElement as HTMLElement;
     setInitialFile(file);
@@ -52,7 +54,7 @@ function Index() {
       </a>
       <Nav onCreate={() => openCreator()} />
       <main id="main">
-        <Hero onCreate={openCreator} />
+        <Hero onCreate={openCreator} hasSession={!!creatorSession.source} />
         <Transformation />
         <Community onCreate={() => openCreator()} />
         <HowItWorks onCreate={() => openCreator()} />
@@ -80,7 +82,7 @@ function Index() {
               </p>
             }
           >
-            <TryItNow initialFile={initialFile} />
+            <TryItNow session={creatorSession} />
           </Suspense>
         </DialogContent>
       </Dialog>
