@@ -73,23 +73,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "ARTOY — Turn Your Art Into A Playable Universe" },
-      { name: "description", content: "Turn your art into mini games, collectible toys, virtual pets and merch experiences." },
+      {
+        name: "description",
+        content:
+          "Turn your art into mini games, collectible toys, virtual pets and merch experiences.",
+      },
       { property: "og:site_name", content: "ARTOY" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
       { name: "twitter:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
-      { property: "og:description", content: "Turn your art into mini games, collectible toys, virtual pets and merch experiences." },
-      { name: "twitter:description", content: "Turn your art into mini games, collectible toys, virtual pets and merch experiences." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea" },
+      {
+        property: "og:description",
+        content:
+          "Turn your art into mini games, collectible toys, virtual pets and merch experiences.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Turn your art into mini games, collectible toys, virtual pets and merch experiences.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2acbad24-1c8e-406f-941a-64291f3945ea",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kalam:wght@400;700&family=Lilita+One&display=swap",
       },
       {
         rel: "stylesheet",

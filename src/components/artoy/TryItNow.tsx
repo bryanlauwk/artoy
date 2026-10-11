@@ -1,5 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy, ImagePlus, Mail, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Sparkles,
+  Wand2,
+  Users,
+  Coins,
+  Rocket,
+  Loader2,
+  RefreshCw,
+  ShoppingBag,
+  Gamepad2,
+  Lock,
+  Trophy,
+  ImagePlus,
+  Mail,
+  CheckCircle2,
+} from "lucide-react";
 import { joinWaitlist } from "@/lib/waitlist.functions";
 import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
 import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
@@ -15,9 +30,27 @@ import wall from "@/assets/artoy/exp-wall.png";
 import { toast } from "sonner";
 
 const SAMPLES: { id: SampleId; src: string; name: string; tagline: string; accent: string }[] = [
-  { id: "nova",  src: a1, name: "Nova",  tagline: "Sci-fi pilot · cyan plaza",     accent: "var(--cyan)" },
-  { id: "mochi", src: a2, name: "Mochi", tagline: "Pastel mascot · pink town",    accent: "var(--pink)" },
-  { id: "hexx",  src: a3, name: "Hexx",  tagline: "Neon punk · arcade alley",     accent: "var(--orange)" },
+  {
+    id: "nova",
+    src: a1,
+    name: "Nova",
+    tagline: "Sci-fi pilot · cyan plaza",
+    accent: "var(--cyan)",
+  },
+  {
+    id: "mochi",
+    src: a2,
+    name: "Mochi",
+    tagline: "Pastel mascot · pink town",
+    accent: "var(--pink)",
+  },
+  {
+    id: "hexx",
+    src: a3,
+    name: "Hexx",
+    tagline: "Neon punk · arcade alley",
+    accent: "var(--orange)",
+  },
 ];
 
 const EXP_PLACEHOLDERS = [
@@ -52,10 +85,30 @@ const MERCH_PRICES: Record<string, string> = {
 };
 
 const FEATURES = [
-  { icon: Wand2, color: "var(--pink)", title: "Pick once, get a full universe", desc: "5 experiences + 3 merch mockups + 1 playable mini-game — all synced to the selected character." },
-  { icon: Coins, color: "var(--orange)", title: "Your IP, your revenue", desc: "Every drop is yours. Sell digital or physical without inventory." },
-  { icon: Users, color: "var(--cyan)", title: "Built-in fandom loop", desc: "Fans play, collect and refer friends to unlock more of your world." },
-  { icon: Rocket, color: "var(--purple)", title: "Ship in minutes, not months", desc: "No code, no 3D pipeline, no studio. Start from a character and prove the loop instantly." },
+  {
+    icon: Wand2,
+    color: "var(--pink)",
+    title: "Pick once, get a full universe",
+    desc: "5 experiences + 3 merch mockups + 1 playable mini-game — all synced to the selected character.",
+  },
+  {
+    icon: Coins,
+    color: "var(--orange)",
+    title: "Your IP, your revenue",
+    desc: "Every drop is yours. Sell digital or physical without inventory.",
+  },
+  {
+    icon: Users,
+    color: "var(--cyan)",
+    title: "Built-in fandom loop",
+    desc: "Fans play, collect and refer friends to unlock more of your world.",
+  },
+  {
+    icon: Rocket,
+    color: "var(--purple)",
+    title: "Ship in minutes, not months",
+    desc: "No code, no 3D pipeline, no studio. Start from a character and prove the loop instantly.",
+  },
 ];
 
 async function urlToDataUrl(url: string): Promise<string> {
@@ -71,7 +124,7 @@ async function urlToDataUrl(url: string): Promise<string> {
 
 type Result = { label: string; kind: "experience" | "merch"; image: string | null; error?: string };
 
-export function TryItNow() {
+export function TryItNow({ initialFile }: { initialFile?: File }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedSampleId, setSelectedSampleId] = useState<SampleId | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -85,28 +138,64 @@ export function TryItNow() {
 
   const MAX_UPLOAD_MB = 8;
 
-  const onUploadFile = (file: File | undefined) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file (PNG, JPG, WebP…)");
-      return;
+  const runGeneration = useCallback(async (sourceDataUrl: string) => {
+    setGenerating(true);
+    setResults(null);
+    try {
+      const res = await fetch("/api/generate-universe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: sourceDataUrl }),
+      });
+      const json = (await res.json()) as { results?: Result[]; error?: string };
+      if (!res.ok || !json.results) {
+        const msg = json.error ?? `Generation failed (${res.status})`;
+        if (res.status === 402)
+          toast.error("AI credits exhausted — add credits in Workspace settings.");
+        else if (res.status === 429) toast.error("Rate limited — try again in a moment.");
+        else toast.error(msg.slice(0, 140));
+        return;
+      }
+      setResults(json.results);
+      const failed = json.results.filter((r) => !r.image).length;
+      if (failed === 0) toast.success("Your universe is ready ✨");
+      else toast.warning(`${json.results.length - failed}/${json.results.length} assets generated`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setGenerating(false);
     }
-    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-      toast.error(`Image must be under ${MAX_UPLOAD_MB}MB`);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setSelectedSampleId(null);
-      setUploadedName(file.name.replace(/\.[^.]+$/, "").slice(0, 60));
-      setPreview(dataUrl);
-      setEmailSaved(false);
-      void runGeneration(dataUrl);
-    };
-    reader.onerror = () => toast.error("Couldn't read that file");
-    reader.readAsDataURL(file);
-  };
+  }, []);
+
+  const onUploadFile = useCallback(
+    (file: File | undefined) => {
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please choose an image file (PNG, JPG, WebP…)");
+        return;
+      }
+      if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+        toast.error(`Image must be under ${MAX_UPLOAD_MB}MB`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        setSelectedSampleId(null);
+        setUploadedName(file.name.replace(/\.[^.]+$/, "").slice(0, 60));
+        setPreview(dataUrl);
+        setEmailSaved(false);
+        void runGeneration(dataUrl);
+      };
+      reader.onerror = () => toast.error("Couldn't read that file");
+      reader.readAsDataURL(file);
+    },
+    [runGeneration],
+  );
+
+  useEffect(() => {
+    if (initialFile) onUploadFile(initialFile);
+  }, [initialFile, onUploadFile]);
 
   const saveEmail = async () => {
     const trimmed = email.trim();
@@ -116,7 +205,9 @@ export function TryItNow() {
     }
     setSavingEmail(true);
     try {
-      await joinWaitlist({ data: { email: trimmed, characterName: uploadedName ?? activeSample?.name } });
+      await joinWaitlist({
+        data: { email: trimmed, characterName: uploadedName ?? activeSample?.name },
+      });
       setEmailSaved(true);
       toast.success("Saved! We'll email you when your universe can go live.");
     } catch (e) {
@@ -131,36 +222,7 @@ export function TryItNow() {
     if (!selectedSampleId) setBests(loadBests());
   }, [selectedSampleId]);
 
-
-  const runGeneration = async (sourceDataUrl: string) => {
-    setGenerating(true);
-    setResults(null);
-    try {
-      const res = await fetch("/api/generate-universe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageDataUrl: sourceDataUrl }),
-      });
-      const json = (await res.json()) as { results?: Result[]; error?: string };
-      if (!res.ok || !json.results) {
-        const msg = json.error ?? `Generation failed (${res.status})`;
-        if (res.status === 402) toast.error("AI credits exhausted — add credits in Workspace settings.");
-        else if (res.status === 429) toast.error("Rate limited — try again in a moment.");
-        else toast.error(msg.slice(0, 140));
-        return;
-      }
-      setResults(json.results);
-      const failed = json.results.filter((r) => !r.image).length;
-      if (failed === 0) toast.success("Your universe is ready ✨");
-      else toast.warning(`${json.results.length - failed}/${json.results.length} assets generated`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Network error");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const onSample = async (sample: typeof SAMPLES[number]) => {
+  const onSample = async (sample: (typeof SAMPLES)[number]) => {
     if (!isUnlocked(sample.id, bests)) {
       const prev = prevStage(sample.id);
       const prevName = prev ? SAMPLES.find((x) => x.id === prev)?.name : "previous stage";
@@ -176,7 +238,6 @@ export function TryItNow() {
       toast.error("Couldn't load sample image");
     }
   };
-
 
   const reset = () => {
     setPreview(null);
@@ -199,12 +260,42 @@ export function TryItNow() {
   };
 
   const experiences = results
-    ? results.filter((r) => r.kind === "experience").map((r) => ({ label: r.label, img: r.image, accent: ACCENTS[r.label] ?? "var(--pink)", aiGenerated: true, error: r.error }))
-    : EXP_PLACEHOLDERS.map((p) => ({ label: p.label, img: p.img as string, accent: p.accent, aiGenerated: false, error: undefined as string | undefined }));
+    ? results
+        .filter((r) => r.kind === "experience")
+        .map((r) => ({
+          label: r.label,
+          img: r.image,
+          accent: ACCENTS[r.label] ?? "var(--pink)",
+          aiGenerated: true,
+          error: r.error,
+        }))
+    : EXP_PLACEHOLDERS.map((p) => ({
+        label: p.label,
+        img: p.img as string,
+        accent: p.accent,
+        aiGenerated: false,
+        error: undefined as string | undefined,
+      }));
 
   const merch = results
-    ? results.filter((r) => r.kind === "merch").map((r) => ({ label: r.label, img: r.image, price: MERCH_PRICES[r.label] ?? "—", accent: ACCENTS[r.label] ?? "var(--pink)", aiGenerated: true, error: r.error }))
-    : MERCH_PLACEHOLDERS.map((p) => ({ label: p.label, img: p.img as string, price: p.price, accent: p.accent, aiGenerated: false, error: undefined as string | undefined }));
+    ? results
+        .filter((r) => r.kind === "merch")
+        .map((r) => ({
+          label: r.label,
+          img: r.image,
+          price: MERCH_PRICES[r.label] ?? "—",
+          accent: ACCENTS[r.label] ?? "var(--pink)",
+          aiGenerated: true,
+          error: r.error,
+        }))
+    : MERCH_PLACEHOLDERS.map((p) => ({
+        label: p.label,
+        img: p.img as string,
+        price: p.price,
+        accent: p.accent,
+        aiGenerated: false,
+        error: undefined as string | undefined,
+      }));
 
   const activeSample = SAMPLES.find((s) => s.id === selectedSampleId);
   const displayName = uploadedName ?? activeSample?.name ?? "Your character";
@@ -214,10 +305,16 @@ export function TryItNow() {
       <div className="mx-auto w-[min(1400px,96vw)] panel-surface px-6 py-14 md:px-12">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">Try it now</p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Drop your art. Get your universe.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Upload your own character — or tap a sample — and your universe and a playable mini-game build themselves.</p>
-
+            <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">
+              Try it now
+            </p>
+            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">
+              Drop your art. Get your universe.
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Upload your own character — or tap a sample — and your universe and a playable
+              mini-game build themselves.
+            </p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
             <Sparkles className="size-4 text-pink" /> Live demo
@@ -229,7 +326,9 @@ export function TryItNow() {
           <div className="rounded-3xl border border-border bg-white/[0.03] p-6 md:p-8">
             {!preview ? (
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Upload your art, or pick a sample</p>
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">
+                  Upload your art, or pick a sample
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -241,13 +340,18 @@ export function TryItNow() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="group relative grid aspect-square place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-pink/50 bg-pink/[0.06] text-center transition-transform hover:-translate-y-1"
-                    style={{ boxShadow: "0 18px 50px -28px color-mix(in oklab, var(--pink) 80%, transparent)" }}
+                    style={{
+                      boxShadow:
+                        "0 18px 50px -28px color-mix(in oklab, var(--pink) 80%, transparent)",
+                    }}
                   >
                     <div className="flex flex-col items-center gap-2 px-4">
                       <span className="grid size-12 place-items-center rounded-2xl bg-pink/15">
                         <ImagePlus className="size-6 text-pink" />
                       </span>
-                      <p className="text-sm font-black uppercase tracking-[0.14em] text-pink">Your art</p>
+                      <p className="text-sm font-black uppercase tracking-[0.14em] text-pink">
+                        Your art
+                      </p>
                       <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
                         Drop any character · PNG/JPG up to {MAX_UPLOAD_MB}MB
                       </p>
@@ -259,15 +363,27 @@ export function TryItNow() {
                   {SAMPLES.map((s) => {
                     const unlocked = isUnlocked(s.id, bests);
                     const myBest = bests[s.id];
-                    const needName = !unlocked && prevStage(s.id) ? SAMPLES.find((x) => x.id === prevStage(s.id))!.name : null;
+                    const needName =
+                      !unlocked && prevStage(s.id)
+                        ? SAMPLES.find((x) => x.id === prevStage(s.id))!.name
+                        : null;
                     return (
                       <button
                         key={s.id}
                         onClick={() => onSample(s)}
                         className={`group relative overflow-hidden rounded-2xl border border-border bg-background/40 text-left transition-transform ${unlocked ? "hover:-translate-y-1" : "opacity-70"}`}
-                        style={{ boxShadow: unlocked ? `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)` : undefined }}
+                        style={{
+                          boxShadow: unlocked
+                            ? `0 18px 50px -28px color-mix(in oklab, ${s.accent} 80%, transparent)`
+                            : undefined,
+                        }}
                       >
-                        <img src={s.src} alt={s.name} loading="lazy" className={`block aspect-square w-full object-cover ${unlocked ? "" : "grayscale"}`} />
+                        <img
+                          src={s.src}
+                          alt={s.name}
+                          loading="lazy"
+                          className={`block aspect-square w-full object-cover ${unlocked ? "" : "grayscale"}`}
+                        />
                         {!unlocked && (
                           <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/55">
                             <div className="flex flex-col items-center gap-1">
@@ -280,20 +396,32 @@ export function TryItNow() {
                         )}
                         {myBest.bestScore > 0 && (
                           <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
-                            <Trophy className="size-3" style={{ color: s.accent }} /> {myBest.bestScore}
+                            <Trophy className="size-3" style={{ color: s.accent }} />{" "}
+                            {myBest.bestScore}
                           </span>
                         )}
                         <div className="px-3 py-3">
-                          <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: s.accent }}>{s.name}</p>
+                          <p
+                            className="text-sm font-black uppercase tracking-[0.14em]"
+                            style={{ color: s.accent }}
+                          >
+                            {s.name}
+                          </p>
                           <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
                             {s.tagline}
-                            {myBest.bestMs > 0 && <span className="ml-1 text-foreground/40">· best {formatMs(myBest.bestMs)}</span>}
+                            {myBest.bestMs > 0 && (
+                              <span className="ml-1 text-foreground/40">
+                                · best {formatMs(myBest.bestMs)}
+                              </span>
+                            )}
                           </p>
                         </div>
                         {unlocked && (
                           <span
                             className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100"
-                            style={{ background: `color-mix(in oklab, ${s.accent} 80%, black 20%)` }}
+                            style={{
+                              background: `color-mix(in oklab, ${s.accent} 80%, black 20%)`,
+                            }}
                           >
                             ✦ Generate universe
                           </span>
@@ -305,24 +433,34 @@ export function TryItNow() {
                 <p className="mt-5 text-center text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                   Clear a stage to unlock the next
                 </p>
-
               </div>
             ) : (
               <div>
                 <div className="flex items-start gap-4">
                   <div className="relative shrink-0">
-                    <img src={preview} alt="Your character" className="size-24 rounded-2xl border border-border object-cover sm:size-36 md:size-44" />
+                    <img
+                      src={preview}
+                      alt="Your character"
+                      className="size-24 rounded-2xl border border-border object-cover sm:size-36 md:size-44"
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-pink">
-                      {generating ? "✦ Generating…" : results ? `✦ ${displayName}'s universe` : "✦ Preview"}
+                      {generating
+                        ? "✦ Generating…"
+                        : results
+                          ? `✦ ${displayName}'s universe`
+                          : "✦ Preview"}
                     </p>
                     <p className="mt-1.5 text-base font-extrabold tracking-tight md:text-lg">
-                      {generating ? "Building your universe" : results ? "Your universe is ready" : "Preparing"}
+                      {generating
+                        ? "Building your universe"
+                        : results
+                          ? "Your universe is ready"
+                          : "Preparing"}
                     </p>
                   </div>
                 </div>
-
 
                 {/* Experiences row */}
                 <div className="mt-7">
@@ -336,10 +474,17 @@ export function TryItNow() {
                       <div
                         key={`${t.label}-${i}`}
                         className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} 70%, transparent)` }}
+                        style={{
+                          boxShadow: `0 18px 40px -24px color-mix(in oklab, ${t.accent} 70%, transparent)`,
+                        }}
                       >
                         {t.img ? (
-                          <img src={t.img} alt={t.label} loading="lazy" className={`block aspect-[4/5] w-full object-cover ${generating ? "opacity-60" : ""}`} />
+                          <img
+                            src={t.img}
+                            alt={t.label}
+                            loading="lazy"
+                            className={`block aspect-[4/5] w-full object-cover ${generating ? "opacity-60" : ""}`}
+                          />
                         ) : (
                           <div className="grid aspect-[4/5] w-full place-items-center bg-white/[0.03] p-3 text-center text-xs text-muted-foreground">
                             {t.error ? "Failed" : "—"}
@@ -358,7 +503,8 @@ export function TryItNow() {
                     {generating && (
                       <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-2xl bg-background/40 backdrop-blur-[2px]">
                         <div className="flex items-center gap-2.5 rounded-full bg-background/80 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em]">
-                          <Loader2 className="size-4 animate-spin text-pink" /> Generating your universe…
+                          <Loader2 className="size-4 animate-spin text-pink" /> Generating your
+                          universe…
                         </div>
                       </div>
                     )}
@@ -380,10 +526,17 @@ export function TryItNow() {
                       <div
                         key={`${m.label}-${i}`}
                         className="relative overflow-hidden rounded-2xl border border-border"
-                        style={{ boxShadow: `0 18px 40px -24px color-mix(in oklab, ${m.accent} 70%, transparent)` }}
+                        style={{
+                          boxShadow: `0 18px 40px -24px color-mix(in oklab, ${m.accent} 70%, transparent)`,
+                        }}
                       >
                         {m.img ? (
-                          <img src={m.img} alt={m.label} loading="lazy" className={`block aspect-square w-full object-cover ${generating ? "opacity-60" : ""}`} />
+                          <img
+                            src={m.img}
+                            alt={m.label}
+                            loading="lazy"
+                            className={`block aspect-square w-full object-cover ${generating ? "opacity-60" : ""}`}
+                          />
                         ) : (
                           <div className="grid aspect-square w-full place-items-center bg-white/[0.03] p-3 text-center text-xs text-muted-foreground">
                             {m.error ? "Failed" : "—"}
@@ -395,8 +548,12 @@ export function TryItNow() {
                           </span>
                         )}
                         <div className="flex items-center justify-between px-2.5 py-2">
-                          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/80">{m.label}</p>
-                          <p className="text-xs font-black" style={{ color: m.accent }}>{m.price}</p>
+                          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/80">
+                            {m.label}
+                          </p>
+                          <p className="text-xs font-black" style={{ color: m.accent }}>
+                            {m.price}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -412,7 +569,10 @@ export function TryItNow() {
                     <span
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em]"
                       style={{
-                        background: results && !generating ? "color-mix(in oklab, var(--pink) 22%, transparent)" : "rgba(255,255,255,0.06)",
+                        background:
+                          results && !generating
+                            ? "color-mix(in oklab, var(--pink) 22%, transparent)"
+                            : "rgba(255,255,255,0.06)",
                         color: results && !generating ? "var(--pink)" : "rgb(255 255 255 / 0.55)",
                       }}
                     >
@@ -420,7 +580,6 @@ export function TryItNow() {
                       {results && !generating
                         ? `Meccha Chameleon · ${activeSample?.name ?? "Demo"}'s stage`
                         : "Locked"}
-
                     </span>
                   </div>
                   {results && !generating ? (
@@ -437,12 +596,9 @@ export function TryItNow() {
                           Mini-game unlocks once your universe finishes generating
                         </p>
                       )}
-
                     </div>
                   )}
                 </div>
-
-
 
                 {/* Email capture — save the universe */}
                 {results && !generating && (
@@ -451,9 +607,12 @@ export function TryItNow() {
                       <div className="flex items-center gap-3">
                         <CheckCircle2 className="size-6 shrink-0 text-pink" />
                         <div>
-                          <p className="text-sm font-extrabold uppercase tracking-[0.12em]">You're on the list</p>
+                          <p className="text-sm font-extrabold uppercase tracking-[0.12em]">
+                            You're on the list
+                          </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            We'll email you when {displayName}'s universe can go live with real drops.
+                            We'll email you when {displayName}'s universe can go live with real
+                            drops.
                           </p>
                         </div>
                       </div>
@@ -463,7 +622,8 @@ export function TryItNow() {
                           Save {displayName}'s universe
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Leave your email to keep this universe and get early access to real merch drops. Your art stays yours — never used for training.
+                          Leave your email to keep this universe and get early access to real merch
+                          drops. Your art stays yours — never used for training.
                         </p>
                         <form
                           className="mt-4 flex flex-col gap-2.5 sm:flex-row"
@@ -489,7 +649,11 @@ export function TryItNow() {
                             disabled={savingEmail}
                             className="bg-gradient-brand shadow-glow inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white disabled:opacity-60"
                           >
-                            {savingEmail ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                            {savingEmail ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Sparkles className="size-4" />
+                            )}
                             Save my universe
                           </button>
                         </form>
@@ -515,7 +679,6 @@ export function TryItNow() {
                     </button>
                   </div>
                 )}
-
               </div>
             )}
           </div>
