@@ -1,24 +1,49 @@
-export function Nav() {
+import { ArrowRight, Menu, Search, X } from "lucide-react";
+import { useState } from "react";
+
+export function Nav({ onCreate }: { onCreate: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <nav className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] w-[min(1200px,94vw)] items-center justify-between">
-        <a href="#top" className="flex items-baseline gap-3">
-          <span className="text-gradient-brand text-2xl font-black tracking-[-0.04em]">ARTOY</span>
-          <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:inline">
-            Playable IP for creators
-          </span>
-        </a>
-        <div className="hidden gap-9 text-xs font-bold uppercase tracking-[0.14em] text-foreground/80 md:flex">
-          <a href="#how" className="hover:text-foreground">How it works</a>
-                    <a href="#try" className="hover:text-foreground">Try it</a>
-        </div>
-        <a
-          href="#try"
-          className="bg-gradient-brand shadow-glow rounded-xl px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white"
+    <header className="artoy-nav">
+      <a className="artoy-logo" href="#top" aria-label="ARTOY home">
+        <b>ARTOY</b>
+        <span>Playable IP for creators</span>
+      </a>
+      <nav
+        className={menuOpen ? "artoy-links is-open" : "artoy-links"}
+        aria-label="Main navigation"
+      >
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            onCreate();
+          }}
         >
-          Try it now
+          Create
+        </button>
+        <a href="#explore" onClick={() => setMenuOpen(false)}>
+          Explore
         </a>
+        <a href="#how" onClick={() => setMenuOpen(false)}>
+          How it works
+        </a>
+      </nav>
+      <div className="artoy-nav-actions">
+        <a className="icon-button search-link" href="#explore" aria-label="Explore characters">
+          <Search size={20} />
+        </a>
+        <button className="artoy-cta nav-cta" onClick={onCreate}>
+          Try it now <ArrowRight size={16} />
+        </button>
+        <button
+          className="icon-button mobile-menu"
+          aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X /> : <Menu />}
+        </button>
       </div>
-    </nav>
+    </header>
   );
 }

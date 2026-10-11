@@ -1,77 +1,117 @@
-import heroArt from "@/assets/artoy/hero.png";
-import { ArrowRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowRight, CloudUpload, Sparkles, X } from "lucide-react";
+import heroArt from "@/assets/artoy/hero-studio.png";
 
-export function Hero() {
+export function Hero({ onCreate }: { onCreate: (file?: File) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File>();
+  const [error, setError] = useState("");
+  const [dragging, setDragging] = useState(false);
+  function chooseFile(next?: File) {
+    if (!next) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(next.type)) {
+      setError("Please choose a PNG, JPG or WebP image.");
+      return;
+    }
+    if (next.size > 8 * 1024 * 1024) {
+      setError("Your image must be 8 MB or smaller.");
+      return;
+    }
+    setError("");
+    setFile(next);
+  }
   return (
-    <section id="top" className="relative overflow-hidden pt-10 pb-12">
-      {/* Ambient glow behind hero */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 80% 30%, rgba(255,79,189,.22), transparent 60%), radial-gradient(50% 50% at 20% 80%, rgba(139,92,246,.22), transparent 65%)",
-        }}
+    <section id="top" className="artoy-hero" aria-labelledby="hero-title">
+      <img
+        src={heroArt}
+        alt="A pink-haired designer toy and a black cat in a colorful artist’s studio"
+        className="studio-art"
+        fetchPriority="high"
+        width="1536"
+        height="864"
       />
-
-      <div className="mx-auto grid w-[min(1200px,94vw)] grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_1.1fr]">
-        <div className="relative z-10">
-          <h1 className="text-[clamp(40px,5.6vw,72px)] font-black uppercase leading-[0.95] tracking-[-0.035em]">
-            Turn your art<br />into a{" "}
-            <span className="text-gradient-brand">playable</span>{" "}
-            <br className="hidden md:inline" />
-            <span className="text-gradient-brand">universe</span>
-          </h1>
-          <p className="mt-6 max-w-[520px] text-base leading-[1.7] text-foreground/75">
-            AI transforms your characters into mini games, collectible toys, virtual
-            pets and merch experiences. Build your world. Grow your fandom. Own your IP.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3.5">
-            <a
-              href="#try"
-              className="bg-gradient-brand shadow-glow inline-flex items-center gap-2 rounded-xl px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white"
-            >
-              Try it now <ArrowRight className="size-4" />
-            </a>
-            <a
-              href="#how"
-              className="inline-flex items-center rounded-xl border border-border bg-white/5 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white hover:bg-white/10"
-            >
-              How it works
-            </a>
-          </div>
-
-          <div className="mt-6 hidden flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-muted-foreground sm:flex">
-            <span>✦ Built for Artists, Creators & Dreamers</span>
-          </div>
-        </div>
-
-        {/* Blended hero artwork — no panel border, soft-fade into background on all sides */}
-        <div className="relative lg:-mr-[6vw]">
-
-          {(() => {
-            const fadeMask =
-              "radial-gradient(ellipse 70% 75% at 55% 50%, #000 35%, rgba(0,0,0,0.6) 60%, transparent 88%)";
-            return (
-              <img
-                src={heroArt}
-                alt="Nova — pink-haired cyberpunk character with collectible figurine box"
-                width={1280}
-                height={800}
-                className="block h-auto w-full select-none"
-                style={{
-                  WebkitMaskImage: fadeMask,
-                  maskImage: fadeMask,
-                  WebkitMaskRepeat: "no-repeat",
-                  maskRepeat: "no-repeat",
-                  WebkitMaskSize: "100% 100%",
-                  maskSize: "100% 100%",
+      <div className="studio-shade" />
+      <div className="hero-inner">
+        <p className="hero-eyebrow">
+          <Sparkles size={13} /> A little idea. A whole new world.
+        </p>
+        <h1 id="hero-title">
+          Your art.
+          <br />
+          Your character.
+          <br />
+          <span>Your universe.</span>
+        </h1>
+        <p className="hero-copy">
+          Turn any drawing into a playful world
+          <br className="wide-only" /> of games, collectibles, and stories.
+        </p>
+        <div
+          className={`artoy-upload ${dragging ? "is-dragging" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            chooseFile(e.dataTransfer.files[0]);
+          }}
+        >
+          <div className="upload-dashed">
+            <input
+              ref={input}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="Upload your character artwork"
+              className="sr-only"
+              tabIndex={-1}
+              onChange={(e) => {
+                chooseFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            <button className="upload-picker" onClick={() => input.current?.click()}>
+              <CloudUpload size={36} strokeWidth={1.5} />
+              <span>
+                <strong>{file ? file.name : "Drop your art here"}</strong>
+                <small>
+                  {file ? "Ready to create · Click to change" : "PNG, JPG or WebP · up to 8 MB"}
+                </small>
+              </span>
+            </button>
+            {file && (
+              <button
+                className="remove-upload"
+                onClick={() => {
+                  setFile(undefined);
+                  setError("");
                 }}
-              />
-            );
-          })()}
+                aria-label="Remove selected artwork"
+              >
+                <X size={15} />
+              </button>
+            )}
+            <button className="artoy-cta" onClick={() => onCreate(file)}>
+              Create my character <ArrowRight size={17} />
+            </button>
+            <p className="upload-error" role="status">
+              {error}
+            </p>
+          </div>
         </div>
+        <p className="hand-note hero-reassurance">
+          No art? Try a sample! <span aria-hidden="true">⤴</span>
+        </p>
       </div>
+      <p className="studio-sticker">
+        From doodle
+        <br />
+        to real
+        <br />
+        things.<span aria-hidden="true">☺</span>
+      </p>
     </section>
   );
 }
