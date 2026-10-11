@@ -34,10 +34,10 @@ export function Hero() {
               Try it now <ArrowRight className="size-4" />
             </a>
             <a
-              href="#universes"
+              href="#how"
               className="inline-flex items-center rounded-xl border border-border bg-white/5 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.12em] text-white hover:bg-white/10"
             >
-              See Demo Universe
+              How it works
             </a>
           </div>
 
