@@ -215,8 +215,8 @@ export function TryItNow() {
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-foreground/70">Try it now</p>
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Pick a character. Get your universe.</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Tap a sample — your universe and a playable mini-game build themselves.</p>
+            <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.02em] md:text-3xl lg:text-4xl">Drop your art. Get your universe.</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Upload your own character — or tap a sample — and your universe and a playable mini-game build themselves.</p>
 
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.04] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-foreground/70">
@@ -229,8 +229,33 @@ export function TryItNow() {
           <div className="rounded-3xl border border-border bg-white/[0.03] p-6 md:p-8">
             {!preview ? (
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Pick a character to start</p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground/60">Upload your art, or pick a sample</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onUploadFile(e.target.files?.[0])}
+                />
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group relative grid aspect-square place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-pink/50 bg-pink/[0.06] text-center transition-transform hover:-translate-y-1"
+                    style={{ boxShadow: "0 18px 50px -28px color-mix(in oklab, var(--pink) 80%, transparent)" }}
+                  >
+                    <div className="flex flex-col items-center gap-2 px-4">
+                      <span className="grid size-12 place-items-center rounded-2xl bg-pink/15">
+                        <ImagePlus className="size-6 text-pink" />
+                      </span>
+                      <p className="text-sm font-black uppercase tracking-[0.14em] text-pink">Your art</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/60">
+                        Drop any character · PNG/JPG up to {MAX_UPLOAD_MB}MB
+                      </p>
+                    </div>
+                    <span className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg bg-pink/80 px-2 py-1.5 text-center text-[10px] font-extrabold uppercase tracking-[0.16em] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      ✦ Generate my universe
+                    </span>
+                  </button>
                   {SAMPLES.map((s) => {
                     const unlocked = isUnlocked(s.id, bests);
                     const myBest = bests[s.id];
