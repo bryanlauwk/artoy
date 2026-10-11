@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, Wand2, Users, Coins, Rocket, Loader2, RefreshCw, ShoppingBag, Gamepad2, Lock, Trophy, ImagePlus, Mail, CheckCircle2 } from "lucide-react";
+import { joinWaitlist } from "@/lib/waitlist.functions";
 import { PixelSocialSim, type SampleId } from "./PixelSocialSim";
 import { loadBests, isUnlocked, prevStage, type BestsBlob } from "./meccha/storage";
 import { formatMs } from "./meccha/scoring";
@@ -76,6 +77,54 @@ export function TryItNow() {
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
   const [bests, setBests] = useState<BestsBlob>(() => loadBests());
+  const [uploadedName, setUploadedName] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_UPLOAD_MB = 8;
+
+  const onUploadFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file (PNG, JPG, WebP…)");
+      return;
+    }
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      toast.error(`Image must be under ${MAX_UPLOAD_MB}MB`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setSelectedSampleId(null);
+      setUploadedName(file.name.replace(/\.[^.]+$/, "").slice(0, 60));
+      setPreview(dataUrl);
+      setEmailSaved(false);
+      void runGeneration(dataUrl);
+    };
+    reader.onerror = () => toast.error("Couldn't read that file");
+    reader.readAsDataURL(file);
+  };
+
+  const saveEmail = async () => {
+    const trimmed = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length > 255) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    setSavingEmail(true);
+    try {
+      await joinWaitlist({ data: { email: trimmed, characterName: uploadedName ?? activeSample?.name } });
+      setEmailSaved(true);
+      toast.success("Saved! We'll email you when your universe can go live.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save — try again");
+    } finally {
+      setSavingEmail(false);
+    }
+  };
 
   // Refresh bests when returning to the picker (after a game) — cheap, no listener needed.
   useEffect(() => {
