@@ -14,6 +14,12 @@ The homepage follows the supplied “ARTOY: From Doodle to Universe” reference
 
 `hero-studio.png` and `bunny-universe.png` are newly generated assets based on the user-supplied design reference. They contain illustration only; navigation, typography, buttons and other controls are real HTML. The bunny atlas is shared by the four transformation examples to preserve character identity. The gallery retains existing ARTOY character assets.
 
+## Previews
+
+![Desktop homepage](previews/desktop.jpg)
+
+[Mobile homepage](previews/mobile.jpg)
+
 ## Validation
 
 - Production build passes (existing dependency/bundle warnings remain).
@@ -23,4 +29,4 @@ The homepage follows the supplied “ARTOY: From Doodle to Universe” reference
 
 ## Follow-up
 
-The raster assets should be converted to responsive delivery formats in the deployment image pipeline. The creator retains its original session behavior; closing its dialog discards in-memory work. Production publishing, pricing and external social destinations are outside this redesign.
+The raster assets should be converted to responsive delivery formats in the deployment image pipeline. Creator state is local to the dialog; closing it discards in-memory work. Production publishing, pricing and external social destinations are outside this redesign.
