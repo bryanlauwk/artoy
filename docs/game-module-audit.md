@@ -153,3 +153,11 @@ The published sample game and all world/collectible assets were verified after P
 The request now follows the published `@tanstack/ai-lovable@0.5.4` edit adapter exactly for its gateway headers (`Authorization`, `Lovable-API-Key`, `X-Lovable-AIG-SDK`), single-reference `image` versus multiple-reference `image[]` fields, and explicit `stream=false`. World relics now use the gateway-supported 1536×1024 canvas with three vertical cells; the parser accepts that 3:2 canvas while retaining prior wide-strip compatibility. The model ID and multipart endpoint were confirmed in the adapter source. References: https://tanstack.com/ai/latest/docs/adapters/lovable and https://registry.npmjs.org/@tanstack/ai-lovable/-/ai-lovable-0.5.4.tgz .
 
 Request-contract regression tests cover the corrected headers, file cardinality and sizing. HTTP errors remain sanitized; keys, references and upstream error bodies are never copied into public error messages. Successful live generation on this corrected integration must still be verified after publication.
+
+## Restore the production-proven generation contract
+
+The PR #6 header/cardinality correction still returned upstream HTTP 400 for all eight primary assets (13 October 2026, 08:32:58–08:33:02 UTC). The SDK's multipart edit contract is therefore not working for this deployed project, despite matching its published adapter.
+
+The endpoint now restores the exact JSON `/v1/images/generations` request and `google/gemini-3.1-flash-image-preview` model that successfully generated eight Nova outputs earlier in this session. Original artwork is passed as an `image_url` content part; optional motion and relic requests append the approved hero as a second reference. Layout remains in the prompt; no unverified size field is added to this restored contract. Reference validation, isolated failures, timeout, partial results and sanitized public errors remain in place. An `X-ARTOY-Generation-Contract: reference-json-v1` response header permits checking the deployed backend using an invalid, non-generating request before a live upload.
+
+Regression checks verify reference order and identity preservation, malformed-reference rejection and safe error handling. A successful live upload on the restored endpoint is still required; the failed multipart attempts do not establish image-generation quality.

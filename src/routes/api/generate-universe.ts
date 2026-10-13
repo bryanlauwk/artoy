@@ -5,19 +5,21 @@ type Body = { imageDataUrl?: string };
 import { ITEMS, MOTION, WORLD_RELICS, generateOne } from "@/lib/universe-generation";
 
 type Result = Awaited<ReturnType<typeof generateOne>>;
+const headers = { "X-ARTOY-Generation-Contract": "reference-json-v1" };
 
 export const Route = createFileRoute("/api/generate-universe")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const apiKey = process.env.LOVABLE_API_KEY;
-        if (!apiKey) return Response.json({ error: "Missing LOVABLE_API_KEY" }, { status: 500 });
+        if (!apiKey)
+          return Response.json({ error: "Missing LOVABLE_API_KEY" }, { status: 500, headers });
 
         let body: Body;
         try {
           body = (await request.json()) as Body;
         } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+          return Response.json({ error: "Invalid JSON" }, { status: 400, headers });
         }
 
         const { imageDataUrl } = body;
@@ -28,7 +30,7 @@ export const Route = createFileRoute("/api/generate-universe")({
         ) {
           return Response.json(
             { error: "imageDataUrl must be a data:image/... URL" },
-            { status: 400 },
+            { status: 400, headers },
           );
         }
 
@@ -70,10 +72,10 @@ export const Route = createFileRoute("/api/generate-universe")({
           const first = results.find((r) => r.error);
           const msg = first?.error ?? "Generation failed";
           const status = msg.startsWith("402") ? 402 : msg.startsWith("429") ? 429 : 502;
-          return Response.json({ error: msg, results }, { status });
+          return Response.json({ error: msg, results }, { status, headers });
         }
 
-        return Response.json({ results });
+        return Response.json({ results }, { headers });
       },
     },
   },
