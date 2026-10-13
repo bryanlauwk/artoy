@@ -42,15 +42,15 @@ export function Hero({
           <Sparkles size={13} /> A little idea. A whole new world.
         </p>
         <h1 id="hero-title">
-          Your art.
-          <br />
           Your character.
           <br />
-          <span>Your universe.</span>
+          Its world.
+          <br />
+          <span>Your collection.</span>
         </h1>
         <p className="hero-copy">
-          Reimagine your character as AI artwork,
-          <br className="wide-only" /> toy concepts, and little worlds.
+          Turn your artwork into a character world,
+          <br className="wide-only" /> collectible concepts and themed editions.
         </p>
         <div
           className={`artoy-upload ${dragging ? "is-dragging" : ""}`}

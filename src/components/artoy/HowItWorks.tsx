@@ -33,7 +33,7 @@ export function HowItWorks({ onCreate }: { onCreate: () => void }) {
                 />
               </div>
               <h3>Generate your universe</h3>
-              <p>See your character reimagined with AI.</p>
+              <p>Discover your character, its world and three collectible concepts.</p>
             </li>
             <li>
               <div className="step-illustration merch-icons">
@@ -41,9 +41,9 @@ export function HowItWorks({ onCreate }: { onCreate: () => void }) {
                 <Download />
                 <Shirt />
               </div>
-              <h3>Explore & download</h3>
+              <h3>Build your collection</h3>
               <p>
-                Keep your favorite images and merch concepts. Play an adventure with your character.
+                Choose a favorite. Expand its views, packaging and series, then save the concepts.
               </p>
             </li>
           </ol>

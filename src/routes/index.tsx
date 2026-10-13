@@ -17,13 +17,13 @@ import { SiteFooter } from "@/components/artoy/SiteFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ARTOY — Turn Your Art Into A Playable Universe" },
+      { title: "ARTOY — Your Character. Its World. Your Collection." },
       {
         name: "description",
         content:
-          "Reimagine your character as AI artwork and merch concepts. Upload a drawing and play The Lost Fragments with your own artwork hero.",
+          "Upload your character and create its illustrated world, collectible concepts, product views, packaging and themed editions.",
       },
-      { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
+      { property: "og:title", content: "ARTOY — Your Character. Its World. Your Collection." },
       {
         property: "og:description",
         content:
@@ -72,8 +72,8 @@ function Index() {
         >
           <DialogTitle className="sr-only">Create your ARTOY universe</DialogTitle>
           <DialogDescription className="sr-only">
-            Upload character artwork or choose a sample to generate your universe and explore the
-            game demo.
+            Upload character artwork or choose a sample to create and explore your collectible
+            collection.
           </DialogDescription>
           <Suspense
             fallback={

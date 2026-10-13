@@ -1,5 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SampleId } from "./quest/engine";
+type SampleId = "nova" | "mochi" | "hexx";
+export type ExpansionType = "product-views" | "packaging" | "series";
+export const DETAIL_OPTIONS = [
+  {
+    id: "product-views",
+    label: "Product Views",
+    description: "Front, side and back of this design",
+  },
+  {
+    id: "packaging",
+    label: "Packaging Concept",
+    description: "Presentation box, insert and story card",
+  },
+  { id: "series", label: "Collect the Series", description: "Three related themed editions" },
+] as const;
 import nova from "@/assets/artoy/avatar-1.png";
 import mochi from "@/assets/artoy/avatar-2.png";
 import hexx from "@/assets/artoy/avatar-3.png";
@@ -22,6 +36,8 @@ export function useCreatorSession(initialFile?: File) {
   const [reading, setReading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Creation[] | null>(null);
+  const [details, setDetails] = useState<Record<string, Creation[]>>({});
+  const [expanding, setExpanding] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [emailSaved, setEmailSaved] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -40,6 +56,8 @@ export function useCreatorSession(initialFile?: File) {
       stopWork();
       setSource(next);
       setResults(null);
+      setDetails({});
+      setExpanding(null);
       setError("");
       setGenerating(false);
       setReading(false);
@@ -48,58 +66,89 @@ export function useCreatorSession(initialFile?: File) {
     [stopWork],
   );
 
-  const generateSource = useCallback(async (selectedSource: Source) => {
-    if (request.current) return;
-    const controller = new AbortController();
-    request.current = controller;
-    setGenerating(true);
-    setError("");
-    try {
-      let imageDataUrl = selectedSource.image;
-      if (!imageDataUrl.startsWith("data:")) {
-        const imageResponse = await fetch(imageDataUrl, { signal: controller.signal });
-        if (!imageResponse.ok) throw new Error("We couldn’t load that sample. Please try another.");
-        const blob = await imageResponse.blob();
-        imageDataUrl = await new Promise<string>((resolve, reject) => {
-          const fileReader = new FileReader();
-          fileReader.onload = () => resolve(String(fileReader.result));
-          fileReader.onerror = () => reject(new Error("We couldn’t read that sample."));
-          fileReader.readAsDataURL(blob);
+  const generateSource = useCallback(
+    async (selectedSource: Source, detail?: { concept: Creation; expansion: ExpansionType }) => {
+      if (request.current) return;
+      const controller = new AbortController();
+      request.current = controller;
+      if (detail) setExpanding(`${detail.concept.label}:${detail.expansion}`);
+      else setGenerating(true);
+      setError("");
+      try {
+        let imageDataUrl = selectedSource.image;
+        if (!imageDataUrl.startsWith("data:")) {
+          const imageResponse = await fetch(imageDataUrl, { signal: controller.signal });
+          if (!imageResponse.ok)
+            throw new Error("We couldn’t load that sample. Please try another.");
+          const blob = await imageResponse.blob();
+          imageDataUrl = await new Promise<string>((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.onload = () => resolve(String(fileReader.result));
+            fileReader.onerror = () => reject(new Error("We couldn’t read that sample."));
+            fileReader.readAsDataURL(blob);
+          });
+        }
+        if (controller.signal.aborted) return;
+        const response = await fetch("/api/generate-universe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageDataUrl,
+            mode: detail ? "detail" : "initial",
+            ...(detail
+              ? {
+                  conceptLabel: detail.concept.label,
+                  conceptImageDataUrl: detail.concept.image,
+                  expansion: detail.expansion,
+                }
+              : {}),
+          }),
+          signal: controller.signal,
         });
+        const json = (await response.json()) as { results?: Creation[] };
+        if (!response.ok) {
+          throw new Error(
+            response.status === 402
+              ? "Generation is temporarily unavailable. Please try again later."
+              : response.status === 429
+                ? "The studio is busy. Please wait a moment and try again."
+                : "We couldn’t generate your universe. Your artwork is still here—try again.",
+          );
+        }
+        if (!Array.isArray(json.results) || !json.results.some((item) => item.image)) {
+          throw new Error("No images were generated. Try again or choose different artwork.");
+        }
+        if (request.current === controller) {
+          if (detail)
+            setDetails((previous) => ({
+              ...previous,
+              [detail.concept.label]: [
+                ...(previous[detail.concept.label] ?? []).filter(
+                  (item) => item.label !== json.results![0].label,
+                ),
+                ...json.results!,
+              ],
+            }));
+          else {
+            setResults(json.results);
+            setDetails({});
+          }
+        }
+      } catch (cause) {
+        if (!controller.signal.aborted && request.current === controller)
+          setError(
+            cause instanceof Error ? cause.message : "Something went wrong. Please try again.",
+          );
+      } finally {
+        if (request.current === controller) {
+          request.current = null;
+          setGenerating(false);
+          setExpanding(null);
+        }
       }
-      if (controller.signal.aborted) return;
-      const response = await fetch("/api/generate-universe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageDataUrl }),
-        signal: controller.signal,
-      });
-      const json = (await response.json()) as { results?: Creation[] };
-      if (!response.ok) {
-        throw new Error(
-          response.status === 402
-            ? "Generation is temporarily unavailable. Please try again later."
-            : response.status === 429
-              ? "The studio is busy. Please wait a moment and try again."
-              : "We couldn’t generate your universe. Your artwork is still here—try again.",
-        );
-      }
-      if (!Array.isArray(json.results) || !json.results.some((item) => item.image)) {
-        throw new Error("No images were generated. Try again or choose different artwork.");
-      }
-      if (request.current === controller) setResults(json.results);
-    } catch (cause) {
-      if (!controller.signal.aborted && request.current === controller)
-        setError(
-          cause instanceof Error ? cause.message : "Something went wrong. Please try again.",
-        );
-    } finally {
-      if (request.current === controller) {
-        request.current = null;
-        setGenerating(false);
-      }
-    }
-  }, []);
+    },
+    [],
+  );
 
   const uploadFile = useCallback(
     (file?: File, autoGenerate = false) => {
@@ -149,11 +198,14 @@ export function useCreatorSession(initialFile?: File) {
   const cancel = () => {
     stopWork();
     setGenerating(false);
+    setExpanding(null);
     setReading(false);
   };
   const reset = () => {
     cancel();
     setSource(null);
+    setDetails({});
+    setExpanding(null);
     setResults(null);
     setError("");
     setEmailSaved(false);
@@ -163,6 +215,11 @@ export function useCreatorSession(initialFile?: File) {
     reading,
     generating,
     results,
+    details,
+    expanding,
+    expand: (concept: Creation, expansion: ExpansionType) => {
+      if (source && concept.image) return generateSource(source, { concept, expansion });
+    },
     error,
     emailSaved,
     setEmailSaved,

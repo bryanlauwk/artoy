@@ -5,109 +5,14 @@ import {
   Check,
   CloudUpload,
   Download,
-  Gamepad2,
   Loader2,
   RefreshCw,
   Sparkles,
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { joinWaitlist } from "@/lib/waitlist.functions";
-import { FragmentQuest } from "./FragmentQuest";
-import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
-import lunarie from "@/assets/artoy/lunarie.png";
-import booboi from "@/assets/artoy/booboi.png";
-import jaygyii from "@/assets/artoy/jaygyii.png";
-
-import lunarieMotion from "@/assets/artoy/game/lunarie-motion-v1.png";
-import booboiMotion from "@/assets/artoy/game/booboi-motion-v1.webp";
-import jaygyiiMotion from "@/assets/artoy/game/jaygyii-motion-v1.webp";
-import lunarieCollectible from "@/assets/artoy/game/lunarie-collectible-v1.webp";
-import booboiCollectible from "@/assets/artoy/game/booboi-collectible-v1.webp";
-import jaygyiiCollectible from "@/assets/artoy/game/jaygyii-collectible-v1.webp";
-
-const WORLD_CHARACTERS = [
-  {
-    id: "lunarie" as const,
-    src: lunarie,
-    name: "Lunarie",
-    motion: lunarieMotion,
-    collectible: lunarieCollectible,
-  },
-  {
-    id: "booboi" as const,
-    src: booboi,
-    name: "BooBoi",
-    motion: booboiMotion,
-    collectible: booboiCollectible,
-  },
-  {
-    id: "jaygyii" as const,
-    src: jaygyii,
-    name: "Jaygyii",
-    motion: jaygyiiMotion,
-    collectible: jaygyiiCollectible,
-  },
-];
-const GAME_CHARACTERS = [...WORLD_CHARACTERS, ...SAMPLES];
-
-function UniverseGame({
-  source,
-  heroSrc,
-  motionSrc,
-  relicsSrc,
-  collectibleSrc,
-  onExploreCollectible,
-}: {
-  source?: CreatorSession["source"];
-  heroSrc?: string | null;
-  motionSrc?: string | null;
-  relicsSrc?: string | null;
-  collectibleSrc?: string | null;
-  onExploreCollectible?: () => void;
-}) {
-  const [sample, setSample] = useState(GAME_CHARACTERS[0]);
-  const artwork = source ?? { image: sample.src, name: sample.name };
-  const world = WORLD_CHARACTERS.find((option) => option.src === artwork.image);
-  return (
-    <div className="studio-game">
-      <p className="studio-tab-note">
-        {source
-          ? "Your character, your colors, one little world to restore. Recover three art fragments and return to the portal."
-          : "Meet The Lost Fragments: one curated adventure, reimagined with each character. Choose a hero and jump in."}
-      </p>
-      {!source && (
-        <div
-          className="studio-game-options"
-          role="group"
-          aria-label="Choose an adventure character"
-        >
-          {GAME_CHARACTERS.map((option) => (
-            <button
-              key={option.id}
-              aria-pressed={sample.id === option.id}
-              onClick={() => setSample(option)}
-            >
-              {option.name}
-            </button>
-          ))}
-        </div>
-      )}
-      <FragmentQuest
-        key={artwork.image}
-        artworkSrc={artwork.image}
-        characterName={artwork.name}
-        heroSrc={heroSrc}
-        motionSrc={motionSrc ?? world?.motion}
-        worldId={world?.id ?? null}
-        relicsSrc={relicsSrc}
-        collectibleSrc={collectibleSrc ?? (!source ? world?.collectible : null)}
-        onExploreCollectible={onExploreCollectible}
-      />
-    </div>
-  );
-}
+import { SAMPLES, DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
 
 function ResultCards({ items }: { items: Creation[] }) {
   return (
@@ -127,11 +32,7 @@ function ResultCards({ items }: { items: Creation[] }) {
             </div>
           )}
           <div>
-            <h3>
-              {["Mini Game", "Virtual Pet"].includes(item.label)
-                ? `${item.label} concept`
-                : item.label}
-            </h3>
+            <h3>{item.label}</h3>
             {item.image && (
               <a
                 href={item.image}
@@ -152,8 +53,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
   const { source, results, generating, reading, error } = session;
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [tab, setTab] = useState("creations");
-  const [showGame, setShowGame] = useState(false);
+  const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
   const [changingCharacter, setChangingCharacter] = useState(false);
   const [email, setEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
@@ -162,6 +62,12 @@ export function TryItNow({ session }: { session: CreatorSession }) {
   const completed = results?.filter((item) => item.image).length ?? 0;
   const experiences = results?.filter((item) => item.kind === "experience") ?? [];
   const merch = results?.filter((item) => item.kind === "merch") ?? [];
+  const chosen =
+    merch.find((item) => item.label === selectedConcept && item.image) ??
+    merch.find((item) => item.image);
+  const chosenDetails = chosen ? (session.details[chosen.label] ?? []) : [];
+  const busy = generating || !!session.expanding;
+
   async function saveEmail() {
     setSavingEmail(true);
     setEmailError("");
@@ -189,9 +95,9 @@ export function TryItNow({ session }: { session: CreatorSession }) {
         </h2>
         <p>
           {generating
-            ? "We’re turning your artwork into AI images and merch concepts."
+            ? "Creating your character identity, illustrated world and three collectible concepts."
             : results
-              ? "Explore your creations, download your favorites, or play with your character."
+              ? "Your character. Its world. Your collection."
               : "Upload your art or choose a sample. Make it a world of its own."}
         </p>
         <ol className="studio-steps" aria-label="Creation progress">
@@ -298,7 +204,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               className="artoy-cta"
               disabled={!source || reading}
               onClick={() => {
-                setTab("creations");
+                setSelectedConcept(null);
                 void session.generate();
               }}
             >
@@ -308,28 +214,9 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             </button>
           </div>
           <p className="studio-footnote">
-            Generates up to 7 character and world assets and 3 merch concepts with AI.
+            Start with 5 images: your character, its world and 3 collectible concepts. Expand a
+            favorite when you’re ready.
           </p>
-          <div className="studio-game-entry">
-            <button
-              className="studio-text-button"
-              aria-expanded={showGame}
-              aria-controls="sample-game"
-              onClick={() => setShowGame(!showGame)}
-            >
-              <Gamepad2 size={17} />{" "}
-              {showGame
-                ? "Close adventure"
-                : source
-                  ? `Play with ${source.name}`
-                  : "Try a sample adventure"}
-            </button>
-            {showGame && (
-              <div id="sample-game">
-                <UniverseGame source={source} />
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -346,7 +233,8 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <Loader2 size={19} className="animate-spin" /> Creating your universe
             </h3>
             <p>
-              Generating character art, motion frames, world relics and 3 merch concepts.
+              First your character identity, then its illustrated world and three collectible
+              concepts.
               <br />
               This can take a few minutes. You can close the studio and return here.
             </p>
@@ -379,7 +267,11 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 </span>
               </div>
             </div>
-            <button className="studio-text-button" onClick={() => setChangingCharacter(true)}>
+            <button
+              className="studio-text-button"
+              disabled={busy}
+              onClick={() => setChangingCharacter(true)}
+            >
               <ArrowLeft size={15} />
               New character
             </button>
@@ -395,7 +287,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                   className="artoy-cta"
                   onClick={() => {
                     setChangingCharacter(false);
-                    setTab("creations");
+                    setSelectedConcept(null);
                     session.reset();
                   }}
                 >
@@ -404,47 +296,171 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               </div>
             </div>
           )}
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="studio-tabs" aria-label="Explore your universe">
-              <TabsTrigger value="creations">
-                Creations <span>{experiences.length}</span>
-              </TabsTrigger>
-              <TabsTrigger value="merch">
-                Merch <span>{merch.length}</span>
-              </TabsTrigger>
-              <TabsTrigger value="play">
-                <Gamepad2 size={16} />
-                Play my universe
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="creations">
+          {session.expanding && (
+            <div className="collection-expanding" role="status">
+              <Loader2 size={18} className="animate-spin" />
+              <p>Expanding your selected collectible…</p>
+              <button className="studio-text-button" onClick={session.cancel}>
+                Stop expansion
+              </button>
+            </div>
+          )}
+          <div className="collection-board">
+            <div className="collection-board-heading">
+              <span>ARTOY / CHARACTER COLLECTION</span>
+              <p>From your illustration to a little world worth collecting.</p>
+            </div>
+            <section className="collection-identity" aria-labelledby="identity-heading">
+              <div>
+                <p className="collection-kicker">01 / THE CHARACTER & ITS WORLD</p>
+                <h3 id="identity-heading">One character. A whole universe.</h3>
+                <p>
+                  Recognizable details from your artwork carry through the character, world and
+                  collectible concepts.
+                </p>
+              </div>
               <ResultCards items={experiences} />
-            </TabsContent>
-            <TabsContent value="merch">
-              <p className="studio-tab-note">
-                Concept mockups for inspiration. These products are not available to purchase yet.
-              </p>
-              <ResultCards items={merch} />
-            </TabsContent>
-            <TabsContent value="play">
-              <UniverseGame
-                source={source}
-                heroSrc={experiences.find((item) => item.label === "Game Character")?.image}
-                motionSrc={experiences.find((item) => item.label === "Game Motion")?.image}
-                relicsSrc={experiences.find((item) => item.label === "World Relics")?.image}
-                collectibleSrc={merch.find((item) => item.label === "Figurine")?.image}
-                onExploreCollectible={
-                  merch.some((item) => item.image) ? () => setTab("merch") : undefined
-                }
-              />
-            </TabsContent>
-          </Tabs>
+            </section>
+            <section className="collection-concepts" aria-labelledby="concepts-heading">
+              <p className="collection-kicker">02 / FROM ILLUSTRATION TO COLLECTIBLE</p>
+              <h3 id="concepts-heading">Find your favorite form.</h3>
+              <p>Choose a concept to explore its product views, packaging and themed editions.</p>
+              <div className="collection-concept-grid">
+                {merch.map((item) => (
+                  <article
+                    key={item.label}
+                    className={`collection-concept ${chosen?.label === item.label ? "selected" : ""}`}
+                  >
+                    {item.image ? (
+                      <button
+                        className="collection-pick"
+                        aria-pressed={chosen?.label === item.label}
+                        onClick={() => setSelectedConcept(item.label)}
+                      >
+                        <img
+                          src={item.image}
+                          alt={`${item.label} concept from ${source.name}`}
+                          loading="lazy"
+                        />
+                        <span>
+                          {item.label}
+                          <small>
+                            {chosen?.label === item.label
+                              ? "Selected concept"
+                              : "Explore this concept"}
+                          </small>
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="studio-result-missing">
+                        <AlertCircle size={24} />
+                        <p>{item.label} didn’t finish.</p>
+                      </div>
+                    )}
+                    {item.image && (
+                      <a
+                        className="collection-download"
+                        href={item.image}
+                        download={`artoy-${item.label.toLowerCase().replaceAll(" ", "-")}.png`}
+                        aria-label={`Download ${item.label}`}
+                      >
+                        <Download size={16} /> Save concept
+                      </a>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+            {chosen && (
+              <section className="collection-breakdown" aria-labelledby="breakdown-heading">
+                <div className="collection-breakdown-heading">
+                  <div>
+                    <p className="collection-kicker">03 / THE COLLECTION BREAKDOWN</p>
+                    <h3 id="breakdown-heading">Explore your {chosen.label.toLowerCase()}.</h3>
+                    <p>
+                      Each expansion creates one new image using this chosen design as its
+                      reference.
+                    </p>
+                  </div>
+                  <img src={chosen.image!} alt="Selected collectible reference" />
+                </div>
+                <div className="collection-detail-grid">
+                  {DETAIL_OPTIONS.map((option) => {
+                    const result = chosenDetails.find((item) => item.label === option.label);
+                    const pending = session.expanding === `${chosen.label}:${option.id}`;
+                    return (
+                      <article
+                        className="collection-detail"
+                        key={`${chosen.label}:${option.id}`}
+                        aria-busy={pending}
+                      >
+                        <h4>{option.label}</h4>
+                        <p>{option.description}</p>
+                        {result?.image ? (
+                          <>
+                            <a
+                              href={result.image}
+                              download={`artoy-${option.id}.png`}
+                              aria-label={`Download ${option.label}`}
+                            >
+                              <img
+                                src={result.image}
+                                alt={`${option.label} for the selected ${chosen.label}`}
+                                loading="lazy"
+                              />
+                              <span>
+                                <Download size={15} /> Save image
+                              </span>
+                            </a>
+                            <small>Generated from your selected concept</small>
+                          </>
+                        ) : (
+                          <div className="collection-detail-placeholder">
+                            <Sparkles size={28} />
+                            <span>{pending ? "Taking shape…" : "Ready when you are"}</span>
+                          </div>
+                        )}
+                        {!result?.image && (
+                          <button
+                            className="studio-text-button"
+                            disabled={busy}
+                            onClick={() => void session.expand(chosen, option.id)}
+                          >
+                            {pending ? (
+                              <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <Sparkles size={16} />
+                            )}
+                            {pending ? "Creating…" : `Generate ${option.label.toLowerCase()}`}
+                          </button>
+                        )}
+                        {pending && (
+                          <button className="studio-text-button" onClick={session.cancel}>
+                            Stop expansion
+                          </button>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+            <p className="collection-disclaimer">
+              Concept previews for inspiration. Product views are visual interpretations; physical
+              design and manufacturing still need review. Products are not available to purchase
+              yet.
+            </p>
+          </div>
           <div className="studio-output-actions">
             <p>
               Download your favorites before refreshing, starting a new character, or generating a
               new set.
             </p>
-            <button className="studio-text-button" onClick={() => void session.generate()}>
+            <button
+              className="studio-text-button"
+              disabled={busy}
+              onClick={() => void session.generate()}
+            >
               <RefreshCw size={15} />
               Generate a new set
             </button>

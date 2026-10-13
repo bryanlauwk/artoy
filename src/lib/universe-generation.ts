@@ -1,79 +1,106 @@
-type Item = { label: string; kind: "experience" | "merch"; prompt: string };
-
+export type Item = { label: string; kind: "experience" | "merch"; prompt: string };
+export type Result = {
+  label: string;
+  kind: "experience" | "merch";
+  image: string | null;
+  error?: string;
+};
+const IDENTITY =
+  "Use the original artwork as the identity reference. Preserve the distinctive face, silhouette, costume, markings and palette. If a second reference is supplied, it is the approved character or product: match its identity and design consistently. Do not replace it with a generic mascot. No captions, labels, watermark or UI. ";
 export const ITEMS: Item[] = [
   {
-    label: "Game Character",
+    label: "Character Identity",
     kind: "experience",
     prompt:
-      "Create ONE isolated full-body game character for ARTOY's The Lost Fragments adventure. Use the supplied artwork as the sole identity reference. Preserve its distinctive face, silhouette, costume, markings and palette; do not substitute a generic mascot. If the artwork is abstract or has several characters, interpret its central subject as one coherent little art spirit. Polished hand-painted 2.5D storybook game art, readable chunky silhouette, gentle three-quarter front view, standing idle, complete body and feet visible, centered with minimal empty margin. Soft warm light from the upper left. Plain pure white background (#FFFFFF) for compositing. No floor, shadow, scene, UI, text, border, checkerboard, sprite sheet or additional poses. This single image will be used as the actual playable hero in a fixed explore-and-dash game; do not generate game rules or a game screenshot.",
+      IDENTITY +
+      "Create one polished full-body character portrait, gentle three-quarter front view, complete body visible, expressive personality. Premium illustrated collectible character style on a clean warm ivory studio background. Preserve the original artistic personality.",
   },
   {
-    label: "Virtual Pet",
+    label: "Illustrated Universe",
     kind: "experience",
     prompt:
-      "Render this character as an adorable 3D virtual pet inside a glossy soft-shaded bubble habitat, big sparkly eyes, chibi proportions, soft studio lighting, pastel gradient backdrop. Preserve the character's colors and identity. Toy-like, Tamagotchi energy.",
+      IDENTITY +
+      "Create one rich illustrated world starring this character. Derive architecture, accessories and landscape details from its recognizable visual motifs. A coherent miniature storybook world with a strong focal point, warm lighting, textured cream paper, expressive ink detail and restrained accents from the character palette. No game screenshot, grid, HUD or product mockup.",
   },
   {
-    label: "Vinyl Toy",
-    kind: "experience",
-    prompt:
-      "Product photo of this character as a premium designer vinyl art toy figurine, glossy plastic finish, standing on a minimal pedestal, soft studio lighting, neutral seamless backdrop. Preserve the character's exact look. KAWS / Pop Mart blind-box aesthetic.",
-  },
-  {
-    label: "Trading Card",
-    kind: "experience",
-    prompt:
-      "Design a premium collectible trading card featuring this character as the centerpiece artwork. Holographic foil frame, character name banner, stat icons (HP, ATK, DEF), rarity gem, decorative border. Preserve the character's style. TCG / Pokémon-card composition, portrait orientation.",
-  },
-  {
-    label: "Wallpaper",
-    kind: "experience",
-    prompt:
-      "Create a stunning phone wallpaper / key art featuring this character heroically posed, dramatic lighting, dynamic background with abstract shapes, particles and color splashes matching the character's palette. Preserve the character's identity. Cinematic, poster-quality, portrait 9:16 feel.",
-  },
-  {
-    label: "Figurine",
+    label: "Character Figurine",
     kind: "merch",
     prompt:
-      "Product mockup of this character as a premium collectible figurine on a small acrylic base, displayed against a clean dark studio backdrop with soft rim lighting. High-end Pop Mart / Bandai product photography. Preserve the character's exact look.",
+      IDENTITY +
+      "Design one premium palm-sized character figurine on a simple plinth. Clear three-quarter studio product view, complete toy visible, carefully sculpted materials, restrained details, clean ivory backdrop. Preserve the approved character exactly. A tangible collectible concept, no scene, packaging or other variants.",
   },
   {
-    label: "Acrylic Stand",
+    label: "Miniature World",
     kind: "merch",
     prompt:
-      "Product mockup of an acrylic standee of this character: full-body cutout printed on clear acrylic with a small base, photographed at a 3/4 angle on a clean neutral backdrop with soft shadow. Anime merch product-photo aesthetic. Preserve the character's exact look.",
+      IDENTITY +
+      "Design one palm-sized miniature diorama of this character and its world. Integrate three meaningful motifs from the artwork into a compact cohesive scene on a simple base. Premium sculpted collectible, readable large forms, limited small details, three-quarter product photography on ivory. One design only, no electronics, text or packaging.",
   },
   {
-    label: "T-Shirt",
+    label: "Acrylic Charm",
     kind: "merch",
     prompt:
-      "Product mockup of a premium black t-shirt with this character printed large on the chest as graphic-tee artwork. Studio product shot, neutral backdrop, soft lighting, slight fabric texture. Streetwear merch energy. Preserve the character's look in the print.",
+      IDENTITY +
+      "Design one everyday collectible acrylic bag charm of this character. Full-body printed cutout, transparent acrylic edge, simple metal loop and tasteful matching accent charm. Premium realistic studio product photography, clean ivory backdrop. Preserve identity and palette, one cohesive product only.",
   },
 ];
+export const EXPANSIONS = {
+  "product-views": {
+    label: "Product Views",
+    kind: "experience",
+    prompt:
+      IDENTITY +
+      "The second reference is the chosen collectible. Create one landscape product reference sheet showing exactly THREE consistent views of THAT SAME product: front, side and back, evenly spaced on a clean ivory background. Preserve geometry, base, accessories, proportions, materials and colors across views. Do not redesign, invent variants, add labels or show an exploded view. This is a visual concept, not an engineering drawing.",
+  },
+  packaging: {
+    label: "Packaging Concept",
+    kind: "experience",
+    prompt:
+      IDENTITY +
+      "The second reference is the chosen collectible. Create one premium packaging concept for exactly that product: an illustrated presentation box, open insert holding the matching collectible, and a small character story card. Use original artwork motifs and palette for the box illustration, ivory paper, restrained graphic layout. Studio product photo, no invented brand, slogans or long text. Do not change the collectible.",
+  },
+  series: {
+    label: "Collect the Series",
+    kind: "experience",
+    prompt:
+      IDENTITY +
+      "The second reference is the chosen collectible. Design a cohesive THREE-piece collectible series of this same character/product, side by side on ivory. Preserve the core face, silhouette and recognizable design; vary only themed accessories, scenery or color accents. Clearly related editions, no extra characters, duplicate identical products, text, numbered labels or UI.",
+  },
+} satisfies Record<string, Item>;
+export type ExpansionType = keyof typeof EXPANSIONS;
+export const isImageDataUrl = (value: unknown): value is string =>
+  typeof value === "string" &&
+  value.length <= 12_000_000 &&
+  /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(value);
 
-type Result = { label: string; kind: "experience" | "merch"; image: string | null; error?: string };
-
-export const MOTION: Item = {
-  label: "Game Motion",
-  kind: "experience",
-  prompt:
-    "Create a precise animation sprite sheet for the supplied game hero. First reference is the original identity, second is the approved full-body hero: preserve its face, silhouette, clothing, markings and palette exactly. One rectangular 4-column by 2-row grid with EIGHT isolated full-body poses. Row 1: idle eyes open, idle blink, running stride A, running opposite stride B. Row 2: dash anticipation, dash extension, hit recoil, recovery. Every pose completely inside its own cell with at least 12% blank margin on all four sides. Same camera, scale, ground line and lighting. No overlap or cropped limbs. Clear opposite arm and leg positions for the run pair. Polished hand-painted 2.5D art. Pure white background, no floor shadow, text, labels, borders, panels or checkerboard. No scene or game UI.",
-};
-
-export const WORLD_RELICS: Item = {
-  label: "World Relics",
-  kind: "experience",
-  prompt:
-    "Create a precise environment asset sheet for the supplied character's mysterious game world. First reference is the original artwork and second is the approved playable hero: preserve their distinctive visual motifs, costume details, shapes and palette. ONE landscape 3:2 image with exactly THREE equal vertical cells side by side in one row. Cell 1: a small shrine crown inspired by the character's most recognizable accessory. Cell 2: an ancient guardian faceplate inspired by the character, with readable glowing eyes. Cell 3: a magical portal crest inspired by that same identity. Each is ONE isolated painted 2.5D object, gentle three-quarter front camera, upper-left moonlight, restrained luminous accents, rich material detail, clear silhouette. Every object completely inside its own cell with at least 15 percent blank margin on all sides. Same scale and camera. Pure white background (#FFFFFF) for compositing; no floor, shadows, landscape, scene, UI, text, grid lines, borders or checkerboard. Do not include a full character or a screenshot. The objects decorate a fixed game map; do not invent mechanics.",
-};
+/** One identity request followed by four conditioned images; no game assets or automatic expansions. */
+export async function generateCollection(apiKey: string, original: string): Promise<Result[]> {
+  const run = async (item: Item, reference?: string): Promise<Result> => {
+    try {
+      return await generateOne(apiKey, original, item, reference);
+    } catch {
+      return {
+        label: item.label,
+        kind: item.kind,
+        image: null,
+        error: "Asset generation unavailable",
+      };
+    }
+  };
+  const identity = await run(ITEMS[0]);
+  const rest = await Promise.all(
+    ITEMS.slice(1).map((item) => run(item, identity.image ?? undefined)),
+  );
+  return [identity, ...rest];
+}
 
 export async function generateOne(
   apiKey: string,
   imageDataUrl: string,
   item: Item,
-  heroReference?: string,
+  conceptReference?: string,
 ): Promise<Result> {
-  const sources = heroReference ? [imageDataUrl, heroReference] : [imageDataUrl];
+  const sources = conceptReference ? [imageDataUrl, conceptReference] : [imageDataUrl];
   for (const source of sources) {
     if (!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(source))
       return { label: item.label, kind: item.kind, image: null, error: "Invalid reference image" };
