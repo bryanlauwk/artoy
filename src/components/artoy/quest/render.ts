@@ -13,12 +13,15 @@ import {
 } from "./engine";
 import { motionFrame, type HeroMotion } from "./motion";
 import type { Palette } from "./artwork";
+import { BACKDROP_RECT, resolveWorldIdentity, type WorldIdentity, type WorldRelics } from "./world";
 
 type Assets = {
   original: HTMLImageElement | null;
   hero: HTMLCanvasElement | null;
   motion?: HeroMotion | null;
   backdrop?: HTMLImageElement | null;
+  identity?: WorldIdentity;
+  relics?: WorldRelics | null;
   palette: Palette;
   name: string;
   reducedMotion: boolean;
@@ -109,31 +112,6 @@ function tree(ctx: CanvasRenderingContext2D, x: number, y: number, size: number,
   }
   star(ctx, x + size * 0.28, y - size * 1.42, 3, "#fff5d0");
 }
-function portrait(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  radius: number,
-) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, TAU);
-  ctx.clip();
-  const side = Math.min(image.naturalWidth, image.naturalHeight);
-  ctx.drawImage(
-    image,
-    (image.naturalWidth - side) / 2,
-    (image.naturalHeight - side) / 2,
-    side,
-    side,
-    x - radius,
-    y - radius,
-    radius * 2,
-    radius * 2,
-  );
-  ctx.restore();
-}
 function label(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -147,6 +125,132 @@ function label(
   ctx.textAlign = "center";
   ctx.fillText(text, x, y);
 }
+
+function contain(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement | HTMLCanvasElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const iw = "naturalWidth" in image ? image.naturalWidth : image.width;
+  const ih = "naturalHeight" in image ? image.naturalHeight : image.height;
+  const scale = Math.min(width / iw, height / ih);
+  ctx.drawImage(image, x - (iw * scale) / 2, y - (ih * scale) / 2, iw * scale, ih * scale);
+}
+
+function sigil(
+  ctx: CanvasRenderingContext2D,
+  identity: WorldIdentity,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(1.3, size * 0.09);
+  ctx.lineCap = "round";
+  if (identity.motif === "signal") {
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.65, Math.PI, 0);
+    ctx.stroke();
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.roundRect(side * size * 0.6 - size * 0.12, -size * 0.06, size * 0.24, size * 0.6, 3);
+      ctx.fill();
+    }
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * size * 0.23, -size * (i === 0 ? 0.2 : 0.05));
+      ctx.lineTo(i * size * 0.23, size * (i === 0 ? 0.6 : 0.43));
+      ctx.stroke();
+    }
+  } else if (identity.motif === "echo") {
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.72, 0, TAU);
+    ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i * TAU) / 6;
+      const x = Math.cos(a) * size * 0.42;
+      const y = Math.sin(a) * size * 0.42;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      const a = (i * TAU) / 6;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * size * 0.42, Math.sin(a) * size * 0.42);
+      ctx.lineTo(Math.cos(a + 0.7) * size * 0.72, Math.sin(a + 0.7) * size * 0.72);
+      ctx.stroke();
+    }
+  } else if (identity.motif === "spark") {
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.68, size * 0.12);
+    ctx.lineTo(-size * 0.7, -size * 0.66);
+    ctx.lineTo(-size * 0.2, -size * 0.27);
+    ctx.quadraticCurveTo(0, -size * 0.4, size * 0.2, -size * 0.27);
+    ctx.lineTo(size * 0.7, -size * 0.66);
+    ctx.lineTo(size * 0.68, size * 0.12);
+    ctx.quadraticCurveTo(0, size * 1.1, -size * 0.68, size * 0.12);
+    ctx.stroke();
+    for (const side of [-1, 1])
+      ellipse(ctx, side * size * 0.28, size * 0.02, size * 0.11, size * 0.18, color);
+  } else {
+    star(ctx, 0, 0, size * 0.8, color);
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, TAU);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function relic(
+  ctx: CanvasRenderingContext2D,
+  assets: Assets,
+  identity: WorldIdentity,
+  column: number,
+  x: number,
+  y: number,
+  width: number,
+  height = width,
+) {
+  const tile = assets.relics?.tiles[column];
+  if (tile) contain(ctx, tile, x, y, width, height);
+  else if (identity.id === "original" && assets.original) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x - width * 0.32, y - height * 0.32, width * 0.64, height * 0.64, 5);
+    ctx.clip();
+    contain(ctx, assets.original, x, y, width * 0.62, height * 0.62);
+    ctx.restore();
+  } else sigil(ctx, identity, x, y, width * 0.28, assets.palette.glow);
+}
+
+function glow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  alpha: number,
+) {
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = alpha;
+  const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  gradient.addColorStop(0, color);
+  gradient.addColorStop(1, "transparent");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+  ctx.restore();
+}
 export function renderQuest(
   ctx: CanvasRenderingContext2D,
   s: QuestState,
@@ -154,6 +258,7 @@ export function renderQuest(
   clock: number,
 ) {
   const { palette: p, original, name } = assets;
+  const identity = assets.identity ?? resolveWorldIdentity();
   const hero = assets.motion?.frames[motionFrame(s, assets.reducedMotion)] ?? assets.hero;
   const t = assets.reducedMotion ? 0 : clock;
   const active = s.phase === "playing";
@@ -163,7 +268,20 @@ export function renderQuest(
   ctx.fillStyle = "#0d1025";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   if (assets.backdrop) {
-    ctx.drawImage(assets.backdrop, 0, 29, WIDTH, 720);
+    ctx.drawImage(
+      assets.backdrop,
+      BACKDROP_RECT.x,
+      BACKDROP_RECT.y,
+      BACKDROP_RECT.width,
+      BACKDROP_RECT.height,
+    );
+    // Transfer the artwork's hue into the painting while preserving its authored lighting.
+    ctx.save();
+    ctx.globalCompositeOperation = "color";
+    ctx.globalAlpha = identity.id === "lunarie" ? 0.25 : identity.id === "original" ? 0.48 : 0.65;
+    ctx.fillStyle = identity.atmosphere ?? p.primary;
+    ctx.fillRect(0, BACKDROP_RECT.y, WIDTH, HEIGHT);
+    ctx.restore();
   } else {
     const sky = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
     sky.addColorStop(0, "#090e25");
@@ -350,279 +468,459 @@ export function renderQuest(
     ])
       tree(ctx, x, y, z, x < 300 ? "#93a790" : p.secondary);
   }
-  // Let each creator's colors seep into the shared archive world, then brighten as
-  // their artwork fragments are restored.
+  const recovered = s.fragments.filter(Boolean).length;
+  const open = recovered === 3;
+  // Character marks are embedded in the paths and relics, while painted stone stays visible.
   ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  SHRINES.forEach((shrine, i) => {
-    const restored = s.fragments[i];
-    const radius = restored ? 132 : 92;
-    const bloom = ctx.createRadialGradient(shrine.x, shrine.y, 4, shrine.x, shrine.y, radius);
-    bloom.addColorStop(0, restored ? p.glow : i === 1 ? p.secondary : p.primary);
-    bloom.addColorStop(0.24, i === 1 ? p.secondary : p.primary);
-    bloom.addColorStop(1, "transparent");
-    ctx.globalAlpha =
-      (restored ? 0.22 : 0.095) + (!assets.reducedMotion ? Math.sin(t * 1.7 + i) * 0.018 : 0);
-    ctx.fillStyle = bloom;
-    ctx.fillRect(shrine.x - radius, shrine.y - radius, radius * 2, radius * 2);
-    if (restored) {
-      ctx.globalAlpha = 0.32;
-      ctx.strokeStyle = p.glow;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(shrine.x, shrine.y + 7, 47 + Math.sin(t * 2 + i) * 3, 23, 0, 0, TAU);
-      ctx.stroke();
+  landPath(ctx);
+  ctx.clip();
+  SHRINES.forEach((shrine, index) => {
+    const restored = s.fragments[index];
+    const radius = restored ? 156 : 94;
+    glow(
+      ctx,
+      shrine.x,
+      shrine.y - 15,
+      radius,
+      index === 1 ? p.secondary : p.primary,
+      restored ? 0.34 : 0.11,
+    );
+    ctx.save();
+    ctx.strokeStyle = restored ? p.glow : p.primary;
+    ctx.globalAlpha = restored ? 0.55 : 0.12;
+    ctx.shadowColor = p.primary;
+    ctx.shadowBlur = restored ? 12 : 0;
+    ctx.lineWidth = restored ? 2.3 : 1;
+    ctx.beginPath();
+    ctx.moveTo(PORTAL.x, PORTAL.y);
+    const controlX = (PORTAL.x + shrine.x) / 2;
+    const controlY = shrine.y + 45;
+    ctx.quadraticCurveTo(controlX, controlY, shrine.x, shrine.y);
+    ctx.stroke();
+    if (restored && !assets.reducedMotion) {
+      for (let i = 0; i < 3; i++) {
+        const f = (t * 0.2 + i / 3) % 1;
+        const x = (1 - f) ** 2 * shrine.x + 2 * (1 - f) * f * controlX + f ** 2 * PORTAL.x;
+        const y = (1 - f) ** 2 * shrine.y + 2 * (1 - f) * f * controlY + f ** 2 * PORTAL.y;
+        star(ctx, x, y, 3.5, p.glow);
+      }
+    }
+    ctx.restore();
+    for (let i = 0; i < 4; i++) {
+      const a = (i * TAU) / 4 + 0.3;
+      const x = shrine.x + Math.cos(a) * 75;
+      const y = shrine.y + Math.sin(a) * 38;
+      ctx.save();
+      ctx.globalAlpha = restored ? 0.4 : 0.16;
+      sigil(ctx, identity, x, y, 9, p.secondary);
+      ctx.restore();
     }
   });
-  ctx.restore();
-  for (const rock of ROCKS) {
-    ellipse(ctx, rock.x + 5, rock.y + 9, rock.r + 4, rock.r * 0.6, "#0b253855");
-    ctx.beginPath();
-    ctx.moveTo(rock.x - rock.r, rock.y + 3);
-    ctx.lineTo(rock.x - rock.r * 0.65, rock.y - rock.r * 0.65);
-    ctx.lineTo(rock.x + rock.r * 0.3, rock.y - rock.r);
-    ctx.lineTo(rock.x + rock.r, rock.y - 2);
-    ctx.lineTo(rock.x + rock.r * 0.65, rock.y + rock.r * 0.55);
-    ctx.closePath();
-    ctx.fillStyle = "#748b94";
-    ctx.fill();
-    ctx.strokeStyle = "#b7c6c155";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    crystal(ctx, rock.x, rock.y - 20, rock.r * 0.48, p.primary);
-  }
-  // Original art lives in each monument, connecting exploration to the creator's universe.
-  SHRINES.forEach((shrine, i) => {
-    const lit = s.fragments[i];
-    ellipse(ctx, shrine.x, shrine.y + 13, 44, 21, "#192e40");
-    ellipse(ctx, shrine.x, shrine.y + 5, 44, 21, lit ? "#677d75" : "#64727f");
-    ctx.strokeStyle = lit ? p.glow : "#a8c3c15c";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(shrine.x, shrine.y + 4, 36, 16, 0, 0, TAU);
-    ctx.stroke();
-    if (lit) {
-      ctx.save();
-      ctx.globalAlpha = 0.35;
+  if (s.beatLeft > 0 && recovered > 0) {
+    // The recovery beat is short and bounded; reduced-motion uses only the steady shrine light.
+    const progress = 1 - s.beatLeft / 2.6;
+    if (!assets.reducedMotion) {
+      ctx.globalAlpha = (1 - progress) * 0.44;
       ctx.strokeStyle = p.glow;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 9]);
+      ctx.lineWidth = 3 - progress * 2;
       ctx.beginPath();
-      ctx.moveTo(shrine.x, shrine.y);
-      ctx.lineTo(PORTAL.x, PORTAL.y);
+      ctx.ellipse(s.player.x, s.player.y, 24 + progress * 285, 12 + progress * 160, 0, 0, TAU);
       ctx.stroke();
-      ctx.restore();
-      star(ctx, shrine.x, shrine.y - 21, 13, p.glow);
-    } else {
-      const bob = Math.sin(t * 2 + i) * 4;
-      ctx.save();
-      ctx.translate(shrine.x, shrine.y - 25 + bob);
-      ctx.rotate(Math.sin(t + i) * 0.06);
-      ctx.shadowColor = p.primary;
-      ctx.shadowBlur = 18;
-      ctx.fillStyle = "#17263c";
-      ctx.strokeStyle = p.glow;
-      ctx.lineWidth = 2;
+    }
+  }
+  ctx.restore();
+
+  // Low luminous stone outlines reveal collision reach without covering the painted formations.
+  for (const rock of ROCKS) {
+    ctx.save();
+    ellipse(ctx, rock.x, rock.y + 8, rock.r + 4, rock.r * 0.48, "#08162b44");
+    if (!assets.backdrop) {
+      const stone = ctx.createLinearGradient(
+        rock.x - rock.r,
+        rock.y - rock.r,
+        rock.x + rock.r,
+        rock.y + rock.r,
+      );
+      stone.addColorStop(0, "#8b87a5");
+      stone.addColorStop(0.4, "#42405d");
+      stone.addColorStop(1, "#17273c");
+      ctx.fillStyle = stone;
       ctx.beginPath();
-      ctx.roundRect(-19, -24, 38, 47, 9);
+      ctx.moveTo(rock.x - rock.r, rock.y + 5);
+      ctx.lineTo(rock.x - rock.r * 0.55, rock.y - rock.r * 0.9);
+      ctx.lineTo(rock.x + rock.r * 0.18, rock.y - rock.r * 1.25);
+      ctx.lineTo(rock.x + rock.r, rock.y + 2);
+      ctx.lineTo(rock.x + rock.r * 0.42, rock.y + rock.r * 0.46);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = distance(s.player, rock) < rock.r + 76 ? 0.58 : 0.23;
+    ctx.strokeStyle = p.secondary;
+    ctx.lineWidth = 1.3;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.ellipse(rock.x, rock.y + 2, rock.r + 7, rock.r + 7, 0, 0.08, Math.PI * 1.95);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  SHRINES.forEach((shrine, index) => {
+    const lit = s.fragments[index];
+    const bob = Math.sin(t * 1.8 + index) * 3;
+    glow(ctx, shrine.x, shrine.y - 32, lit ? 66 : 42, p.primary, lit ? 0.5 : 0.3);
+    ctx.save();
+    ctx.shadowColor = p.primary;
+    ctx.shadowBlur = lit ? 14 : 6;
+    ctx.strokeStyle = lit ? p.glow : p.primary;
+    ctx.lineWidth = lit ? 2.3 : 1.5;
+    ctx.globalAlpha = lit ? 0.88 : 0.62;
+    ctx.beginPath();
+    ctx.ellipse(shrine.x, shrine.y + 5, 37, 17, 0, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+    // Each painted relic is a small piece of architecture grounded on its shrine pad.
+    ellipse(ctx, shrine.x, shrine.y + 12, 48, 13, "#050a2188");
+    relic(ctx, assets, identity, 0, shrine.x, shrine.y - 35, 116, 106);
+    if (!lit) {
+      ctx.save();
+      ctx.translate(shrine.x, shrine.y - 24 + bob);
+      ctx.rotate(Math.sin(t + index) * 0.04);
+      ctx.shadowColor = p.primary;
+      ctx.shadowBlur = 16;
+      const crystalFace = ctx.createLinearGradient(-17, -22, 17, 22);
+      crystalFace.addColorStop(0, "#e4e8ff99");
+      crystalFace.addColorStop(0.3, "#303955bb");
+      crystalFace.addColorStop(1, "#b8a6e488");
+      ctx.fillStyle = crystalFace;
+      ctx.strokeStyle = p.glow;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(0, -27);
+      ctx.lineTo(20, -17);
+      ctx.lineTo(17, 22);
+      ctx.lineTo(0, 29);
+      ctx.lineTo(-17, 22);
+      ctx.lineTo(-20, -17);
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
       ctx.shadowBlur = 0;
       if (original) {
         ctx.save();
         ctx.beginPath();
-        ctx.roundRect(-15, -20, 30, 33, 5);
+        ctx.roundRect(-13, -17, 26, 36, 4);
         ctx.clip();
         const slice = original.naturalWidth / 3;
-        ctx.drawImage(original, i * slice, 0, slice, original.naturalHeight, -15, -20, 30, 33);
+        ctx.drawImage(original, index * slice, 0, slice, original.naturalHeight, -13, -17, 26, 36);
         ctx.restore();
       }
-      star(ctx, 0, 17, 5, p.glow);
       ctx.restore();
+    } else {
+      sigil(ctx, identity, shrine.x, shrine.y - 23 + bob, 17, p.glow);
+      for (let i = 0; i < 4; i++) {
+        const a = t * 0.6 + (i * TAU) / 4;
+        star(ctx, shrine.x + Math.cos(a) * 25, shrine.y - 22 + Math.sin(a) * 12, 2.8, p.glow);
+      }
     }
-    label(ctx, shrine.name.toUpperCase(), shrine.x, shrine.y + 48, lit ? p.glow : "#d8e8e0", 10);
-    label(ctx, lit ? "RESTORED" : `FRAGMENT 0${i + 1}`, shrine.x, shrine.y + 63, "#c1d0cf99", 8);
+    // Restrained backing keeps small labels readable over textured illustration.
+    ctx.save();
+    ctx.fillStyle = "#081329bf";
+    ctx.beginPath();
+    ctx.roundRect(shrine.x - 72, shrine.y + 30, 144, 32, 9);
+    ctx.fill();
+    label(
+      ctx,
+      identity.landmarks[index].toUpperCase(),
+      shrine.x,
+      shrine.y + 43,
+      lit ? p.glow : "#e7e7f8",
+      9,
+    );
+    label(
+      ctx,
+      lit ? "MEMORY RESTORED" : `FRAGMENT 0${index + 1}`,
+      shrine.x,
+      shrine.y + 55,
+      "#c4c5db",
+      7,
+    );
+    ctx.restore();
   });
-  SPARKS.forEach((spark, i) => {
-    if (s.sparks[i]) return;
-    const y = spark.y + Math.sin(t * 3 + i) * 2;
-    ellipse(ctx, spark.x, spark.y + 8, 7, 3, "#0a203c55");
-    star(ctx, spark.x, y, 7, p.glow, t * 0.4);
+
+  SPARKS.forEach((spark, index) => {
+    if (s.sparks[index]) return;
+    const y = spark.y + Math.sin(t * 3 + index) * 2;
+    glow(ctx, spark.x, y, 16, p.glow, 0.25);
+    star(ctx, spark.x, y, 5.5, p.glow, t * 0.4);
   });
-  // Portal is the start and the explicit finish; each recovered fragment fills one socket.
-  const open = s.fragments.every(Boolean);
-  ellipse(ctx, PORTAL.x, PORTAL.y + 20, 66, 24, "#17293b");
-  ellipse(ctx, PORTAL.x, PORTAL.y + 13, 57, 22, "#718386");
+
+  // An open ring sits on the painted portal pad. The recovered art rebuilds inside it.
+  glow(ctx, PORTAL.x, PORTAL.y - 26, open ? 130 : 74, p.primary, open ? 0.6 : 0.22);
   ctx.save();
-  ctx.translate(PORTAL.x, PORTAL.y - 13);
-  ctx.strokeStyle = "#a6a8ac";
-  ctx.lineWidth = 13;
-  ctx.beginPath();
-  ctx.ellipse(0, -20, 35, 46, 0, 0, TAU);
-  ctx.stroke();
   ctx.strokeStyle = open ? p.glow : p.primary;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 2;
   ctx.shadowColor = p.primary;
-  ctx.shadowBlur = open ? 22 : 8;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  const gate = ctx.createRadialGradient(0, -20, 3, 0, -20, 48);
-  gate.addColorStop(0, open ? "#fff4db" : "#485570");
-  gate.addColorStop(1, open ? p.primary : "#1f2b40");
-  ctx.fillStyle = gate;
+  ctx.shadowBlur = open ? 18 : 9;
   ctx.beginPath();
-  ctx.ellipse(0, -20, 30, 42, 0, 0, TAU);
-  ctx.fill();
-  if (original) {
-    ctx.globalAlpha = open ? 0.5 : 0.15;
-    portrait(ctx, original, 0, -21, 25);
-    ctx.globalAlpha = 1;
-  }
-  for (let i = 0; i < 3; i++) star(ctx, -22 + i * 22, 38, 6, s.fragments[i] ? p.glow : "#34424f");
+  ctx.ellipse(PORTAL.x, PORTAL.y + 2, 45, 21, 0, 0, TAU);
+  ctx.stroke();
+  ctx.globalAlpha = open ? 0.75 : 0.38;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(PORTAL.x, PORTAL.y + 2, 53, 26, 0, 0, TAU);
+  ctx.stroke();
   ctx.restore();
+  ellipse(ctx, PORTAL.x, PORTAL.y + 15, 56, 15, "#050a2199");
+  ctx.save();
+  ctx.globalAlpha = open ? 1 : 0.72;
+  relic(ctx, assets, identity, 2, PORTAL.x, PORTAL.y - 53, 150, 135);
+  ctx.restore();
+  if (original && recovered > 0) {
+    const imageWidth = 68;
+    const imageHeight = 58;
+    const artScale = Math.min(
+      imageWidth / original.naturalWidth,
+      imageHeight / original.naturalHeight,
+    );
+    const dw = original.naturalWidth * artScale;
+    const dh = original.naturalHeight * artScale;
+    ctx.save();
+    ctx.translate(PORTAL.x, PORTAL.y - 117);
+    ctx.shadowColor = p.primary;
+    ctx.shadowBlur = open ? 22 : 11;
+    ctx.fillStyle = "#13223aaa";
+    ctx.strokeStyle = open ? p.glow : p.primary;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.roundRect(-dw / 2 - 5, -dh / 2 - 5, dw + 10, dh + 10, 7);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < 3; i++) {
+      if (!s.fragments[i]) continue;
+      ctx.drawImage(
+        original,
+        (i * original.naturalWidth) / 3,
+        0,
+        original.naturalWidth / 3,
+        original.naturalHeight,
+        -dw / 2 + (i * dw) / 3,
+        -dh / 2,
+        dw / 3,
+        dh,
+      );
+    }
+    ctx.restore();
+  } else {
+    if (!assets.relics) sigil(ctx, identity, PORTAL.x, PORTAL.y - 36, 20, p.primary);
+  }
+  for (let i = 0; i < 3; i++)
+    star(ctx, PORTAL.x - 17 + i * 17, PORTAL.y + 12, 4, s.fragments[i] ? p.glow : "#666684");
+  ctx.save();
+  ctx.fillStyle = "#081329c9";
+  ctx.beginPath();
+  ctx.roundRect(PORTAL.x - 96, PORTAL.y + 34, 192, 22, 10);
+  ctx.fill();
   label(
     ctx,
-    open ? "PORTAL OPEN · COME HOME" : "THE PORTAL",
+    open ? "PORTAL OPEN · COME HOME" : `THE ARCHIVE · ${recovered}/3 RESTORED`,
     PORTAL.x,
-    PORTAL.y + 55,
-    open ? p.glow : "#dde7e1",
-    10,
+    PORTAL.y + 49,
+    open ? p.glow : "#e2dff3",
+    9,
   );
-  // Telegraph patrol reach and draw enemies separately from the hero artwork.
-  PATROLS.forEach((patrol, i) => {
-    const enemy = patrolPosition(i, s.elapsed);
-    const stunned = s.stunned[i] > 0;
-    ctx.strokeStyle = "#e693bc22";
+  ctx.restore();
+
+  PATROLS.forEach((patrol, index) => {
+    const enemy = patrolPosition(index, s.elapsed);
+    const stunned = s.stunned[index] > 0;
+    ctx.save();
+    ctx.strokeStyle = "#e8a9df26";
     ctx.lineWidth = 1;
-    ctx.setLineDash([3, 9]);
+    ctx.setLineDash([2, 12]);
     ctx.beginPath();
     ctx.ellipse(patrol.x, patrol.y, patrol.rx, patrol.ry, 0, 0, TAU);
     ctx.stroke();
     ctx.setLineDash([]);
-    ellipse(ctx, enemy.x, enemy.y + 5, 34, 17, stunned ? "#ffe4a326" : "#dc6f962b");
-    ellipse(ctx, enemy.x, enemy.y + 10, 20, 8, "#13223e70");
-    ctx.save();
-    ctx.translate(enemy.x, enemy.y - 6 + Math.sin(t * 3 + i) * 2);
-    ctx.fillStyle = stunned ? "#655878" : "#24253e";
-    ctx.strokeStyle = "#bc91c880";
-    ctx.lineWidth = 1.5;
+    ellipse(ctx, enemy.x, enemy.y + 5, 26, 10, "#090d2688");
+    ctx.translate(enemy.x, enemy.y - 9 + Math.sin(t * 3 + index) * 2);
+    const body = ctx.createRadialGradient(-7, -13, 1, 0, 0, 33);
+    body.addColorStop(0, stunned ? "#b6a5d0" : "#715a8e");
+    body.addColorStop(0.55, "#2d294c");
+    body.addColorStop(1, "#16182f33");
+    ctx.fillStyle = body;
+    ctx.strokeStyle = "#d1a1d479";
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(-18, 13);
-    ctx.bezierCurveTo(-29, -33, 29, -33, 18, 13);
-    ctx.lineTo(8, 8);
-    ctx.lineTo(0, 15);
-    ctx.lineTo(-8, 8);
-    ctx.closePath();
+    ctx.moveTo(-16, 16);
+    ctx.bezierCurveTo(-32, -28, 26, -42, 22, 4);
+    ctx.quadraticCurveTo(20, 20, 9, 13);
+    ctx.quadraticCurveTo(-2, 29, -6, 15);
+    ctx.quadraticCurveTo(-13, 24, -16, 16);
     ctx.fill();
     ctx.stroke();
-    ellipse(ctx, -7, -3, 3, 4, stunned ? p.glow : "#f3bdd9");
-    ellipse(ctx, 7, -3, 3, 4, stunned ? p.glow : "#f3bdd9");
-    if (stunned) star(ctx, 0, -28, 7, p.glow, t * 2);
+    ctx.shadowColor = stunned ? p.glow : "#ffc5e6";
+    ctx.shadowBlur = 8;
+    ellipse(ctx, -6, -4, 2.6, 3.6, stunned ? p.glow : "#ffcfeb");
+    ellipse(ctx, 6, -4, 2.6, 3.6, stunned ? p.glow : "#ffcfeb");
+    if (stunned) star(ctx, 0, -31, 6, p.glow, t * 2);
     ctx.restore();
   });
-  if (s.fragments.some(Boolean)) {
-    ctx.save();
-    ctx.globalAlpha = 0.15;
-    ellipse(ctx, 480, 330, 125, 85, p.primary);
-    ctx.restore();
-  }
+
   const guardian = s.guardian;
   if (guardian.active) {
     if (guardian.mode === "warning" || guardian.mode === "burst") {
-      ctx.save();
       const { x, y } = guardian.target;
-      ctx.strokeStyle = "#ffb367";
-      ctx.lineWidth = 4;
-      ellipse(ctx, x, y, 66, 66, guardian.mode === "burst" ? "#ff9066aa" : "#ff906633");
+      const burst = guardian.mode === "burst";
+      const charge = burst ? 1 : 1 - guardian.timer / 0.9;
+      ctx.save();
+      ellipse(ctx, x, y, 66, 66, burst ? "#ffa26475" : "#ff8d5524");
+      ctx.strokeStyle = "#ffd6a2";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y, 66, 0, TAU);
       ctx.stroke();
-      ctx.fillStyle = "#fff1d4";
-      ctx.font = "bold 16px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("MOVE!", x, y - 74);
-      ctx.restore();
-    }
-    ctx.save();
-    ctx.translate(guardian.position.x, guardian.position.y - 12);
-    ctx.shadowColor = p.primary;
-    ctx.shadowBlur = 20;
-    ellipse(ctx, 0, 28, 30, 10, "#0b102966");
-    ctx.beginPath();
-    ctx.moveTo(0, -42);
-    ctx.lineTo(29, -8);
-    ctx.lineTo(20, 25);
-    ctx.lineTo(0, 38);
-    ctx.lineTo(-20, 25);
-    ctx.lineTo(-29, -8);
-    ctx.closePath();
-    ctx.fillStyle = "#283249";
-    ctx.fill();
-    ctx.strokeStyle = p.primary;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ellipse(ctx, -10, -5, 5, 8, "#ffd19a");
-    ellipse(ctx, 10, -5, 5, 8, "#ffd19a");
-    if (guardian.mode === "stunned") star(ctx, 0, -57, 10, p.glow, t);
-    ctx.restore();
-  }
-  // Keep the complete generated hero; raw artwork becomes an intentional floating art token.
-  s.trail.forEach((point) => {
-    ctx.globalAlpha = point.life * 0.8;
-    ellipse(ctx, point.x, point.y, 21, 15, p.primary);
-  });
-  ctx.globalAlpha = 1;
-  const x = s.player.x,
-    y = s.player.y;
-  const bounce = active && s.moving ? Math.sin(t * 12) * 2 : Math.sin(t * 2.5) * 1.5;
-  ellipse(ctx, x, y + 10, hero ? 19 : 24, 8, "#0b203a77");
-  if (s.invulnerable === 0 || Math.floor(t * 12) % 2 === 0) {
-    if (hero) {
-      const scale = assets.motion
-          ? Math.min(75 / assets.motion.height, 72 / assets.motion.width)
-          : Math.min(75 / hero.height, 65 / hero.width),
-        height = hero.height * scale,
-        width = hero.width * scale;
-      ctx.save();
-      ctx.translate(x, y + 10 + bounce);
-      ctx.rotate(s.dashLeft > 0 ? s.facing.x * 0.13 : 0);
-      ctx.shadowColor = p.primary;
-      ctx.shadowBlur = 9;
-      ctx.drawImage(hero, -width / 2, -height, width, height);
-      ctx.restore();
-    } else {
-      ctx.save();
-      ctx.translate(x, y - 13 + bounce);
-      ctx.rotate(s.dashLeft > 0 ? s.facing.x * 0.17 : 0);
-      ctx.shadowColor = p.primary;
-      ctx.shadowBlur = 15;
-      ellipse(ctx, 0, 0, 25, 25, "#132940");
-      ctx.shadowBlur = 0;
-      if (original) portrait(ctx, original, 0, 0, 22);
-      else star(ctx, 0, 0, 17, p.primary);
-      ctx.strokeStyle = p.primary;
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#ffab6f";
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(0, 0, 25, 0, TAU);
+      ctx.arc(x, y, 66, -Math.PI / 2, -Math.PI / 2 + TAU * charge);
       ctx.stroke();
-      star(ctx, 0, 30, 5, p.glow);
+      if (!assets.reducedMotion) {
+        ctx.globalAlpha = 0.3 + charge * 0.3;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 66 * (1 - charge), 0, TAU);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      label(ctx, burst ? "ECHO STRIKE" : "DASH CLEAR", x, y - 78, "#ffe6c4", 10);
       ctx.restore();
     }
-    ctx.strokeStyle = p.primary;
-    ctx.lineWidth = 2;
+    const gx = guardian.position.x;
+    const gy = guardian.position.y;
+    const stunned = guardian.mode === "stunned";
+    const float = Math.sin(t * 2) * 3;
+    ellipse(ctx, gx, gy + 14, 32, 10, "#071225aa");
+    glow(ctx, gx, gy - 28, 82, p.secondary, stunned ? 0.14 : 0.32);
+    ctx.save();
+    ctx.translate(gx, gy - 20 + float);
+    const robe = ctx.createLinearGradient(-32, -48, 32, 35);
+    robe.addColorStop(0, "#bbb1d4");
+    robe.addColorStop(0.15, "#564766");
+    robe.addColorStop(0.45, "#2b2a49");
+    robe.addColorStop(1, "#0b153299");
+    ctx.fillStyle = robe;
+    ctx.strokeStyle = p.secondary;
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.ellipse(x, y + 9, 27, 11, 0, 0, TAU);
+    ctx.moveTo(0, -44);
+    ctx.bezierCurveTo(28, -41, 36, -5, 22, 25);
+    ctx.lineTo(8, 18);
+    ctx.lineTo(0, 39);
+    ctx.lineTo(-11, 22);
+    ctx.lineTo(-26, 28);
+    ctx.bezierCurveTo(-20, 8, -34, -29, 0, -44);
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = p.primary;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(side * 8, -25);
+      ctx.quadraticCurveTo(side * 3, 2, side * 18, 24);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = stunned ? p.glow : p.secondary;
+    ctx.shadowBlur = 10;
+    ellipse(ctx, -8, -9, 3.8, 5, stunned ? p.glow : "#ffe5ad");
+    ellipse(ctx, 8, -9, 3.8, 5, stunned ? p.glow : "#ffe5ad");
+    ctx.shadowBlur = 0;
+    sigil(ctx, identity, 0, 13, 9, p.primary);
+    ctx.restore();
+    relic(ctx, assets, identity, 1, gx, gy - 53 + float, 90, 76);
+    if (stunned) star(ctx, gx, gy - 107, 7, p.glow, t);
+  }
+
+  const x = s.player.x;
+  const y = s.player.y;
+  const spriteScale = hero
+    ? Math.min(
+        90 / (assets.motion?.height ?? hero.height),
+        88 / (assets.motion?.width ?? hero.width),
+      )
+    : 1;
+  const spriteWidth = hero ? hero.width * spriteScale : 0;
+  const spriteHeight = hero ? hero.height * spriteScale : 0;
+  const direction = s.facing.x < -0.08 ? -1 : 1;
+  const bounce = assets.reducedMotion
+    ? 0
+    : active && s.moving
+      ? Math.sin(t * 13) * 1.4
+      : Math.sin(t * 2.4) * 1.1;
+  // Sparse silhouette afterimages make the dash read as movement by this particular character.
+  if (!assets.reducedMotion) {
+    s.trail.forEach((point, index) => {
+      if (index % 3 !== 0) return;
+      ctx.save();
+      ctx.globalAlpha = point.life * 0.65;
+      if (hero) {
+        ctx.translate(point.x, point.y + 9);
+        ctx.scale(direction, 1);
+        ctx.drawImage(hero, -spriteWidth / 2, -spriteHeight, spriteWidth, spriteHeight);
+      } else {
+        sigil(ctx, identity, point.x, point.y - 15, 14, p.primary);
+      }
+      ctx.restore();
+    });
+  }
+  ellipse(ctx, x, y + 9, hero ? 19 : 22, 6.5, "#050d23b3");
+  glow(ctx, x, y + 7, 36, p.primary, s.dashLeft > 0 ? 0.65 : 0.22);
+  if (s.invulnerable === 0 || assets.reducedMotion || Math.floor(t * 12) % 2 === 0) {
+    ctx.save();
+    ctx.translate(x, y + 9 + bounce);
+    ctx.rotate(s.dashLeft > 0 ? s.facing.x * 0.09 : 0);
+    if (hero) {
+      ctx.scale(direction, 1);
+      ctx.shadowColor = p.primary;
+      ctx.shadowBlur = s.dashLeft > 0 ? 14 : 5;
+      ctx.drawImage(hero, -spriteWidth / 2, -spriteHeight, spriteWidth, spriteHeight);
+    } else {
+      ctx.shadowColor = p.primary;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = "#14213de8";
+      ctx.strokeStyle = p.glow;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(-27, -72, 54, 66, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      if (original) contain(ctx, original, 0, -39, 46, 56);
+      else sigil(ctx, identity, 0, -39, 18, p.primary);
+    }
+    ctx.restore();
+    ctx.strokeStyle = p.primary;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 9, 24, 9, 0, 0, TAU);
     ctx.stroke();
   }
-  label(ctx, name.slice(0, 24), x, y + 35, "#fff3dc", 10);
+  ctx.save();
+  ctx.fillStyle = "#071329b3";
+  const nameWidth = Math.min(154, Math.max(48, name.slice(0, 24).length * 6.3 + 16));
+  ctx.beginPath();
+  ctx.roundRect(x - nameWidth / 2, y + 19, nameWidth, 18, 7);
+  ctx.fill();
+  label(ctx, name.slice(0, 24), x, y + 32, "#fff3e8", 10);
+  ctx.restore();
   if (s.target && active) {
-    ctx.strokeStyle = "#fff0c988";
+    ctx.strokeStyle = "#fff0c9aa";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(s.target.x, s.target.y, 11, 5, 0, 0, TAU);
+    ctx.ellipse(s.target.x, s.target.y, 10, 4, 0, 0, TAU);
     ctx.stroke();
   }
-  // A compass helps a newcomer choose a route, then points back to the unlocked portal.
   if (active) {
     const destinations = open ? [PORTAL] : SHRINES.filter((_, i) => !s.fragments[i]);
     const goal = [...destinations].sort((a, b) => distance(a, s.player) - distance(b, s.player))[0];
@@ -640,19 +938,20 @@ export function renderQuest(
       ctx.restore();
     }
   }
-  // A subtle vignette keeps the edges quiet without obscuring navigation.
-  // Mist stays over the lower island edges; paths, patrols and fragments remain legible.
+
+  // The chapter's atmosphere changes with the recovered art; keep the play plane readable.
   for (let i = 0; i < 3; i++) {
-    const fogX = 180 + i * 310 + Math.sin(t * 0.12 + i) * 22;
-    const fog = ctx.createRadialGradient(fogX, 568, 5, fogX, 568, 155);
-    fog.addColorStop(0, "#9ab4dc13");
-    fog.addColorStop(1, "transparent");
-    ctx.fillStyle = fog;
-    ctx.fillRect(fogX - 155, 430, 310, 210);
+    const fogX = 160 + i * 320 + Math.sin(t * 0.12 + i) * 18;
+    glow(ctx, fogX, 581, 150, i % 2 ? p.primary : p.secondary, 0.055 + recovered * 0.01);
   }
-  const vignette = ctx.createRadialGradient(480, 350, 250, 480, 350, 650);
+  const vignette = ctx.createRadialGradient(480, 350, 260, 480, 350, 650);
   vignette.addColorStop(0, "transparent");
-  vignette.addColorStop(1, "#070d2188");
+  vignette.addColorStop(1, open ? "#190d3299" : "#070d2177");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.save();
+  ctx.fillStyle = "#081020b3";
+  ctx.fillRect(0, 0, WIDTH, 28);
+  label(ctx, identity.title.toUpperCase(), WIDTH / 2, 18, "#e4ddf5", 10);
+  ctx.restore();
 }

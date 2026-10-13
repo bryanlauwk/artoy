@@ -17,26 +17,59 @@ import { joinWaitlist } from "@/lib/waitlist.functions";
 import { FragmentQuest } from "./FragmentQuest";
 import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
 import lunarie from "@/assets/artoy/lunarie.png";
+import booboi from "@/assets/artoy/booboi.png";
+import jaygyii from "@/assets/artoy/jaygyii.png";
 
 import lunarieMotion from "@/assets/artoy/game/lunarie-motion-v1.png";
+import booboiMotion from "@/assets/artoy/game/booboi-motion-v1.webp";
+import jaygyiiMotion from "@/assets/artoy/game/jaygyii-motion-v1.webp";
+import lunarieCollectible from "@/assets/artoy/game/lunarie-collectible-v1.webp";
+import booboiCollectible from "@/assets/artoy/game/booboi-collectible-v1.webp";
+import jaygyiiCollectible from "@/assets/artoy/game/jaygyii-collectible-v1.webp";
 
-const GAME_CHARACTERS = [{ id: "lunarie", src: lunarie, name: "Lunarie" }, ...SAMPLES];
+const WORLD_CHARACTERS = [
+  {
+    id: "lunarie" as const,
+    src: lunarie,
+    name: "Lunarie",
+    motion: lunarieMotion,
+    collectible: lunarieCollectible,
+  },
+  {
+    id: "booboi" as const,
+    src: booboi,
+    name: "BooBoi",
+    motion: booboiMotion,
+    collectible: booboiCollectible,
+  },
+  {
+    id: "jaygyii" as const,
+    src: jaygyii,
+    name: "Jaygyii",
+    motion: jaygyiiMotion,
+    collectible: jaygyiiCollectible,
+  },
+];
+const GAME_CHARACTERS = [...WORLD_CHARACTERS, ...SAMPLES];
 
 function UniverseGame({
   source,
   heroSrc,
   motionSrc,
+  relicsSrc,
   collectibleSrc,
   onExploreCollectible,
 }: {
   source?: CreatorSession["source"];
   heroSrc?: string | null;
   motionSrc?: string | null;
+  relicsSrc?: string | null;
   collectibleSrc?: string | null;
   onExploreCollectible?: () => void;
 }) {
   const [sample, setSample] = useState(GAME_CHARACTERS[0]);
   const artwork = source ?? { image: sample.src, name: sample.name };
+  const world = WORLD_CHARACTERS.find((option) => option.src === artwork.image);
   return (
     <div className="studio-game">
       <p className="studio-tab-note">
@@ -66,8 +99,10 @@ function UniverseGame({
         artworkSrc={artwork.image}
         characterName={artwork.name}
         heroSrc={heroSrc}
-        motionSrc={source ? motionSrc : sample.id === "lunarie" ? lunarieMotion : null}
-        collectibleSrc={collectibleSrc}
+        motionSrc={motionSrc ?? world?.motion}
+        worldId={world?.id ?? null}
+        relicsSrc={relicsSrc}
+        collectibleSrc={collectibleSrc ?? (!source ? world?.collectible : null)}
         onExploreCollectible={onExploreCollectible}
       />
     </div>
@@ -273,7 +308,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             </button>
           </div>
           <p className="studio-footnote">
-            Generates up to 6 character assets and 3 merch concepts with AI.
+            Generates up to 7 character and world assets and 3 merch concepts with AI.
           </p>
           <div className="studio-game-entry">
             <button
@@ -311,7 +346,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <Loader2 size={19} className="animate-spin" /> Creating your universe
             </h3>
             <p>
-              Generating character art, motion frames and 3 merch concepts.
+              Generating character art, motion frames, world relics and 3 merch concepts.
               <br />
               This can take a few minutes. You can close the studio and return here.
             </p>
@@ -396,6 +431,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 source={source}
                 heroSrc={experiences.find((item) => item.label === "Game Character")?.image}
                 motionSrc={experiences.find((item) => item.label === "Game Motion")?.image}
+                relicsSrc={experiences.find((item) => item.label === "World Relics")?.image}
                 collectibleSrc={merch.find((item) => item.label === "Figurine")?.image}
                 onExploreCollectible={
                   merch.some((item) => item.image) ? () => setTab("merch") : undefined

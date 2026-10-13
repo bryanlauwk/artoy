@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
 import {
   ArrowUp,
   ArrowDown,
@@ -13,7 +21,8 @@ import {
   VolumeX,
   Zap,
   Gem,
-  Trophy,
+  Download,
+  ArrowUpRight,
   Expand,
   Minimize,
 } from "lucide-react";
@@ -31,7 +40,9 @@ import {
 import { DEFAULT_PALETTE, extractPalette, prepareHero } from "./quest/artwork";
 import { prepareMotion, type HeroMotion } from "./quest/motion";
 import backdrop from "@/assets/artoy/game/mysterious-island-v1.webp";
+import relicAtlas from "@/assets/artoy/game/world-relics-v1.webp";
 import { renderQuest } from "./quest/render";
+import { prepareRelics, resolveWorldIdentity, type WorldRelics } from "./quest/world";
 
 type Props = {
   artworkSrc: string;
@@ -39,6 +50,8 @@ type Props = {
   heroSrc?: string | null;
   motionSrc?: string | null;
   collectibleSrc?: string | null;
+  relicsSrc?: string | null;
+  worldId?: "lunarie" | "booboi" | "jaygyii" | null;
   onExploreCollectible?: () => void;
 };
 type Snapshot = {
@@ -75,11 +88,20 @@ export function FragmentQuest({
   heroSrc,
   motionSrc,
   collectibleSrc,
+  relicsSrc,
+  worldId,
   onExploreCollectible,
 }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const arena = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const finale = useRef<HTMLElement>(null);
+  const rewardHeading = useRef<HTMLHeadingElement>(null);
+  const finaleTitleId = useId();
+  const identity = useMemo(
+    () => resolveWorldIdentity(worldId, characterName),
+    [worldId, characterName],
+  );
   const state = useRef(createQuest());
   const keys = useRef(new Set<string>());
   const dashRequest = useRef(false);
@@ -89,6 +111,8 @@ export function FragmentQuest({
     hero: null as HTMLCanvasElement | null,
     motion: null as HeroMotion | null,
     backdrop: null as HTMLImageElement | null,
+    identity,
+    relics: null as WorldRelics | null,
     palette: DEFAULT_PALETTE,
     name: characterName,
     reducedMotion: false,
@@ -108,29 +132,63 @@ export function FragmentQuest({
   const [expanded, setExpanded] = useState(false);
   const [compact, setCompact] = useState(false);
   const [collectibleFailed, setCollectibleFailed] = useState(false);
+  const [rewardImageFailed, setRewardImageFailed] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const openArchive = () => {
-    setRevealed(true);
-    window.requestAnimationFrame(() => {
-      const reward = root.current?.querySelector<HTMLElement>(".quest-reward");
-      reward?.scrollIntoView?.({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        block: "center",
-      });
-      reward?.focus({ preventScroll: true });
-    });
-  };
+  const [saving, setSaving] = useState(false);
+  const [saveNotice, setSaveNotice] = useState("");
   useEffect(() => {
     setRevealed(false);
+    setSaveNotice("");
     if (hud.phase !== "won") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    finale.current?.focus({ preventScroll: true });
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const revealIfReduced = () => {
+      if (motion.matches) setRevealed(true);
+    };
+    if (motion.matches) {
       setRevealed(true);
       return;
     }
-    const timer = window.setTimeout(() => setRevealed(true), 1800);
-    return () => window.clearTimeout(timer);
+    motion.addEventListener("change", revealIfReduced);
+    const timer = window.setTimeout(() => setRevealed(true), 2400);
+    return () => {
+      window.clearTimeout(timer);
+      motion.removeEventListener("change", revealIfReduced);
+    };
   }, [hud.phase]);
+  useEffect(() => {
+    if (revealed && hud.phase === "won") {
+      rewardHeading.current?.focus({ preventScroll: true });
+      if (finale.current) finale.current.scrollTop = 0;
+    }
+  }, [revealed, hud.phase]);
   const hasCollectible = !!collectibleSrc && !collectibleFailed;
+  const rewardSrc = hasCollectible ? collectibleSrc! : artworkSrc;
+  const savePreview = async () => {
+    setSaving(true);
+    setSaveNotice("");
+    try {
+      const response = await fetch(rewardSrc);
+      if (!response.ok) throw new Error("Image unavailable");
+      const file = await response.blob();
+      if (!file.type.startsWith("image/")) throw new Error("Image unavailable");
+      const extension =
+        file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1]?.split("+")[0] || "png";
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${characterName.replace(/[^a-z0-9-]/gi, "-")}-archive.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setSaveNotice("Your preview is ready to save.");
+    } catch {
+      setSaveNotice("Open the preview to save the image on your device.");
+    } finally {
+      setSaving(false);
+    }
+  };
   const storageKey = useMemo(() => artworkKey(artworkSrc), [artworkSrc]);
   const storageRef = useRef(storageKey);
   storageRef.current = storageKey;
@@ -141,13 +199,23 @@ export function FragmentQuest({
     const frequencies =
       event === "won"
         ? [523, 659, 784, 1046]
-        : event === "fragment"
-          ? [659, 880, 1175]
-          : event === "hit" || event === "lost"
-            ? [180, 110]
-            : event === "dash"
-              ? [220, 440]
-              : [880];
+        : event === "escape"
+          ? [392, 523, 784, 1046]
+          : event === "guardian"
+            ? [146, 196, 233]
+            : event === "warning"
+              ? [196, 247, 330]
+              : event === "awaken"
+                ? [262, 392, 523]
+                : event === "stun"
+                  ? [311, 622]
+                  : event === "fragment"
+                    ? [659, 880, 1175]
+                    : event === "hit" || event === "lost"
+                      ? [180, 110]
+                      : event === "dash"
+                        ? [220, 440]
+                        : [880];
     frequencies.forEach((frequency, i) => {
       const oscillator = ctx.createOscillator(),
         gain = ctx.createGain(),
@@ -179,8 +247,13 @@ export function FragmentQuest({
     }
   };
   const restart = () => {
+    setRevealed(false);
     releaseControls();
     state.current = createQuest();
+    camera.current.left = Math.max(
+      0,
+      Math.min(WIDTH - camera.current.width, state.current.player.x - camera.current.width / 2),
+    );
     saved.current = false;
     setAnnouncement("A fresh adventure. Recover the three fragments.");
     changePhase("playing");
@@ -188,6 +261,8 @@ export function FragmentQuest({
 
   useEffect(() => {
     setCollectibleFailed(false);
+    setRewardImageFailed(false);
+    setSaveNotice("");
   }, [collectibleSrc, artworkSrc]);
 
   useEffect(() => {
@@ -266,6 +341,34 @@ export function FragmentQuest({
       image.onload = null;
     };
   }, [motionSrc, artworkSrc]);
+  useEffect(() => {
+    let cancelled = false;
+    assets.current.identity = identity;
+    assets.current.relics = null;
+    const source = relicsSrc || (worldId ? relicAtlas : null);
+    if (!source) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      if (cancelled) return;
+      try {
+        assets.current.relics = prepareRelics(
+          image,
+          relicsSrc ? "strip-3x1" : "atlas-3x3",
+          identity,
+        );
+      } catch {
+        // The signature motifs remain usable when a generated relic image is malformed.
+        assets.current.relics = null;
+      }
+    };
+    image.src = source;
+    return () => {
+      cancelled = true;
+      image.onload = null;
+    };
+  }, [identity, relicsSrc, worldId]);
+
   useEffect(() => {
     const image = new Image();
     image.onload = () => {
@@ -371,10 +474,11 @@ export function FragmentQuest({
       }
       renderQuest(worldCtx, state.current, assets.current, now / 1000);
       const width = camera.current.width;
-      camera.current.left = Math.max(
-        0,
-        Math.min(WIDTH - width, state.current.player.x - width / 2),
-      );
+      const cameraTarget = Math.max(0, Math.min(WIDTH - width, state.current.player.x - width / 2));
+      camera.current.left =
+        assets.current.reducedMotion || state.current.phase !== "playing"
+          ? cameraTarget
+          : camera.current.left + (cameraTarget - camera.current.left) * (1 - Math.exp(-dt * 10));
       ctx.drawImage(world, camera.current.left, 0, width, HEIGHT, 0, 0, view.width, view.height);
       if (now - hudAt > 90) {
         setHud(snapshot(state.current));
@@ -443,7 +547,7 @@ export function FragmentQuest({
   return (
     <div
       ref={root}
-      className={`fragment-quest ${expanded ? "quest-expanded" : ""}`}
+      className={`fragment-quest ${expanded ? "quest-expanded" : ""} ${hud.phase === "won" ? "quest-completed" : ""}`}
       style={
         {
           "--quest-accent": palette.primary,
@@ -456,8 +560,8 @@ export function FragmentQuest({
           <span className="quest-kicker">
             <Sparkles size={13} /> ARTOY ORIGINAL · CHAPTER 01
           </span>
-          <h3>The Lost Fragments</h3>
-          <p>A mysterious signal from {characterName}’s universe.</p>
+          <h3>{identity.title}</h3>
+          <p>{characterName}’s chapter in The Lost Fragments.</p>
         </div>
         <div className="quest-tools">
           <button
@@ -512,9 +616,16 @@ export function FragmentQuest({
           <Gem size={16} /> <b>{hud.fragments}/3</b>
           <span>fragments</span>
         </span>
-        <span className={hud.seconds < 15 ? "quest-time urgent" : "quest-time"}>
-          {hud.act === "escape" ? "ESCAPE · " : ""}
-          {hud.seconds}s
+        <span
+          className={
+            hud.seconds < 15 && hud.phase === "playing" ? "quest-time urgent" : "quest-time"
+          }
+        >
+          {hud.phase === "won"
+            ? "COMPLETE"
+            : hud.phase === "lost"
+              ? "TRY AGAIN"
+              : `${hud.act === "escape" ? "ESCAPE · " : ""}${hud.seconds}s`}
         </span>
         <button
           disabled={hud.phase === "ready" || hud.phase === "won" || hud.phase === "lost"}
@@ -529,7 +640,7 @@ export function FragmentQuest({
       </div>
       <div
         ref={arena}
-        className={`quest-arena ${compact ? "quest-compact" : ""}`}
+        className={`quest-arena ${compact ? "quest-compact" : ""} ${hud.phase === "won" ? "quest-finished" : ""}`}
         tabIndex={0}
         role="group"
         aria-label={`${characterName}’s adventure. Use arrow keys or WASD to move; Space to dash; P to pause.`}
@@ -538,7 +649,11 @@ export function FragmentQuest({
             keys.current.clear();
         }}
         onKeyDown={(event) => {
-          if ((event.target as HTMLElement).closest("button")) return;
+          if (
+            (event.target as HTMLElement).closest("button, a, input, select, textarea") ||
+            !["playing", "paused"].includes(state.current.phase)
+          )
+            return;
           const key = event.key.toLowerCase();
           if (
             [
@@ -606,22 +721,16 @@ export function FragmentQuest({
             </div>
           </div>
         )}
-        {(hud.phase === "won" || hud.phase === "lost") && (
+        {hud.phase === "lost" && (
           <div className="quest-overlay">
             <div>
-              <span className="quest-kicker">
-                {hud.phase === "won" ? "CHAPTER COMPLETE" : "ANOTHER WAY THROUGH"}
-              </span>
-              {hud.phase === "won" ? <Trophy size={33} /> : <Gem size={33} />}
-              <h4>
-                {hud.phase === "won" ? "Your universe is whole." : "Every hero gets a retry."}
-              </h4>
+              <span className="quest-kicker">ANOTHER WAY THROUGH</span>
+              <Gem size={33} />
+              <h4>Every hero gets a retry.</h4>
               <p>
-                {hud.phase === "won"
-                  ? `${characterName} recovered every fragment and made it home.`
-                  : hud.hearts === 0
-                    ? "The inklings caught you. Dash through them to stay safe."
-                    : "Time ran out. Find all three fragments, then reach the portal."}
+                {hud.hearts === 0
+                  ? "The inklings caught you. Dash through them to stay safe."
+                  : "Time ran out. Find all three fragments, then reach the portal."}
               </p>
               <strong className="quest-score">
                 {hud.score.toLocaleString()} <small>points</small>
@@ -630,74 +739,134 @@ export function FragmentQuest({
                 {hud.fragments}/3 fragments · {hud.sparks} sparks · {hud.hearts} hearts
               </p>
               <button className="quest-primary" onClick={restart}>
-                <RotateCcw size={16} /> {hud.phase === "won" ? "Beat your score" : "Try again"}
+                <RotateCcw size={16} /> Try again
               </button>
-              {hud.phase === "won" && (
-                <button className="quest-primary quest-archive-cta" onClick={openArchive}>
-                  <Sparkles size={16} /> Open character archive
-                </button>
-              )}
             </div>
           </div>
         )}
-      </div>
-      {hud.phase === "won" && (
-        <section
-          className={`quest-reward ${revealed ? "is-revealed" : "is-sealed"}`}
-          aria-label="Collectible preview revealed"
-          aria-live="polite"
-          tabIndex={-1}
-        >
-          {!revealed && (
-            <button className="quest-unseal" onClick={() => setRevealed(true)}>
-              The archive is opening… <small>Skip reveal</small>
-            </button>
-          )}
-          <div className="quest-reward-art" inert={!revealed}>
-            <span className="quest-reward-edition">ARCHIVE 01</span>
-            <img
-              src={hasCollectible ? collectibleSrc! : artworkSrc}
-              alt={
-                hasCollectible
-                  ? `${characterName} figurine concept revealed after completing the adventure`
-                  : `${characterName} character card preview`
-              }
-              onError={() => {
-                if (hasCollectible) setCollectibleFailed(true);
-              }}
-            />
-            <span className="quest-reward-name">{characterName}</span>
-          </div>
-          <div className="quest-reward-copy" inert={!revealed}>
-            <span className="quest-kicker">
-              <Sparkles size={13} /> UNSEALED FROM THE ARCHIVE
-            </span>
-            <h4>Your character. A new form.</h4>
-            <p>
-              {hasCollectible
-                ? `The portal reveals ${characterName}’s collectible figurine concept.`
-                : `${characterName}’s first character card has emerged from the portal.`}
-            </p>
-            <small>
-              {hasCollectible
-                ? "Concept preview · Physical products are not available to purchase yet."
-                : "Digital card preview · Figurine concepts appear when generation succeeds."}
-            </small>
-            <a
-              className="quest-primary"
-              href={hasCollectible ? collectibleSrc! : artworkSrc}
-              download={`${characterName.replace(/[^a-z0-9-]/gi, "-")}-archive.png`}
-            >
-              Save collectible preview
-            </a>
-            {onExploreCollectible && (
-              <button className="quest-primary" onClick={onExploreCollectible}>
-                Explore collectible concepts <Gem size={16} />
-              </button>
+        {hud.phase === "won" && (
+          <section
+            ref={finale}
+            className={`quest-finale ${revealed ? "is-revealed" : "is-assembling"}`}
+            aria-labelledby={finaleTitleId}
+            tabIndex={-1}
+          >
+            {!revealed ? (
+              <div className="quest-restoration">
+                <span className="quest-kicker">THREE FRAGMENTS. ONE ORIGINAL.</span>
+                <div className="quest-portal-art" aria-hidden="true">
+                  <div className="quest-portal-ring" />
+                  {[0, 1, 2].map((fragment) => (
+                    <div className={`quest-art-shard shard-${fragment}`} key={fragment}>
+                      {!artError ? <img src={artworkSrc} alt="" /> : <Sparkles size={72} />}
+                    </div>
+                  ))}
+                </div>
+                <h4 id={finaleTitleId}>{characterName} made it home.</h4>
+                <p>Your art is whole. The archive has one last secret.</p>
+                <button className="quest-finale-secondary" onClick={() => setRevealed(true)}>
+                  Skip reveal <ArrowUpRight size={15} />
+                </button>
+              </div>
+            ) : (
+              <div className="quest-archive">
+                <div className="quest-archive-art">
+                  <span className="quest-archive-edition">ARTOY ARCHIVE / 001</span>
+                  {!rewardImageFailed ? (
+                    <img
+                      src={rewardSrc}
+                      alt={
+                        hasCollectible
+                          ? `${characterName} collectible figurine concept`
+                          : `${characterName} original artwork, restored`
+                      }
+                      onError={() => {
+                        if (hasCollectible) setCollectibleFailed(true);
+                        else setRewardImageFailed(true);
+                      }}
+                    />
+                  ) : (
+                    <div className="quest-archive-placeholder">
+                      <Sparkles size={52} />
+                      <span>{characterName}</span>
+                    </div>
+                  )}
+                  <div className="quest-archive-caption">
+                    <span>{hasCollectible ? "COLLECTIBLE CONCEPT" : "ORIGINAL ARTWORK"}</span>
+                    <strong>{characterName}</strong>
+                  </div>
+                </div>
+                <div className="quest-archive-copy">
+                  <span className="quest-kicker">
+                    <Sparkles size={13} /> CHAPTER COMPLETE
+                  </span>
+                  <h4 id={finaleTitleId} ref={rewardHeading} tabIndex={-1}>
+                    A little world.
+                    <br /> A piece to keep.
+                  </h4>
+                  <p>
+                    {hasCollectible
+                      ? `You brought ${characterName} home. Now meet the collectible from their universe.`
+                      : `You brought ${characterName} home. Keep the original artwork that started this universe.`}
+                  </p>
+                  <div
+                    className="quest-archive-score"
+                    aria-label={`${hud.score} points, all three fragments recovered`}
+                  >
+                    <strong>
+                      {hud.score.toLocaleString()} <span>points</span>
+                    </strong>
+                    <span>
+                      <Gem size={13} /> 3 / 3 recovered
+                    </span>
+                  </div>
+                  <div className="quest-archive-actions">
+                    {onExploreCollectible && (
+                      <button className="quest-primary" onClick={onExploreCollectible}>
+                        Explore collectibles <ArrowUpRight size={16} />
+                      </button>
+                    )}
+                    <button
+                      className="quest-finale-secondary"
+                      onClick={() => void savePreview()}
+                      disabled={saving || rewardImageFailed}
+                    >
+                      <Download size={15} />{" "}
+                      {saving
+                        ? "Preparing image…"
+                        : hasCollectible
+                          ? "Save preview"
+                          : "Save original art"}
+                    </button>
+                    <button className="quest-finale-replay" onClick={restart}>
+                      <RotateCcw size={14} /> Play again
+                    </button>
+                  </div>
+                  <small>
+                    {hasCollectible
+                      ? "Concept preview · Not available to purchase yet."
+                      : "Your original artwork · Collectible concepts await in the studio."}
+                  </small>
+                  {saveNotice && (
+                    <p className="quest-save-notice" role="status">
+                      {saveNotice}{" "}
+                      <a href={rewardSrc} target="_blank" rel="noreferrer">
+                        Open preview
+                      </a>
+                    </p>
+                  )}
+                  {rewardImageFailed && (
+                    <p className="quest-save-notice" role="status">
+                      The image couldn’t load. Your adventure is complete; explore the studio or
+                      play again.
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </div>
       <div className="quest-bottom">
         <div className="quest-objective">
           <span>

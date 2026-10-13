@@ -1,5 +1,7 @@
 # Game module audit and overhaul — 13 October 2026
 
+This is a chronological implementation log. The latest world, motion, browser-validation and release notes are in the final section below; earlier access restrictions describe earlier sessions.
+
 The previous Play tab ran a disconnected sample game. This change replaces it with **The Lost Fragments**, one authored adventure personalized by the selected artwork.
 
 ## Findings
@@ -104,3 +106,41 @@ The win overlay now has an **Open character archive** action. It reveals the rew
 - Gameplay and generation contract tests pass; TypeScript, changed-file ESLint and the production build pass.
 - The supplied reference images and the repository's Lunarie, BooBoi and Jaygyii art were reviewed as visual references. The three project examples span anime, cozy mascot and fantasy-creature styles.
 - The saved DOM interaction harness could not run because its `@napi-rs/canvas` dependency is absent from this checkout. A local production preview also could not bind a port (`EPERM`). No live AI generation or real phone/desktop browser playthrough was available, so the reveal navigation, canvas rendering across inputs and responsive behavior still need hands-on confirmation.
+
+
+## Character worlds and in-arena finale — current follow-up
+
+The curated map and deterministic rules remain shared. Each benchmark now has a clearly recognizable identity throughout its architecture and effects:
+
+| Character | Chapter | World motifs |
+| --- | --- | --- |
+| Lunarie | The Midnight Frequency | Headphones, skull crystals, pink signal light |
+| BooBoi | The Lantern Archive | Camera lenses, bear-carved wood, amber lantern light |
+| Jaygyii | The Neon Afterworld | Cat masks, teal flames, spectral portal arches |
+
+A new painted atlas provides nine shrine, guardian and portal assets. Grounded architecture replaces the tiny floating ornaments; the original painting remains visible beneath contact shadows, slim interaction rings and restored paths. Artwork hues grade the shared painting without changing its lighting or collision coordinates. The three recovered art slices visibly rebuild the source image above the portal.
+
+All three benchmark heroes now have eight isolated full-body poses, a 90px maximum display height, direction-aware facing and dash afterimages. The run-pair changes are subtle; these are pose animations rather than a skeletal walk cycle. Motion parsing now accounts for image downscaling and checks cell boundaries before trimming, fixing high-resolution false rejection and clipped-pose acceptance.
+
+Uploaded artwork can generate a **World Relics** strip alongside its motion sheet, conditioned on the original artwork and approved hero. This optional tenth result requests a 4:1 image with three isolated cells: shrine, guardian faceplate, portal crest. The provider's documented 4:1 format is used (see https://ai.google.dev/gemini-api/docs/image-generation). The client rejects malformed/opaque scene strips and falls back to source-art sigils. Explicit sample IDs select curated worlds; uploaded filenames never impersonate a curated identity. Asset checks establish geometric validity, not guaranteed semantic fidelity.
+
+A win triggers a 2.4-second restoration inside the arena and then a prominent collectible reveal. Each benchmark includes its own identity-matched figurine concept; uploaded sources use their actual generated figurine when available. Skip, reduced motion, keyboard focus, save, explore and replay are supported. Missing or broken figurines reveal the original artwork. The completed HUD says COMPLETE rather than retaining the escape countdown. Audio remains opt-in, with distinct awakening, guardian warning and escape cues; the phone camera eases toward the hero.
+
+### Verification of this follow-up
+
+- Real Chrome desktop playthrough: keyboard dash, pause/timer freeze, pointer navigation, all three fragments, escape, win, automatic reveal, image download, replay and character switching passed. No engine state was injected to complete the run.
+- iPhone 13 viewport/touch emulation: held direction controls, release, dash and pause passed; no horizontal overflow. Controls remain visible with the arena on screen. This is browser emulation, not physical iOS/Android device certification.
+- Real Chrome with a mocked partial generation response: a rough uploaded drawing remained playable when hero/motion/figurine URLs failed. Reduced motion immediately revealed the archive, original-art download worked, and Explore collectibles selected the Merch tab. Mocked responses do not validate the live AI provider.
+- Native canvas asset preflight: all 24 benchmark motion frames and all nine world relics accepted. Valid 3:1/4:1 isolated strips accepted; blank, scene, inset scene, wrong-grid, clipped-pose and opaque-motion fixtures rejected. Valid 256px and 1024px cell motion fixtures both accepted.
+- Gameplay and generation request regression suites, TypeScript, changed-file ESLint and production build passed. Existing upstream deprecation and bundle-size warnings remain.
+- The earlier PR #4 had truncated `src/styles.css` during file transport. The full stylesheet is restored here. Every uploaded blob and the complete Git tree are verified against local hashes before merging.
+
+The supplied examples now have curated world art and poses. Arbitrary generated identities still need visual review; automatic crop/alpha checks cannot guarantee exact likeness. Physical-device testing and broad live-generation coverage across white-heavy, dark, multi-subject and rough drawings remain a separate quality gate.
+
+### Actual browser canvas captures
+
+![Lunarie: The Midnight Frequency](previews/character-world-lunarie.webp)
+
+![BooBoi: The Lantern Archive](previews/character-world-booboi.webp)
+
+![Jaygyii: The Neon Afterworld](previews/character-world-jaygyii.webp)

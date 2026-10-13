@@ -26,13 +26,33 @@ export function prepareMotion(image: HTMLImageElement): HeroMotion | null {
         width,
         height,
       );
+      const raw = ctx.getImageData(0, 0, width, height).data;
+      let boundary = 0,
+        touched = 0;
+      const inspect = (pixel: number) => {
+        boundary++;
+        const p = pixel * 4;
+        if (raw[p + 3] > 30 && !(raw[p] > 238 && raw[p + 1] > 238 && raw[p + 2] > 238)) touched++;
+      };
+      for (let x = 0; x < width; x++) {
+        inspect(x);
+        inspect((height - 1) * width + x);
+      }
+      for (let y = 0; y < height; y++) {
+        inspect(y * width);
+        inspect(y * width + width - 1);
+      }
+      // Validate the original cell before trimming can hide a clipped body or scene edge.
+      if (touched / boundary > 0.16) return null;
       const clean = prepareHero(cell),
         pixels = clean.getContext("2d")?.getImageData(0, 0, clean.width, clean.height).data;
       if (!pixels || clean.width < 12 || clean.height < 24) return null;
       let filled = 0,
         edge = 0;
       for (let p = 0; p < pixels.length; p += 4) if (pixels[p + 3] > 120) filled++;
-      const coverage = filled / (width * height);
+      // prepareHero caps a cell's longest side at 512px; compare at the same resolution.
+      const scale = Math.min(1, 512 / Math.max(width, height));
+      const coverage = filled / (Math.round(width * scale) * Math.round(height * scale));
       // Reject empty cells, opaque scene panels and images that do not contain isolated poses.
       if (coverage < 0.018 || coverage > 0.8) return null;
       for (let x = 0; x < clean.width; x++) {
