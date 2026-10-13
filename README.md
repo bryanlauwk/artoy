@@ -1,6 +1,6 @@
 # ARTOY
 
-Implement exactly the screenshot and nothing else
+Turn character artwork into a playable universe and collectible concepts.
 
 This project was built with [Lovable](https://lovable.dev).
 
@@ -24,3 +24,11 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## The Lost Fragments
+
+The studio uses one curated explore-and-dash adventure for every character. Uploaded artwork is playable immediately; generation produces a single full-body **Game Character** asset that replaces the original-art hero. Artwork colors and fragments personalize the same authored world without generating new mechanics.
+
+Recover three art fragments, dash through roaming inklings, then return to the portal before 90 seconds expire. Use WASD/arrows and Space, or tap/drag and the touch controls. P pauses. All characters are available without progression locks.
+
+Run `npm run test:game` with Node 22.18+ or Node 24 for the gameplay regression checks. See [the module audit and design contract](docs/game-module-audit.md) for the findings, implementation and validation limits.

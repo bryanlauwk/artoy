@@ -42,7 +42,9 @@ export function HowItWorks({ onCreate }: { onCreate: () => void }) {
                 <Shirt />
               </div>
               <h3>Explore & download</h3>
-              <p>Keep your favorite images and merch concepts. Try a sample game, too.</p>
+              <p>
+                Keep your favorite images and merch concepts. Play an adventure with your character.
+              </p>
             </li>
           </ol>
           <div className="how-cta">

@@ -1878,30 +1878,547 @@
   }
 }
 
-.game-toolbar button {
-  min-height: 44px;
-  white-space: nowrap;
+/* The Lost Fragments: one curated game, themed by the creator's art. */
+.fragment-quest {
+  --quest-accent: #bc87ff;
+  --quest-secondary: #f48eaf;
+  color: #eef0fa;
+  background: #111b2b;
+  border: 1px solid #6c6e8844;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px #111b2b18;
+  font-family: "Inter", system-ui, sans-serif;
 }
-.game-tutorial-actions button {
+.quest-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+}
+.quest-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--quest-accent);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+.quest-heading h3 {
+  margin: 5px 0 2px;
+  font-size: 27px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+}
+.quest-heading p {
+  margin: 0;
+  color: #a8b6c9;
+  font-size: 12px;
+}
+.quest-tools {
+  display: flex;
+  gap: 5px;
+}
+.fragment-quest button {
+  cursor: pointer;
+}
+.fragment-quest button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.fragment-quest button:focus-visible {
+  outline: 2px solid #ffe4a3;
+  outline-offset: 3px;
+}
+.quest-tools button,
+.quest-hud button {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
+  background: #ffffff07;
+  color: #bcc8da;
+  border: 1px solid #ffffff10;
+}
+.quest-hud {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 0 24px 14px;
+}
+.quest-health {
+  display: flex;
+  gap: 4px;
+  color: #f3a5bd;
+}
+.quest-health .empty {
+  opacity: 0.22;
+}
+.quest-fragments {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #ffe4a3;
+}
+.quest-fragments > span {
+  color: #9aacc4;
+}
+.quest-time {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.quest-time.urgent {
+  color: #ffa6ac;
+}
+.quest-arena {
+  position: relative;
+  outline: none;
+  overflow: hidden;
+  background: #23394c;
+}
+.quest-arena:focus-visible {
+  box-shadow: inset 0 0 0 3px #ffe4a3;
+}
+.quest-arena canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  touch-action: none;
+  cursor: crosshair;
+}
+.quest-intro {
+  position: absolute;
+  left: 28px;
+  top: 28px;
+  width: min(300px, 44%);
+  padding: 24px;
+  background: #111b2bf0;
+  border: 1px solid #ccd3e12e;
+  border-radius: 19px;
+  box-shadow: 0 12px 45px #111b2b44;
+}
+.quest-intro > span {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  color: var(--quest-accent);
+}
+.quest-intro h4 {
+  font-size: 31px;
+  letter-spacing: -0.055em;
+  line-height: 1.1;
+  font-weight: 750;
+  margin: 10px 0;
+}
+.quest-intro p,
+.quest-overlay p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #b8c6d9;
+  margin-bottom: 17px;
+}
+.quest-primary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: #ffe4a3;
+  color: #26303c;
+  border-radius: 11px;
+  padding: 12px 17px;
   min-height: 44px;
+  font-weight: 800;
+  font-size: 12px;
+  box-shadow: 0 3px 0 #c4a974;
+}
+.quest-intro small {
+  display: block;
+  margin-top: 14px;
+  color: #8295ae;
+  font-size: 8px;
+  line-height: 1.6;
+}
+.quest-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #0a162aab;
+  backdrop-filter: blur(5px);
+}
+.quest-overlay > div {
+  width: min(350px, 100%);
+  text-align: center;
+  background: #122036f2;
+  padding: 26px;
+  border: 1px solid #e3d5c736;
+  border-radius: 20px;
+}
+.quest-overlay svg {
+  margin: 6px auto;
+  color: #ffe4a3;
+}
+.quest-overlay h4 {
+  font-size: 26px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  margin: 8px 0;
+}
+.quest-overlay .quest-primary {
+  margin: 0 auto;
+}
+.quest-overlay .quest-primary svg {
+  margin: 0;
+  color: currentColor;
+}
+.quest-score {
+  display: block;
+  color: #ffe4a3;
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.quest-score small {
+  font-size: 11px;
+  color: #bcc7d4;
+}
+.quest-overlay .quest-result-detail {
+  font-size: 10px;
+}
+.quest-bottom {
+  padding: 16px 24px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.quest-objective > span {
+  color: #8ba0bd;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.quest-objective p {
+  margin: 3px 0 0;
+  color: #d5dfed;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.quest-dash {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--quest-accent) 55%, transparent);
+  background: #ffffff09;
+  color: var(--quest-accent);
+  border-radius: 12px;
+  padding: 10px 15px;
+  min-width: 108px;
+  min-height: 48px;
+}
+.quest-dash > span {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+}
+.quest-dash small {
+  font-size: 8px;
+  font-weight: 400;
+  color: #99a8bd;
+}
+.quest-dash i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--quest-accent);
+  transform-origin: left;
+}
+.quest-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 8px 24px;
+  color: #7f95b1;
+  font-size: 9px;
+}
+.quest-controls {
+  padding: 0 24px 17px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #8d9db4;
+  margin: 0;
+}
+.quest-touch {
+  display: none;
+  justify-content: center;
+  gap: 9px;
+  padding: 10px 20px 5px;
+}
+.quest-touch button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 46px;
+  background: #ffffff0b;
+  border: 1px solid #ffffff1a;
+  border-radius: 12px;
+  color: #d2dff0;
+  touch-action: none;
+  user-select: none;
+}
+.quest-touch button:active {
+  background: #ffffff22;
+}
+.quest-asset-note {
+  margin: 0;
+  padding: 0 24px 15px;
+  font-size: 11px;
+  color: #ffe4a3;
+}
+.quest-expanded:fullscreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-height: 100vh;
+  overflow-y: auto;
+  border-radius: 0;
+  padding: 0 max(0px, calc((100vw - 1050px) / 2));
+  background: #0c1524;
+}
+.quest-expanded .quest-arena {
+  flex-shrink: 0;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  .quest-touch {
+    display: flex;
+  }
 }
 @media (max-width: 600px) {
-  .game-arena.tutorial-open {
-    aspect-ratio: auto !important;
-    height: 390px;
-    min-height: 390px;
-    width: 100%;
+  .quest-heading {
+    padding: 16px 14px 12px;
+    gap: 8px;
   }
-  .game-meters {
+  .quest-heading h3 {
+    font-size: 22px;
+  }
+  .quest-heading p {
+    font-size: 10px;
+  }
+  .quest-kicker {
+    font-size: 7px;
+  }
+  .quest-tools {
+    flex-direction: column;
+  }
+  .quest-tools button {
+    min-width: 35px;
+    min-height: 35px;
+  }
+  .quest-hud {
+    padding: 0 14px 12px;
+    gap: 8px;
+  }
+  .quest-hud button {
+    min-width: 32px;
+    min-height: 36px;
+  }
+  .quest-fragments {
+    font-size: 11px;
+    gap: 4px;
+  }
+  .quest-fragments > span {
+    display: none;
+  }
+  .quest-health svg {
+    width: 14px;
+  }
+  .quest-arena canvas {
+    aspect-ratio: 1;
+  }
+  .quest-intro {
+    inset: 12px;
+    width: auto;
+    max-width: 290px;
+    height: fit-content;
+    padding: 17px;
+  }
+  .quest-intro h4 {
+    font-size: 25px;
+    margin: 8px 0;
+  }
+  .quest-intro p {
+    font-size: 11px;
+    margin-bottom: 11px;
+  }
+  .quest-intro small {
+    font-size: 7px;
+    margin-top: 10px;
+  }
+  .quest-bottom {
+    padding: 12px 14px 5px;
+    gap: 10px;
+  }
+  .quest-objective p {
+    font-size: 10px;
+  }
+  .quest-dash {
+    min-width: 90px;
+    padding: 9px 10px;
+  }
+  .quest-dash > span {
+    font-size: 10px;
+  }
+  .quest-footer {
+    padding: 9px 14px;
+    font-size: 8px;
+    gap: 5px;
+  }
+  .quest-controls {
+    padding: 0 14px 15px;
+    font-size: 9px;
+  }
+  .quest-overlay > div {
+    padding: 16px;
+  }
+  .quest-overlay h4 {
+    font-size: 22px;
+  }
+  .quest-overlay p {
+    font-size: 10px;
+    margin-bottom: 12px;
+  }
+  .quest-score {
+    font-size: 25px;
+  }
+}
+.quest-arena.quest-compact canvas {
+  aspect-ratio: 1;
+}
+
+.quest-overlay > div {
+  max-height: 100%;
+  overflow-y: auto;
+}
+.quest-reward {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  margin: 20px 24px 4px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--quest-accent) 35%, transparent);
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 10% 40%, #7770b525, transparent 65%), #0e182b;
+  animation: quest-unseal 650ms ease-out both;
+}
+.quest-reward-art {
+  position: relative;
+  aspect-ratio: 0.8;
+  overflow: hidden;
+  border-radius: 11px;
+  border: 1px solid color-mix(in srgb, var(--quest-accent) 55%, transparent);
+  background: #1e2140;
+  box-shadow: 0 8px 24px #050d2377;
+}
+.quest-reward-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.quest-reward-edition,
+.quest-reward-name {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  padding: 8px 10px;
+  background: #0b152cc9;
+  backdrop-filter: blur(6px);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: #e5d0ff;
+}
+.quest-reward-edition {
+  top: 0;
+}
+.quest-reward-name {
+  bottom: 0;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.quest-reward-copy h4 {
+  margin: 8px 0;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+.quest-reward-copy p {
+  margin: 0 0 9px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c1cae0;
+}
+.quest-reward-copy small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #95a5bf;
+}
+.quest-reward-copy button {
+  margin-top: 14px;
+}
+@keyframes quest-unseal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px) {
+  .quest-reward {
     grid-template-columns: 1fr;
+    gap: 15px;
+    margin: 14px 12px 4px;
+    padding: 16px;
   }
-  .game-tutorial {
-    padding: 8px;
+  .quest-reward-art {
+    width: 140px;
+    justify-self: center;
   }
-  .game-tutorial > div {
-    padding: 16px 12px;
+  .quest-reward-copy h4 {
+    font-size: 22px;
   }
-  .game-tutorial-actions > div {
-    flex-wrap: wrap;
+  .quest-reward-copy .quest-primary {
+    width: 100%;
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quest-reward {
+    animation: none;
   }
 }

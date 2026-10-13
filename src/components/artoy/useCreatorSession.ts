@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SampleId } from "./meccha/stages";
+import type { SampleId } from "./quest/engine";
 import nova from "@/assets/artoy/avatar-1.png";
 import mochi from "@/assets/artoy/avatar-2.png";
 import hexx from "@/assets/artoy/avatar-3.png";
