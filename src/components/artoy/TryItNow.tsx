@@ -18,16 +18,20 @@ import { FragmentQuest } from "./FragmentQuest";
 import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
 import lunarie from "@/assets/artoy/lunarie.png";
 
+import lunarieMotion from "@/assets/artoy/game/lunarie-motion-v1.png";
+
 const GAME_CHARACTERS = [{ id: "lunarie", src: lunarie, name: "Lunarie" }, ...SAMPLES];
 
 function UniverseGame({
   source,
   heroSrc,
+  motionSrc,
   collectibleSrc,
   onExploreCollectible,
 }: {
   source?: CreatorSession["source"];
   heroSrc?: string | null;
+  motionSrc?: string | null;
   collectibleSrc?: string | null;
   onExploreCollectible?: () => void;
 }) {
@@ -62,6 +66,7 @@ function UniverseGame({
         artworkSrc={artwork.image}
         characterName={artwork.name}
         heroSrc={heroSrc}
+        motionSrc={source ? motionSrc : sample.id === "lunarie" ? lunarieMotion : null}
         collectibleSrc={collectibleSrc}
         onExploreCollectible={onExploreCollectible}
       />
@@ -268,7 +273,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             </button>
           </div>
           <p className="studio-footnote">
-            Generates up to 5 character images and 3 merch concepts with AI.
+            Generates up to 6 character assets and 3 merch concepts with AI.
           </p>
           <div className="studio-game-entry">
             <button
@@ -306,7 +311,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <Loader2 size={19} className="animate-spin" /> Creating your universe
             </h3>
             <p>
-              Generating 5 character images and 3 merch concepts.
+              Generating character art, motion frames and 3 merch concepts.
               <br />
               This can take a few minutes. You can close the studio and return here.
             </p>
@@ -390,6 +395,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <UniverseGame
                 source={source}
                 heroSrc={experiences.find((item) => item.label === "Game Character")?.image}
+                motionSrc={experiences.find((item) => item.label === "Game Motion")?.image}
                 collectibleSrc={merch.find((item) => item.label === "Figurine")?.image}
                 onExploreCollectible={
                   merch.some((item) => item.image) ? () => setTab("merch") : undefined

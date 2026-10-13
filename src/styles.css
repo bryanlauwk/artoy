@@ -2422,3 +2422,48 @@
     animation: none;
   }
 }
+
+/* The archive opens only after the completed adventure. */
+.quest-reward {
+  position: relative;
+  overflow: hidden;
+}
+.quest-reward-art,
+.quest-reward-copy {
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease,
+    filter 0.65s ease;
+}
+.quest-reward.is-sealed .quest-reward-art,
+.quest-reward.is-sealed .quest-reward-copy {
+  opacity: 0;
+  transform: translateY(18px) scale(0.93);
+  filter: blur(12px);
+}
+.quest-unseal {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  color: #fff;
+  background: radial-gradient(ellipse at center, #8059a6, #111327 70%);
+  font: inherit;
+  cursor: pointer;
+}
+.quest-unseal small {
+  display: block;
+  margin-top: 12px;
+  opacity: 0.7;
+}
+.quest-reward-copy a.quest-primary {
+  display: inline-flex;
+  margin: 12px 8px 0 0;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .quest-reward-art,
+  .quest-reward-copy {
+    transition: none;
+  }
+}

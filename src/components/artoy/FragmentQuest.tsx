@@ -23,22 +23,27 @@ import {
   questScore,
   WIDTH,
   HEIGHT,
-  DURATION,
+  timeRemaining,
+  questAct,
   type Vec,
   type Phase,
 } from "./quest/engine";
 import { DEFAULT_PALETTE, extractPalette, prepareHero } from "./quest/artwork";
+import { prepareMotion, type HeroMotion } from "./quest/motion";
+import backdrop from "@/assets/artoy/game/mysterious-island-v1.webp";
 import { renderQuest } from "./quest/render";
 
 type Props = {
   artworkSrc: string;
   characterName: string;
   heroSrc?: string | null;
+  motionSrc?: string | null;
   collectibleSrc?: string | null;
   onExploreCollectible?: () => void;
 };
 type Snapshot = {
   phase: Phase;
+  act: ReturnType<typeof questAct>;
   hearts: number;
   fragments: number;
   sparks: number;
@@ -49,10 +54,11 @@ type Snapshot = {
 function snapshot(s: ReturnType<typeof createQuest>): Snapshot {
   return {
     phase: s.phase,
+    act: questAct(s),
     hearts: s.hearts,
     fragments: s.fragments.filter(Boolean).length,
     sparks: s.sparks.filter(Boolean).length,
-    seconds: Math.ceil(Math.max(0, DURATION - s.elapsed)),
+    seconds: Math.ceil(timeRemaining(s)),
     cooldown: s.cooldown,
     score: questScore(s),
   };
@@ -67,6 +73,7 @@ export function FragmentQuest({
   artworkSrc,
   characterName,
   heroSrc,
+  motionSrc,
   collectibleSrc,
   onExploreCollectible,
 }: Props) {
@@ -80,6 +87,8 @@ export function FragmentQuest({
   const assets = useRef({
     original: null as HTMLImageElement | null,
     hero: null as HTMLCanvasElement | null,
+    motion: null as HeroMotion | null,
+    backdrop: null as HTMLImageElement | null,
     palette: DEFAULT_PALETTE,
     name: characterName,
     reducedMotion: false,
@@ -99,6 +108,17 @@ export function FragmentQuest({
   const [expanded, setExpanded] = useState(false);
   const [compact, setCompact] = useState(false);
   const [collectibleFailed, setCollectibleFailed] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    setRevealed(false);
+    if (hud.phase !== "won") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setRevealed(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setRevealed(true), 1800);
+    return () => window.clearTimeout(timer);
+  }, [hud.phase]);
   const hasCollectible = !!collectibleSrc && !collectibleFailed;
   const storageKey = useMemo(() => artworkKey(artworkSrc), [artworkSrc]);
   const storageRef = useRef(storageKey);
@@ -215,7 +235,36 @@ export function FragmentQuest({
       cancelled = true;
       image.onload = null;
     };
-  }, [heroSrc]);
+  }, [heroSrc, artworkSrc]);
+
+  useEffect(() => {
+    let cancelled = false;
+    assets.current.motion = null;
+    if (!motionSrc) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      if (!cancelled) {
+        assets.current.motion = prepareMotion(image);
+        if (assets.current.motion) setHeroReady(true);
+      }
+    };
+    image.src = motionSrc;
+    return () => {
+      cancelled = true;
+      image.onload = null;
+    };
+  }, [motionSrc, artworkSrc]);
+  useEffect(() => {
+    const image = new Image();
+    image.onload = () => {
+      assets.current.backdrop = image;
+    };
+    image.src = backdrop;
+    return () => {
+      image.onload = null;
+    };
+  }, []);
 
   useEffect(() => {
     const heldKeys = keys.current;
@@ -271,8 +320,20 @@ export function FragmentQuest({
                 ? "All fragments recovered! Return to the glowing portal."
                 : `${state.current.fragments.filter(Boolean).length} of 3 fragments recovered.`,
             );
+          if (events.includes("awaken"))
+            setAnnouncement("The first fragment lights the archive. Something is waking.");
+          if (events.includes("guardian"))
+            setAnnouncement(
+              "The Archive Warden is awake. Leave its marked circle before it strikes.",
+            );
+          if (events.includes("warning"))
+            setAnnouncement("Move out of the marked circle! Dash to evade the Warden.");
+          if (events.includes("stun"))
+            setAnnouncement("Warden stunned. Keep moving toward the fragments.");
+          if (events.includes("escape"))
+            setAnnouncement("The portal is closing! You have 20 seconds to get home.");
           if (events.includes("hit"))
-            setAnnouncement("An inkling caught you. Dash through its next patrol.");
+            setAnnouncement("You were hit. Dash to evade the next attack.");
           if (events.includes("won"))
             setAnnouncement("Universe restored! Your character made it home.");
           if (events.includes("lost"))
@@ -441,6 +502,7 @@ export function FragmentQuest({
           <span>fragments</span>
         </span>
         <span className={hud.seconds < 15 ? "quest-time urgent" : "quest-time"}>
+          {hud.act === "escape" ? "ESCAPE · " : ""}
           {hud.seconds}s
         </span>
         <button
@@ -564,8 +626,16 @@ export function FragmentQuest({
         )}
       </div>
       {hud.phase === "won" && (
-        <section className="quest-reward" aria-label="Collectible preview revealed">
-          <div className="quest-reward-art">
+        <section
+          className={`quest-reward ${revealed ? "is-revealed" : "is-sealed"}`}
+          aria-label="Collectible preview revealed"
+        >
+          {!revealed && (
+            <button className="quest-unseal" onClick={() => setRevealed(true)}>
+              The archive is opening… <small>Skip reveal</small>
+            </button>
+          )}
+          <div className="quest-reward-art" inert={!revealed}>
             <span className="quest-reward-edition">ARCHIVE 01</span>
             <img
               src={hasCollectible ? collectibleSrc! : artworkSrc}
@@ -580,7 +650,7 @@ export function FragmentQuest({
             />
             <span className="quest-reward-name">{characterName}</span>
           </div>
-          <div className="quest-reward-copy">
+          <div className="quest-reward-copy" inert={!revealed}>
             <span className="quest-kicker">
               <Sparkles size={13} /> UNSEALED FROM THE ARCHIVE
             </span>
@@ -595,6 +665,13 @@ export function FragmentQuest({
                 ? "Concept preview · Physical products are not available to purchase yet."
                 : "Digital card preview · Figurine concepts appear when generation succeeds."}
             </small>
+            <a
+              className="quest-primary"
+              href={hasCollectible ? collectibleSrc! : artworkSrc}
+              download={`${characterName.replace(/[^a-z0-9-]/gi, "-")}-archive.png`}
+            >
+              Save collectible preview
+            </a>
             {onExploreCollectible && (
               <button className="quest-primary" onClick={onExploreCollectible}>
                 Explore collectible concepts <Gem size={16} />
@@ -605,7 +682,15 @@ export function FragmentQuest({
       )}
       <div className="quest-bottom">
         <div className="quest-objective">
-          <span>{hud.fragments === 3 ? "RETURN HOME" : "YOUR QUEST"}</span>
+          <span>
+            {hud.act === "escape"
+              ? "ESCAPE THE ARCHIVE"
+              : hud.act === "guardian"
+                ? "THE WARDEN AWAKES"
+                : hud.act === "awakening"
+                  ? "THE RUINS ARE ALIVE"
+                  : "YOUR QUEST"}
+          </span>
           <p role="status" aria-live="polite">
             {announcement}
           </p>

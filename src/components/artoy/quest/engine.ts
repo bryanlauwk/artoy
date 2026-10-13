@@ -4,6 +4,16 @@ export type Phase = "ready" | "playing" | "paused" | "won" | "lost";
 export const WIDTH = 960;
 export const HEIGHT = 640;
 export const DURATION = 90;
+export const ESCAPE_SECONDS = 20;
+export type Act = "search" | "awakening" | "guardian" | "escape";
+export type HeroAction = "idle" | "run" | "dash" | "hit";
+export type Guardian = {
+  active: boolean;
+  position: Vec;
+  target: Vec;
+  mode: "waking" | "stalk" | "warning" | "burst" | "stunned";
+  timer: number;
+};
 export const PORTAL = { x: 480, y: 520 };
 export const SPAWN = { x: 480, y: 465 };
 export const LAND: Vec[] = [
@@ -50,7 +60,18 @@ export const PATROLS = [
   { x: 747, y: 356, rx: 74, ry: 62, speed: -1.05, phase: 1.8 },
   { x: 499, y: 389, rx: 101, ry: 37, speed: 0.7, phase: 3.2 },
 ];
-export type QuestEvent = "dash" | "spark" | "fragment" | "hit" | "won" | "lost";
+export type QuestEvent =
+  | "dash"
+  | "spark"
+  | "fragment"
+  | "hit"
+  | "won"
+  | "lost"
+  | "awaken"
+  | "guardian"
+  | "warning"
+  | "escape"
+  | "stun";
 export type QuestState = {
   phase: Phase;
   player: Vec;
@@ -66,6 +87,12 @@ export type QuestState = {
   target: Vec | null;
   trail: (Vec & { life: number })[];
   events: QuestEvent[];
+  moving: boolean;
+  motionTime: number;
+  hitLeft: number;
+  beatLeft: number;
+  escapeDeadline: number | null;
+  guardian: Guardian;
 };
 export function createQuest(): QuestState {
   return {
@@ -83,6 +110,18 @@ export function createQuest(): QuestState {
     target: null,
     trail: [],
     events: [],
+    moving: false,
+    motionTime: 0,
+    hitLeft: 0,
+    beatLeft: 0,
+    escapeDeadline: null,
+    guardian: {
+      active: false,
+      position: { x: 480, y: 320 },
+      target: { ...SPAWN },
+      mode: "waking",
+      timer: 1.3,
+    },
   };
 }
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -110,6 +149,62 @@ export function questScore(s: QuestState): number {
       : 0)
   );
 }
+export function questAct(s: QuestState): Act {
+  return (["search", "awakening", "guardian", "escape"] as const)[
+    s.fragments.filter(Boolean).length
+  ];
+}
+export function timeRemaining(s: QuestState): number {
+  return Math.max(0, Math.min(DURATION, s.escapeDeadline ?? DURATION) - s.elapsed);
+}
+export function heroAction(s: QuestState): HeroAction {
+  if (s.hitLeft > 0) return "hit";
+  if (s.dashLeft > 0) return "dash";
+  return s.moving ? "run" : "idle";
+}
+function damage(s: QuestState): void {
+  if (s.invulnerable > 0 || s.dashLeft > 0) return;
+  s.hearts -= 1;
+  s.invulnerable = 1.8;
+  s.hitLeft = 0.3;
+  s.events.push("hit");
+}
+function stepGuardian(s: QuestState, dt: number, dashing: boolean): void {
+  const g = s.guardian;
+  if (!g.active) return;
+  g.timer = Math.max(0, g.timer - dt);
+  if (g.mode === "waking" || g.mode === "stunned" || g.mode === "burst") {
+    if (g.timer > 0) return;
+    g.mode = "stalk";
+    g.timer = questAct(s) === "escape" ? 1.2 : 2.1;
+  }
+  if (dashing && distance(s.player, g.position) < 53 && g.mode !== "warning") {
+    g.mode = "stunned";
+    g.timer = 2.2;
+    s.events.push("stun");
+    return;
+  }
+  if (g.mode === "warning") {
+    if (g.timer === 0) {
+      g.mode = "burst";
+      g.timer = 0.35;
+      if (distance(s.player, g.target) < 66 && !dashing) damage(s);
+    }
+    return;
+  }
+  const dist = distance(g.position, s.player);
+  if (dist > 50) {
+    const speed = questAct(s) === "escape" ? 125 : 85;
+    g.position.x += ((s.player.x - g.position.x) / dist) * speed * dt;
+    g.position.y += ((s.player.y - g.position.y) / dist) * speed * dt;
+  }
+  if (g.timer === 0) {
+    g.target = { ...s.player };
+    g.mode = "warning";
+    g.timer = 0.9;
+    s.events.push("warning");
+  }
+}
 /** Fixed, curated rules: only the visual theme changes with the character. */
 export function stepQuest(s: QuestState, seconds: number, move: Vec, dash: boolean): void {
   s.events = [];
@@ -118,6 +213,9 @@ export function stepQuest(s: QuestState, seconds: number, move: Vec, dash: boole
   s.elapsed += dt;
   s.cooldown = Math.max(0, s.cooldown - dt);
   s.invulnerable = Math.max(0, s.invulnerable - dt);
+  s.hitLeft = Math.max(0, s.hitLeft - dt);
+  s.beatLeft = Math.max(0, s.beatLeft - dt);
+  s.motionTime += dt;
   s.stunned = s.stunned.map((t) => Math.max(0, t - dt));
   s.trail = s.trail.map((p) => ({ ...p, life: p.life - dt })).filter((p) => p.life > 0);
   let direction = { ...move };
@@ -141,6 +239,7 @@ export function stepQuest(s: QuestState, seconds: number, move: Vec, dash: boole
   const dashing = s.dashLeft > 0;
   const velocity = dashing ? s.facing : direction;
   const speed = dashing ? 650 : 185;
+  const previousPosition = { ...s.player };
   // Small movement substeps prevent dash tunnelling through solid props.
   const steps = Math.max(1, Math.ceil((speed * dt) / 5));
   for (let i = 0; i < steps; i++) {
@@ -149,6 +248,7 @@ export function stepQuest(s: QuestState, seconds: number, move: Vec, dash: boole
     if (onLand({ x: nx, y: s.player.y })) s.player.x = nx;
     if (onLand({ x: s.player.x, y: ny })) s.player.y = ny;
   }
+  s.moving = distance(previousPosition, s.player) > 0.01;
   if (dashing) s.trail.push({ ...s.player, life: 0.3 });
   s.dashLeft = Math.max(0, s.dashLeft - dt);
   SPARKS.forEach((p, i) => {
@@ -157,22 +257,36 @@ export function stepQuest(s: QuestState, seconds: number, move: Vec, dash: boole
       s.events.push("spark");
     }
   });
+  const previousFragments = s.fragments.filter(Boolean).length;
   SHRINES.forEach((p, i) => {
     if (!s.fragments[i] && distance(s.player, p) < 35) {
       s.fragments[i] = true;
       s.events.push("fragment");
     }
   });
+  const recovered = s.fragments.filter(Boolean).length;
+  if (recovered > previousFragments) {
+    s.beatLeft = 2.6;
+    if (previousFragments < 1) s.events.push("awaken");
+    if (previousFragments < 2 && recovered >= 2) {
+      s.guardian.active = true;
+      s.events.push("guardian");
+    }
+    if (recovered === 3) {
+      s.escapeDeadline = Math.min(DURATION, s.elapsed + ESCAPE_SECONDS);
+      s.invulnerable = Math.max(s.invulnerable, 0.8);
+      s.events.push("escape");
+    }
+  }
   PATROLS.forEach((_, i) => {
     if (s.stunned[i] > 0 || distance(s.player, patrolPosition(i, s.elapsed)) > 34) return;
     if (dashing) s.stunned[i] = 2.5;
     else if (s.invulnerable === 0) {
-      s.hearts -= 1;
-      s.invulnerable = 1.8;
-      s.events.push("hit");
+      damage(s);
     }
   });
-  if (s.hearts <= 0 || s.elapsed >= DURATION) {
+  stepGuardian(s, dt, dashing);
+  if (s.hearts <= 0 || timeRemaining(s) === 0) {
     s.phase = "lost";
     s.target = null;
     s.events.push("lost");

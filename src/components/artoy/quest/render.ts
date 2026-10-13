@@ -11,11 +11,14 @@ import {
   distance,
   type QuestState,
 } from "./engine";
+import { motionFrame, type HeroMotion } from "./motion";
 import type { Palette } from "./artwork";
 
 type Assets = {
   original: HTMLImageElement | null;
   hero: HTMLCanvasElement | null;
+  motion?: HeroMotion | null;
+  backdrop?: HTMLImageElement | null;
   palette: Palette;
   name: string;
   reducedMotion: boolean;
@@ -150,196 +153,203 @@ export function renderQuest(
   assets: Assets,
   clock: number,
 ) {
-  const { palette: p, original, hero, name } = assets;
+  const { palette: p, original, name } = assets;
+  const hero = assets.motion?.frames[motionFrame(s, assets.reducedMotion)] ?? assets.hero;
   const t = assets.reducedMotion ? 0 : clock;
   const active = s.phase === "playing";
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  const sky = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-  sky.addColorStop(0, "#090e25");
-  sky.addColorStop(0.5, "#1d203e");
-  sky.addColorStop(1, "#102b37");
-  ctx.fillStyle = sky;
+  ctx.fillStyle = "#0d1025";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  // A luminous sky and distant floating islands establish depth before the playable plane.
-  ctx.save();
-  ctx.globalAlpha = 0.11;
-  ellipse(ctx, 488, 160, 360, 210, p.primary);
-  ctx.restore();
-  ellipse(ctx, 813, 98, 32, 32, "#c7d9f2");
-  ellipse(ctx, 824, 87, 28, 28, "#18213b");
-  for (let i = 0; i < 52; i++) {
-    const x = (i * 173 + 21) % WIDTH,
-      y = (i * 97 + 13) % HEIGHT;
-    ctx.globalAlpha = 0.25 + (Math.sin(t * 0.7 + i) + 1) * 0.15;
-    star(ctx, x, y, i % 7 === 0 ? 3 : 1.3, "#e0e8ff");
-  }
-  ctx.globalAlpha = 1;
-  for (let i = 0; i < 6; i++) {
-    const x = [65, 904, 150, 850, 70, 840][i];
-    const y = [137, 172, 592, 567, 510, 54][i] + Math.sin(t * 0.3 + i) * 4;
-    ellipse(ctx, x, y + 13, 39, 15, "#142735");
-    ellipse(ctx, x, y, 49, 15, "#395865");
-    crystal(ctx, x - 7, y - 16, 17, i % 2 ? p.secondary : p.primary);
-  }
-  // Island side facets and a fine top rim; the polygon is also the exact movement boundary.
-  landPath(ctx, 24);
-  ctx.fillStyle = "#121e32";
-  ctx.fill();
-  for (let i = 0; i < LAND.length - 1; i++) {
-    const a = LAND[i],
-      b = LAND[i + 1];
-    if (b.x >= a.x) continue;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.lineTo(b.x, b.y + 24);
-    ctx.lineTo(a.x, a.y + 24);
-    ctx.fillStyle = i % 2 ? "#29414d" : "#1f3345";
-    ctx.fill();
-  }
-  landPath(ctx);
-  const ground = ctx.createLinearGradient(0, 110, 0, 600);
-  ground.addColorStop(0, "#344456");
-  ground.addColorStop(0.5, "#2f4a50");
-  ground.addColorStop(1, "#233b49");
-  ctx.fillStyle = ground;
-  ctx.fill();
-  ctx.strokeStyle = "#87bab066";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.save();
-  landPath(ctx);
-  ctx.clip();
-  for (const [x, y, color] of [
-    [205, 350, "#98b67a55"],
-    [515, 207, "#b3b6bb44"],
-    [762, 357, "#a38ab755"],
-  ] as const) {
-    const shade = ctx.createRadialGradient(x, y, 8, x, y, 150);
-    shade.addColorStop(0, color);
-    shade.addColorStop(1, "transparent");
-    ctx.fillStyle = shade;
-    ctx.fillRect(x - 150, y - 150, 300, 300);
-  }
-  // Three readable routes radiate from the home portal; paving is visual rather than a maze.
-  for (const shrine of SHRINES) {
-    ctx.strokeStyle = "#d6c8a630";
-    ctx.lineWidth = 39;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(PORTAL.x, PORTAL.y - 20);
-    ctx.quadraticCurveTo((PORTAL.x + shrine.x) / 2, shrine.y + 45, shrine.x, shrine.y);
-    ctx.stroke();
-    ctx.strokeStyle = "#e3d5b021";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 16]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  for (let i = 0; i < 120; i++) {
-    const x = 95 + ((i * 73) % 790),
-      y = 125 + ((i * 113) % 470);
-    ctx.strokeStyle = i % 3 ? "#8eb29b44" : "#c0d1b555";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 2, y - 5);
-    ctx.lineTo(x + 4, y);
-    ctx.stroke();
-    if (i % 9 === 0) {
-      ellipse(ctx, x + 2, y - 5, 2, 2, p.secondary);
+  if (assets.backdrop) {
+    ctx.drawImage(assets.backdrop, 0, 29, WIDTH, 720);
+  } else {
+    const sky = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+    sky.addColorStop(0, "#090e25");
+    sky.addColorStop(0.5, "#1d203e");
+    sky.addColorStop(1, "#102b37");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    // A luminous sky and distant floating islands establish depth before the playable plane.
+    ctx.save();
+    ctx.globalAlpha = 0.11;
+    ellipse(ctx, 488, 160, 360, 210, p.primary);
+    ctx.restore();
+    ellipse(ctx, 813, 98, 32, 32, "#c7d9f2");
+    ellipse(ctx, 824, 87, 28, 28, "#18213b");
+    for (let i = 0; i < 52; i++) {
+      const x = (i * 173 + 21) % WIDTH,
+        y = (i * 97 + 13) % HEIGHT;
+      ctx.globalAlpha = 0.25 + (Math.sin(t * 0.7 + i) + 1) * 0.15;
+      star(ctx, x, y, i % 7 === 0 ? 3 : 1.3, "#e0e8ff");
     }
-  }
-  ctx.restore();
-  // Small authored environmental details give each landmark a different character.
-  for (let i = 0; i < 15; i++) {
-    const a = i * 2.4,
-      x = 208 + Math.cos(a) * (60 + i * 2),
-      y = 365 + Math.sin(a) * (45 + i);
-    ctx.strokeStyle = "#8cb292";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 7);
-    ctx.lineTo(x, y - 5);
-    ctx.stroke();
-    for (let j = 0; j < 5; j++)
-      ellipse(
-        ctx,
-        x + Math.cos((j * TAU) / 5) * 4,
-        y - 5 + Math.sin((j * TAU) / 5) * 4,
-        3.5,
-        3,
-        p.secondary,
-      );
-    ellipse(ctx, x, y - 5, 2.5, 2.5, p.glow);
-  }
-  for (const x of [420, 603]) {
-    ellipse(ctx, x, 168, 16, 7, "#10273566");
-    ctx.fillStyle = "#536779";
-    ctx.fillRect(x - 10, 123, 20, 39);
-    ctx.fillStyle = "#9caaa8";
-    ctx.fillRect(x - 15, 121, 30, 9);
-    ctx.fillRect(x - 13, 158, 26, 8);
-    ctx.fillStyle = "#ffffff22";
-    ctx.fillRect(x - 8, 131, 4, 25);
-    crystal(ctx, x, 109, 12, p.primary);
-  }
-  for (let i = 0; i < 8; i++) {
-    const x = 404 + i * 30,
-      y = 278 + Math.sin(i) * 8;
-    ctx.fillStyle = "#b7b2a630";
-    ctx.beginPath();
-    ctx.roundRect(x, y, 18, 6, 2);
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < 6; i++) {
+      const x = [65, 904, 150, 850, 70, 840][i];
+      const y = [137, 172, 592, 567, 510, 54][i] + Math.sin(t * 0.3 + i) * 4;
+      ellipse(ctx, x, y + 13, 39, 15, "#142735");
+      ellipse(ctx, x, y, 49, 15, "#395865");
+      crystal(ctx, x - 7, y - 16, 17, i % 2 ? p.secondary : p.primary);
+    }
+    // Island side facets and a fine top rim; the polygon is also the exact movement boundary.
+    landPath(ctx, 24);
+    ctx.fillStyle = "#121e32";
     ctx.fill();
-  }
-  for (const [x, y] of [
-    [719, 272],
-    [817, 324],
-    [800, 459],
-  ]) {
-    ellipse(ctx, x, y + 7, 18, 7, "#10273577");
-    ctx.fillStyle = "#554963";
-    ctx.beginPath();
-    ctx.roundRect(x - 12, y - 29, 24, 36, 5);
+    for (let i = 0; i < LAND.length - 1; i++) {
+      const a = LAND[i],
+        b = LAND[i + 1];
+      if (b.x >= a.x) continue;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.lineTo(b.x, b.y + 24);
+      ctx.lineTo(a.x, a.y + 24);
+      ctx.fillStyle = i % 2 ? "#29414d" : "#1f3345";
+      ctx.fill();
+    }
+    landPath(ctx);
+    const ground = ctx.createLinearGradient(0, 110, 0, 600);
+    ground.addColorStop(0, "#344456");
+    ground.addColorStop(0.5, "#2f4a50");
+    ground.addColorStop(1, "#233b49");
+    ctx.fillStyle = ground;
     ctx.fill();
-    ctx.strokeStyle = p.primary;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#87bab066";
+    ctx.lineWidth = 3;
     ctx.stroke();
-    star(ctx, x, y - 13, 6, p.secondary);
-    ctx.strokeStyle = "#a7a1be";
-    ctx.beginPath();
-    ctx.moveTo(x, y - 29);
-    ctx.lineTo(x, y - 43);
-    ctx.stroke();
-    ellipse(ctx, x, y - 43, 3, 3, p.glow);
+    ctx.save();
+    landPath(ctx);
+    ctx.clip();
+    for (const [x, y, color] of [
+      [205, 350, "#98b67a55"],
+      [515, 207, "#b3b6bb44"],
+      [762, 357, "#a38ab755"],
+    ] as const) {
+      const shade = ctx.createRadialGradient(x, y, 8, x, y, 150);
+      shade.addColorStop(0, color);
+      shade.addColorStop(1, "transparent");
+      ctx.fillStyle = shade;
+      ctx.fillRect(x - 150, y - 150, 300, 300);
+    }
+    // Three readable routes radiate from the home portal; paving is visual rather than a maze.
+    for (const shrine of SHRINES) {
+      ctx.strokeStyle = "#d6c8a630";
+      ctx.lineWidth = 39;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(PORTAL.x, PORTAL.y - 20);
+      ctx.quadraticCurveTo((PORTAL.x + shrine.x) / 2, shrine.y + 45, shrine.x, shrine.y);
+      ctx.stroke();
+      ctx.strokeStyle = "#e3d5b021";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 16]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    for (let i = 0; i < 120; i++) {
+      const x = 95 + ((i * 73) % 790),
+        y = 125 + ((i * 113) % 470);
+      ctx.strokeStyle = i % 3 ? "#8eb29b44" : "#c0d1b555";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 2, y - 5);
+      ctx.lineTo(x + 4, y);
+      ctx.stroke();
+      if (i % 9 === 0) {
+        ellipse(ctx, x + 2, y - 5, 2, 2, p.secondary);
+      }
+    }
+    ctx.restore();
+    // Small authored environmental details give each landmark a different character.
+    for (let i = 0; i < 15; i++) {
+      const a = i * 2.4,
+        x = 208 + Math.cos(a) * (60 + i * 2),
+        y = 365 + Math.sin(a) * (45 + i);
+      ctx.strokeStyle = "#8cb292";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 7);
+      ctx.lineTo(x, y - 5);
+      ctx.stroke();
+      for (let j = 0; j < 5; j++)
+        ellipse(
+          ctx,
+          x + Math.cos((j * TAU) / 5) * 4,
+          y - 5 + Math.sin((j * TAU) / 5) * 4,
+          3.5,
+          3,
+          p.secondary,
+        );
+      ellipse(ctx, x, y - 5, 2.5, 2.5, p.glow);
+    }
+    for (const x of [420, 603]) {
+      ellipse(ctx, x, 168, 16, 7, "#10273566");
+      ctx.fillStyle = "#536779";
+      ctx.fillRect(x - 10, 123, 20, 39);
+      ctx.fillStyle = "#9caaa8";
+      ctx.fillRect(x - 15, 121, 30, 9);
+      ctx.fillRect(x - 13, 158, 26, 8);
+      ctx.fillStyle = "#ffffff22";
+      ctx.fillRect(x - 8, 131, 4, 25);
+      crystal(ctx, x, 109, 12, p.primary);
+    }
+    for (let i = 0; i < 8; i++) {
+      const x = 404 + i * 30,
+        y = 278 + Math.sin(i) * 8;
+      ctx.fillStyle = "#b7b2a630";
+      ctx.beginPath();
+      ctx.roundRect(x, y, 18, 6, 2);
+      ctx.fill();
+    }
+    for (const [x, y] of [
+      [719, 272],
+      [817, 324],
+      [800, 459],
+    ]) {
+      ellipse(ctx, x, y + 7, 18, 7, "#10273577");
+      ctx.fillStyle = "#554963";
+      ctx.beginPath();
+      ctx.roundRect(x - 12, y - 29, 24, 36, 5);
+      ctx.fill();
+      ctx.strokeStyle = p.primary;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      star(ctx, x, y - 13, 6, p.secondary);
+      ctx.strokeStyle = "#a7a1be";
+      ctx.beginPath();
+      ctx.moveTo(x, y - 29);
+      ctx.lineTo(x, y - 43);
+      ctx.stroke();
+      ellipse(ctx, x, y - 43, 3, 3, p.glow);
+    }
+    for (const [x, y] of [
+      [167, 523],
+      [798, 502],
+      [588, 589],
+    ]) {
+      ctx.strokeStyle = "#66967a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.bezierCurveTo(x - 4, y + 15, x + 10, y + 33, x + 2, y + 43);
+      ctx.stroke();
+      for (let i = 0; i < 4; i++)
+        ellipse(ctx, x + (i % 2 ? 5 : -4), y + i * 10 + 8, 5, 2.5, "#8aae89");
+    }
+    // Stationary props occupy the edge; only the four central rocks block the player.
+    for (const [x, y, z] of [
+      [139, 302, 32],
+      [129, 419, 30],
+      [258, 292, 36],
+      [283, 516, 24],
+      [839, 415, 31],
+      [810, 286, 29],
+      [580, 138, 25],
+    ])
+      tree(ctx, x, y, z, x < 300 ? "#93a790" : p.secondary);
   }
-  for (const [x, y] of [
-    [167, 523],
-    [798, 502],
-    [588, 589],
-  ]) {
-    ctx.strokeStyle = "#66967a";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.bezierCurveTo(x - 4, y + 15, x + 10, y + 33, x + 2, y + 43);
-    ctx.stroke();
-    for (let i = 0; i < 4; i++)
-      ellipse(ctx, x + (i % 2 ? 5 : -4), y + i * 10 + 8, 5, 2.5, "#8aae89");
-  }
-  // Stationary props occupy the edge; only the four central rocks block the player.
-  for (const [x, y, z] of [
-    [139, 302, 32],
-    [129, 419, 30],
-    [258, 292, 36],
-    [283, 516, 24],
-    [839, 415, 31],
-    [810, 286, 29],
-    [580, 138, 25],
-  ])
-    tree(ctx, x, y, z, x < 300 ? "#93a790" : p.secondary);
   for (const rock of ROCKS) {
     ellipse(ctx, rock.x + 5, rock.y + 9, rock.r + 4, rock.r * 0.6, "#0b253855");
     ctx.beginPath();
@@ -485,6 +495,52 @@ export function renderQuest(
     if (stunned) star(ctx, 0, -28, 7, p.glow, t * 2);
     ctx.restore();
   });
+  if (s.fragments.some(Boolean)) {
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ellipse(ctx, 480, 330, 125, 85, p.primary);
+    ctx.restore();
+  }
+  const guardian = s.guardian;
+  if (guardian.active) {
+    if (guardian.mode === "warning" || guardian.mode === "burst") {
+      ctx.save();
+      const { x, y } = guardian.target;
+      ctx.strokeStyle = "#ffb367";
+      ctx.lineWidth = 4;
+      ellipse(ctx, x, y, 66, 66, guardian.mode === "burst" ? "#ff9066aa" : "#ff906633");
+      ctx.beginPath();
+      ctx.arc(x, y, 66, 0, TAU);
+      ctx.stroke();
+      ctx.fillStyle = "#fff1d4";
+      ctx.font = "bold 16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("MOVE!", x, y - 74);
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.translate(guardian.position.x, guardian.position.y - 12);
+    ctx.shadowColor = p.primary;
+    ctx.shadowBlur = 20;
+    ellipse(ctx, 0, 28, 30, 10, "#0b102966");
+    ctx.beginPath();
+    ctx.moveTo(0, -42);
+    ctx.lineTo(29, -8);
+    ctx.lineTo(20, 25);
+    ctx.lineTo(0, 38);
+    ctx.lineTo(-20, 25);
+    ctx.lineTo(-29, -8);
+    ctx.closePath();
+    ctx.fillStyle = "#283249";
+    ctx.fill();
+    ctx.strokeStyle = p.primary;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ellipse(ctx, -10, -5, 5, 8, "#ffd19a");
+    ellipse(ctx, 10, -5, 5, 8, "#ffd19a");
+    if (guardian.mode === "stunned") star(ctx, 0, -57, 10, p.glow, t);
+    ctx.restore();
+  }
   // Keep the complete generated hero; raw artwork becomes an intentional floating art token.
   s.trail.forEach((point) => {
     ctx.globalAlpha = point.life * 0.8;
@@ -493,12 +549,15 @@ export function renderQuest(
   ctx.globalAlpha = 1;
   const x = s.player.x,
     y = s.player.y;
-  const bounce = active && s.target ? Math.sin(t * 12) * 2 : Math.sin(t * 2.5) * 1.5;
+  const bounce = active && s.moving ? Math.sin(t * 12) * 2 : Math.sin(t * 2.5) * 1.5;
   ellipse(ctx, x, y + 10, hero ? 19 : 24, 8, "#0b203a77");
   if (s.invulnerable === 0 || Math.floor(t * 12) % 2 === 0) {
     if (hero) {
-      const height = Math.min(75, (65 * hero.height) / hero.width),
-        width = height * (hero.width / hero.height);
+      const scale = assets.motion
+          ? Math.min(75 / assets.motion.height, 72 / assets.motion.width)
+          : Math.min(75 / hero.height, 65 / hero.width),
+        height = hero.height * scale,
+        width = hero.width * scale;
       ctx.save();
       ctx.translate(x, y + 10 + bounce);
       ctx.rotate(s.dashLeft > 0 ? s.facing.x * 0.13 : 0);
