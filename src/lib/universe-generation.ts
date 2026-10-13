@@ -73,34 +73,32 @@ export async function generateOne(
   item: Item,
   heroReference?: string,
 ): Promise<Result> {
-  // Reference-based generation uses the gateway's multipart image-edit contract.
-  const form = new FormData();
-  form.set("model", "google/gemini-3.1-flash-image");
-  form.set("prompt", item.prompt);
-  form.set("n", "1");
-  form.set("stream", "false");
-  form.set("output_format", "png");
-  if (item.label === "Game Motion" || item.label === "World Relics") form.set("size", "1536x1024");
-  const sources = [imageDataUrl, heroReference].filter(Boolean);
-  for (const [index, source] of sources.entries()) {
-    const match = source!.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
-    if (!match)
+  const sources = heroReference ? [imageDataUrl, heroReference] : [imageDataUrl];
+  for (const source of sources) {
+    if (!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(source))
       return { label: item.label, kind: item.kind, image: null, error: "Invalid reference image" };
-    const bytes = Buffer.from(match[2], "base64");
-    form.append(
-      sources.length === 1 ? "image" : "image[]",
-      new Blob([bytes], { type: match[1] }),
-      `source-${index}.${match[1].split("/")[1]}`,
-    );
   }
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
+  // This project's gateway accepts the multimodal JSON generation contract.
+  // The SDK's multipart edit contract returned HTTP 400 in production.
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      "Lovable-API-Key": apiKey,
-      "X-Lovable-AIG-SDK": "tanstack-ai",
+      "Content-Type": "application/json",
     },
-    body: form,
+    body: JSON.stringify({
+      model: "google/gemini-3.1-flash-image-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: item.prompt },
+            ...sources.map((url) => ({ type: "image_url", image_url: { url } })),
+          ],
+        },
+      ],
+      modalities: ["image", "text"],
+    }),
     signal: AbortSignal.timeout(120_000),
   });
   if (!res.ok)
