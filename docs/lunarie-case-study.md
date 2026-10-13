@@ -1,6 +1,6 @@
 # Lunarie collection case study
 
-One complete homepage study replaces the three simple artwork-to-figurine pairs. The page shows the original artwork and generated character, an illustrated world, three collectible forms, reference views, presentation packaging, related editions and a practical prototype step. It does not open another creator popup or trigger image generation merely by viewing the study.
+One complete homepage study replaces the three simple artwork-to-figurine pairs. The page shows the original artwork, an illustrated world, three collectible forms, reference views, presentation packaging, related editions and a practical prototype step. It does not open another creator popup or trigger image generation merely by viewing the study.
 
 ## Evidence and limits
 
@@ -21,3 +21,5 @@ A browser-rendered local component preview could not be opened: the cloud browse
 Merge only; owner publishes manually in Lovable.
 
 ![Observed live generation-unavailable state](previews/lunarie-generation-blocked.jpg)
+
+The collection is now one of three examples in a toggle-driven common template. The separately saved full-body character remains archived evidence; the visible first panel shows the original artwork. Prototype and evidence notes are collapsed by default. See collection-showcase.md for current presentation and switching checks.
