@@ -16,15 +16,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { joinWaitlist } from "@/lib/waitlist.functions";
 import { FragmentQuest } from "./FragmentQuest";
 import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
+import lunarie from "@/assets/artoy/lunarie.png";
+
+const GAME_CHARACTERS = [{ id: "lunarie", src: lunarie, name: "Lunarie" }, ...SAMPLES];
 
 function UniverseGame({
   source,
   heroSrc,
+  collectibleSrc,
+  onExploreCollectible,
 }: {
   source?: CreatorSession["source"];
   heroSrc?: string | null;
+  collectibleSrc?: string | null;
+  onExploreCollectible?: () => void;
 }) {
-  const [sample, setSample] = useState(SAMPLES[0]);
+  const [sample, setSample] = useState(GAME_CHARACTERS[0]);
   const artwork = source ?? { image: sample.src, name: sample.name };
   return (
     <div className="studio-game">
@@ -39,7 +46,7 @@ function UniverseGame({
           role="group"
           aria-label="Choose an adventure character"
         >
-          {SAMPLES.map((option) => (
+          {GAME_CHARACTERS.map((option) => (
             <button
               key={option.id}
               aria-pressed={sample.id === option.id}
@@ -55,6 +62,8 @@ function UniverseGame({
         artworkSrc={artwork.image}
         characterName={artwork.name}
         heroSrc={heroSrc}
+        collectibleSrc={collectibleSrc}
+        onExploreCollectible={onExploreCollectible}
       />
     </div>
   );
@@ -381,6 +390,10 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <UniverseGame
                 source={source}
                 heroSrc={experiences.find((item) => item.label === "Game Character")?.image}
+                collectibleSrc={merch.find((item) => item.label === "Figurine")?.image}
+                onExploreCollectible={
+                  merch.some((item) => item.image) ? () => setTab("merch") : undefined
+                }
               />
             </TabsContent>
           </Tabs>

@@ -30,7 +30,13 @@ import {
 import { DEFAULT_PALETTE, extractPalette, prepareHero } from "./quest/artwork";
 import { renderQuest } from "./quest/render";
 
-type Props = { artworkSrc: string; characterName: string; heroSrc?: string | null };
+type Props = {
+  artworkSrc: string;
+  characterName: string;
+  heroSrc?: string | null;
+  collectibleSrc?: string | null;
+  onExploreCollectible?: () => void;
+};
 type Snapshot = {
   phase: Phase;
   hearts: number;
@@ -57,7 +63,13 @@ function artworkKey(src: string) {
   return `artoy.fragment-quest.v1.${(hash >>> 0).toString(16)}`;
 }
 
-export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
+export function FragmentQuest({
+  artworkSrc,
+  characterName,
+  heroSrc,
+  collectibleSrc,
+  onExploreCollectible,
+}: Props) {
   const root = useRef<HTMLDivElement>(null);
   const arena = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -86,6 +98,8 @@ export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
   const [artError, setArtError] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [compact, setCompact] = useState(false);
+  const [collectibleFailed, setCollectibleFailed] = useState(false);
+  const hasCollectible = !!collectibleSrc && !collectibleFailed;
   const storageKey = useMemo(() => artworkKey(artworkSrc), [artworkSrc]);
   const storageRef = useRef(storageKey);
   storageRef.current = storageKey;
@@ -140,6 +154,10 @@ export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
     setAnnouncement("A fresh adventure. Recover the three fragments.");
     changePhase("playing");
   };
+
+  useEffect(() => {
+    setCollectibleFailed(false);
+  }, [collectibleSrc, artworkSrc]);
 
   useEffect(() => {
     let cancelled = false;
@@ -367,7 +385,7 @@ export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
             <Sparkles size={13} /> ARTOY ORIGINAL · CHAPTER 01
           </span>
           <h3>The Lost Fragments</h3>
-          <p>A little adventure inside {characterName}’s universe.</p>
+          <p>A mysterious signal from {characterName}’s universe.</p>
         </div>
         <div className="quest-tools">
           <button
@@ -494,8 +512,8 @@ export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
               One way home.
             </h4>
             <p>
-              The portal has lost its light. Recover your art fragments and bring your universe back
-              to life.
+              Something is calling from beyond the portal. Recover three lost art fragments, evade
+              the inklings, and discover what the archive is hiding.
             </p>
             <button className="quest-primary" onClick={() => changePhase("playing")}>
               <Play size={17} fill="currentColor" /> Start adventure
@@ -545,6 +563,46 @@ export function FragmentQuest({ artworkSrc, characterName, heroSrc }: Props) {
           </div>
         )}
       </div>
+      {hud.phase === "won" && (
+        <section className="quest-reward" aria-label="Collectible preview revealed">
+          <div className="quest-reward-art">
+            <span className="quest-reward-edition">ARCHIVE 01</span>
+            <img
+              src={hasCollectible ? collectibleSrc! : artworkSrc}
+              alt={
+                hasCollectible
+                  ? `${characterName} figurine concept revealed after completing the adventure`
+                  : `${characterName} character card preview`
+              }
+              onError={() => {
+                if (hasCollectible) setCollectibleFailed(true);
+              }}
+            />
+            <span className="quest-reward-name">{characterName}</span>
+          </div>
+          <div className="quest-reward-copy">
+            <span className="quest-kicker">
+              <Sparkles size={13} /> UNSEALED FROM THE ARCHIVE
+            </span>
+            <h4>Your character. A new form.</h4>
+            <p>
+              {hasCollectible
+                ? `The portal reveals ${characterName}’s collectible figurine concept.`
+                : `${characterName}’s first character card has emerged from the portal.`}
+            </p>
+            <small>
+              {hasCollectible
+                ? "Concept preview · Physical products are not available to purchase yet."
+                : "Digital card preview · Figurine concepts appear when generation succeeds."}
+            </small>
+            {onExploreCollectible && (
+              <button className="quest-primary" onClick={onExploreCollectible}>
+                Explore collectible concepts <Gem size={16} />
+              </button>
+            )}
+          </div>
+        </section>
+      )}
       <div className="quest-bottom">
         <div className="quest-objective">
           <span>{hud.fragments === 3 ? "RETURN HOME" : "YOUR QUEST"}</span>

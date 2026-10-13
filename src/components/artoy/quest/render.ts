@@ -157,9 +157,9 @@ export function renderQuest(
   ctx.imageSmoothingQuality = "high";
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
   const sky = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-  sky.addColorStop(0, "#111b35");
-  sky.addColorStop(0.5, "#29354e");
-  sky.addColorStop(1, "#183943");
+  sky.addColorStop(0, "#090e25");
+  sky.addColorStop(0.5, "#1d203e");
+  sky.addColorStop(1, "#102b37");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   // A luminous sky and distant floating islands establish depth before the playable plane.
@@ -167,8 +167,8 @@ export function renderQuest(
   ctx.globalAlpha = 0.11;
   ellipse(ctx, 488, 160, 360, 210, p.primary);
   ctx.restore();
-  ellipse(ctx, 813, 98, 32, 32, "#ffe5b5");
-  ellipse(ctx, 824, 87, 28, 28, "#233349");
+  ellipse(ctx, 813, 98, 32, 32, "#c7d9f2");
+  ellipse(ctx, 824, 87, 28, 28, "#18213b");
   for (let i = 0; i < 52; i++) {
     const x = (i * 173 + 21) % WIDTH,
       y = (i * 97 + 13) % HEIGHT;
@@ -201,9 +201,9 @@ export function renderQuest(
   }
   landPath(ctx);
   const ground = ctx.createLinearGradient(0, 110, 0, 600);
-  ground.addColorStop(0, "#3c5961");
-  ground.addColorStop(0.5, "#345b5a");
-  ground.addColorStop(1, "#294b4d");
+  ground.addColorStop(0, "#344456");
+  ground.addColorStop(0.5, "#2f4a50");
+  ground.addColorStop(1, "#233b49");
   ctx.fillStyle = ground;
   ctx.fill();
   ctx.strokeStyle = "#87bab066";
@@ -557,9 +557,18 @@ export function renderQuest(
     }
   }
   // A subtle vignette keeps the edges quiet without obscuring navigation.
+  // Mist stays over the lower island edges; paths, patrols and fragments remain legible.
+  for (let i = 0; i < 3; i++) {
+    const fogX = 180 + i * 310 + Math.sin(t * 0.12 + i) * 22;
+    const fog = ctx.createRadialGradient(fogX, 568, 5, fogX, 568, 155);
+    fog.addColorStop(0, "#9ab4dc13");
+    fog.addColorStop(1, "transparent");
+    ctx.fillStyle = fog;
+    ctx.fillRect(fogX - 155, 430, 310, 210);
+  }
   const vignette = ctx.createRadialGradient(480, 350, 250, 480, 350, 650);
   vignette.addColorStop(0, "transparent");
-  vignette.addColorStop(1, "#08122288");
+  vignette.addColorStop(1, "#070d2188");
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 }

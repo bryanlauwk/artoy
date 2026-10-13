@@ -25,9 +25,9 @@ export const LAND: Vec[] = [
   { x: 320, y: 232 },
 ];
 export const SHRINES = [
-  { x: 208, y: 362, name: "Bloom grove", subtitle: "Find your first fragment" },
+  { x: 208, y: 362, name: "Shadow grove", subtitle: "Find your first fragment" },
   { x: 514, y: 206, name: "Prism ruins", subtitle: "Watch the roaming inkling" },
-  { x: 764, y: 358, name: "Ink garden", subtitle: "Dash through the patrol" },
+  { x: 764, y: 358, name: "Whisper vault", subtitle: "Dash through the patrol" },
 ];
 export const ROCKS = [
   { x: 344, y: 323, r: 28 },
