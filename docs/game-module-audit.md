@@ -122,7 +122,7 @@ A new painted atlas provides nine shrine, guardian and portal assets. Grounded a
 
 All three benchmark heroes now have eight isolated full-body poses, a 90px maximum display height, direction-aware facing and dash afterimages. The run-pair changes are subtle; these are pose animations rather than a skeletal walk cycle. Motion parsing now accounts for image downscaling and checks cell boundaries before trimming, fixing high-resolution false rejection and clipped-pose acceptance.
 
-Uploaded artwork can generate a **World Relics** strip alongside its motion sheet, conditioned on the original artwork and approved hero. This optional tenth result requests a 4:1 image with three isolated cells: shrine, guardian faceplate, portal crest. The provider's documented 4:1 format is used (see https://ai.google.dev/gemini-api/docs/image-generation). The client rejects malformed/opaque scene strips and falls back to source-art sigils. Explicit sample IDs select curated worlds; uploaded filenames never impersonate a curated identity. Asset checks establish geometric validity, not guaranteed semantic fidelity.
+Uploaded artwork can generate a **World Relics** strip alongside its motion sheet, conditioned on the original artwork and approved hero. This optional tenth result requests a 1536×1024 landscape image with three isolated vertical cells: shrine, guardian faceplate, portal crest. The canvas size follows Lovable's gateway adapter contract; native model aspect ratios alone do not establish gateway support. The client rejects malformed/opaque scene strips and falls back to source-art sigils. Explicit sample IDs select curated worlds; uploaded filenames never impersonate a curated identity. Asset checks establish geometric validity, not guaranteed semantic fidelity.
 
 A win triggers a 2.4-second restoration inside the arena and then a prominent collectible reveal. Each benchmark includes its own identity-matched figurine concept; uploaded sources use their actual generated figurine when available. Skip, reduced motion, keyboard focus, save, explore and replay are supported. Missing or broken figurines reveal the original artwork. The completed HUD says COMPLETE rather than retaining the escape countdown. Audio remains opt-in, with distinct awakening, guardian warning and escape cues; the phone camera eases toward the hero.
 
@@ -144,3 +144,12 @@ The supplied examples now have curated world art and poses. Arbitrary generated 
 ![BooBoi: The Lantern Archive](previews/character-world-booboi.webp)
 
 ![Jaygyii: The Neon Afterworld](previews/character-world-jaygyii.webp)
+
+
+## Published-generation integration correction
+
+The published sample game and all world/collectible assets were verified after PR #5. A live Lunarie upload exposed immediate HTTP 400 responses from the upstream image gateway for all eight primary assets; the application correctly retained the artwork and reported a generation error. No generated images were returned.
+
+The request now follows the published `@tanstack/ai-lovable@0.5.4` edit adapter exactly for its gateway headers (`Authorization`, `Lovable-API-Key`, `X-Lovable-AIG-SDK`), single-reference `image` versus multiple-reference `image[]` fields, and explicit `stream=false`. World relics now use the gateway-supported 1536×1024 canvas with three vertical cells; the parser accepts that 3:2 canvas while retaining prior wide-strip compatibility. The model ID and multipart endpoint were confirmed in the adapter source. References: https://tanstack.com/ai/latest/docs/adapters/lovable and https://registry.npmjs.org/@tanstack/ai-lovable/-/ai-lovable-0.5.4.tgz .
+
+Request-contract regression tests cover the corrected headers, file cardinality and sizing. HTTP errors remain sanitized; keys, references and upstream error bodies are never copied into public error messages. Successful live generation on this corrected integration must still be verified after publication.
