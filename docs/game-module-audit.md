@@ -54,7 +54,7 @@ Removed the old chameleon module, sample lock/progression helpers, unused game s
 
 Full browser interaction and responsive layout verification were blocked by local-preview restrictions in this environment. Real phone testing, fullscreen/audio behavior on specific browsers and live AI asset quality remain to be verified before release. The DOM check is not a replacement for those checks.
 
-![World rendered from the implemented game code](previews/fragment-quest-world.png)
+![World rendered from the implemented game code](previews/fragment-quest-world.webp)
 
 ## Next quality gate
 
@@ -65,3 +65,42 @@ The current implementation is a functional foundation rather than the final owne
 The follow-up DOM fixture verified that only a win reveals the concept, its image comes from the provided figurine asset, the concept action invokes navigation, image failure restores the source-art card, and restarting hides the reveal. The updated Lunarie world was rendered and visually inspected separately. TypeScript, changed-file ESLint, the nine engine tests and the production build pass. Browser/device and live-generation checks remain outstanding.
 
 Play the chapter on a real phone and desktop, then test live generation with a doodle, an illustrated mascot, a dark/white-heavy character and multi-subject artwork. Check that the single hero stays recognizable and that edge cleanup does not erase white details connected to the outside. If live generation fails that visual contract, improve asset preparation while keeping the curated gameplay unchanged. Merch continues to be concept previews.
+
+## Motion, guardian and archive follow-up (13 October 2026)
+
+The single curated adventure now has an escalating arc: the first fragment awakens the ruins; the second wakes the Archive Warden; the third starts a 20-second escape, capped by the original 90-second deadline. The Warden locks its target and warns for 0.9 seconds before striking. Dashes protect the hero and can stun the stalking Warden. Pausing freezes its attack clock.
+
+Lunarie is the animation benchmark, with eight poses for idle/blink, alternating run strides, dash and hit/recovery. Uploaded artwork uses optional generated motion sheets conditioned on both the original art and the generated full-body hero. Sheets must satisfy a 4-by-2 contract and client-side isolation/coverage checks; failed sheets fall back to the full-body hero, then original artwork. These geometric checks do not prove semantic identity fidelity; generated sheets still need visual review. The painted mysterious island is a shared template; source artwork and its palette appear in monuments, the hero and world accents.
+
+The collectible remains win-only. The archive opens over 1.8 seconds, supports skipping and reduced motion, then offers saving the preview and exploring existing merch concepts. Missing figurines reveal the original character card instead. This is a concept reveal, not an order or a claim of manufacturing readiness.
+
+### Generation contract update
+
+Reference-image requests now use multipart `/v1/images/edits`, rather than the unconventional chat-message payload sent to `/images/generations` (which the older public deployment currently accepts). The current model ID and request contract were checked against the published `@tanstack/ai-lovable` 0.5.4 adapter source and https://tanstack.com/ai/latest/docs/adapters/lovable. Motion is an optional ninth output after a successful Game Character result. Base images remain available if motion generation fails. Provider errors are returned without copying provider response bodies into the public UI.
+
+### Validation and remaining limits
+
+- 15 automated gameplay and generation-contract tests pass, covering guardian warnings, locked targeting, dash protection, final escape, timing/pause, win/loss conditions and reference uploads.
+- TypeScript and production build pass. Changed TypeScript files pass ESLint. Repository-wide ESLint still fails on existing unrelated files.
+- DOM interaction checks pass for start/pause/resume, keyboard dash, blur pause, restart, artwork/theme replacement, partial generation results, hero fallback, win-only collectible, navigation and cleanup. These checks use a DOM fixture and a separate native-canvas render; they do not constitute real-device testing.
+- The real eight-pose benchmark passes the motion parser. The preview image is rendered by the actual game renderer, with a fixture Warden warning state.
+- A direct public-art request returned non-JSON HTTP 403, but a subsequent public-site UI test successfully generated all eight Nova outputs. The published site still runs the older Mini Game concept and disconnected chameleon Play demo; it does not include the previously merged Lost Fragments changes. The connected development preview requires Lovable sign-in. Successful live generation on the revised endpoint and actual iOS/Android/desktop browser playthroughs remain pending; do not report priority 5 as fully complete.
+- The painted art retains decorative stone props in addition to the visibly drawn collider rocks. Map/art alignment and touch navigation need a real playtest before calling this a release-quality game. The guardian is original shared-world art rather than a generated antagonist specific to each IP.
+
+### Asset direction
+
+Motion prompt: preserve Lunarie's pink bob, cap, headphones, face and skull jacket; create eight isolated full-body poses in a regular 4-by-2 sheet with clear opposite run strides and transparent background. The lower body is a curated interpretation of the portrait reference. World prompt: transform the authored island layout into a richly painted mysterious moonlit archive with violet crystals, ruined shrines, shadow grove, open traversable paths and no characters or UI. Both assets were generated from existing project references, inspected and optimized for the repository.
+
+![Public deployment generated eight Nova outputs; this is the older deployed flow](previews/live-generation-baseline.jpg)
+
+## World and collectible follow-up (13 October 2026)
+
+The shared moonlit island now picks up a soft color bloom at each landmark from the selected artwork palette. Restored fragments brighten their shrine and add a visible resonance ring, so the world changes as the player's universe is repaired while keeping the same map and rules for every character.
+
+The win overlay now has an **Open character archive** action. It reveals the reward immediately and moves focus to the collectible card, where the player can save the concept preview or continue to the existing collectible concepts. The reduced-motion preference uses an instant scroll. The archive remains win-only; when the figurine asset is missing or fails to load, the original art card remains the fallback.
+
+### Verification and limits
+
+- Gameplay and generation contract tests pass; TypeScript, changed-file ESLint and the production build pass.
+- The supplied reference images and the repository's Lunarie, BooBoi and Jaygyii art were reviewed as visual references. The three project examples span anime, cozy mascot and fantasy-creature styles.
+- The saved DOM interaction harness could not run because its `@napi-rs/canvas` dependency is absent from this checkout. A local production preview also could not bind a port (`EPERM`). No live AI generation or real phone/desktop browser playthrough was available, so the reveal navigation, canvas rendering across inputs and responsive behavior still need hands-on confirmation.

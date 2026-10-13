@@ -40,11 +40,13 @@ export function extractPalette(image: HTMLImageElement): Palette {
   }
 }
 /** Remove only a near-white background connected to the edges of the generated single hero. */
-export function prepareHero(image: HTMLImageElement): HTMLCanvasElement {
+export function prepareHero(image: HTMLImageElement | HTMLCanvasElement): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  const scale = Math.min(1, 512 / Math.max(image.naturalWidth, image.naturalHeight));
-  canvas.width = Math.round(image.naturalWidth * scale);
-  canvas.height = Math.round(image.naturalHeight * scale);
+  const width = "naturalWidth" in image ? image.naturalWidth : image.width;
+  const height = "naturalHeight" in image ? image.naturalHeight : image.height;
+  const scale = Math.min(1, 512 / Math.max(width, height));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
   try {
@@ -53,13 +55,32 @@ export function prepareHero(image: HTMLImageElement): HTMLCanvasElement {
       h = canvas.height,
       seen = new Uint8Array(w * h),
       queue: number[] = [];
+    let transparentEdge = 0,
+      edgeCount = 0;
+    const inspectEdge = (p: number) => {
+      edgeCount++;
+      if (pixels.data[p * 4 + 3] < 10) transparentEdge++;
+    };
+    for (let x = 0; x < w; x++) {
+      inspectEdge(x);
+      inspectEdge((h - 1) * w + x);
+    }
+    for (let y = 0; y < h; y++) {
+      inspectEdge(y * w);
+      inspectEdge(y * w + w - 1);
+    }
+    // Existing alpha is authoritative: white fur/costume must remain opaque.
+    const nativeAlpha = transparentEdge / edgeCount > 0.8;
     const add = (p: number) => {
       if (seen[p]) return;
       seen[p] = 1;
       const i = p * 4;
       if (
         pixels.data[i + 3] < 10 ||
-        (pixels.data[i] > 238 && pixels.data[i + 1] > 238 && pixels.data[i + 2] > 238)
+        (!nativeAlpha &&
+          pixels.data[i] > 238 &&
+          pixels.data[i + 1] > 238 &&
+          pixels.data[i + 2] > 238)
       ) {
         queue.push(p);
         pixels.data[i + 3] = 0;

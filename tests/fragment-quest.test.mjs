@@ -146,3 +146,71 @@ test("restarting clears run state and scores reward actual objectives", () => {
   assert.equal(questScore(s), 350);
   assert.equal(questScore(createQuest()), 0);
 });
+
+test("fragment progression awakens the world, guardian and capped final escape", () => {
+  const s = start();
+  for (let i = 0; i < 3; i++) {
+    s.player = { ...SHRINES[i] };
+    stepQuest(s, 1 / 60, idle, false);
+    assert.ok(s.events.includes(["awaken", "guardian", "escape"][i]));
+  }
+  assert.equal(s.guardian.active, true);
+  assert.ok(Math.abs(s.escapeDeadline - s.elapsed - 20) < 0.001);
+  assert.ok(s.escapeDeadline <= DURATION);
+});
+
+test("guardian locks a warning target before a dodgeable burst and never attacks before awakening", () => {
+  const s = start();
+  advance(s, 3);
+  assert.equal(s.guardian.active, false);
+  s.guardian.active = true;
+  s.guardian.mode = "stalk";
+  s.guardian.timer = 0;
+  stepQuest(s, 1 / 60, idle, false);
+  assert.equal(s.guardian.mode, "warning");
+  const target = { ...s.guardian.target };
+  s.player = { x: target.x + 100, y: target.y };
+  advance(s, 0.9);
+  assert.equal(s.hearts, 3);
+  assert.deepEqual(s.guardian.target, target);
+  assert.equal(s.guardian.mode, "burst");
+});
+
+test("guardian burst causes one hit; a dash shields and stuns the stalking guardian", () => {
+  const s = start();
+  s.guardian.active = true;
+  s.guardian.mode = "warning";
+  s.guardian.timer = 1 / 60;
+  s.guardian.target = { ...s.player };
+  stepQuest(s, 1 / 60, idle, false);
+  assert.equal(s.hearts, 2);
+  assert.equal(s.hitLeft, 0.3);
+  advance(s, 0.2);
+  assert.equal(s.hearts, 2);
+  const dash = start();
+  dash.guardian.active = true;
+  dash.guardian.mode = "stalk";
+  dash.guardian.timer = 1;
+  dash.guardian.position = { ...dash.player };
+  stepQuest(dash, 1 / 60, idle, true);
+  assert.equal(dash.hearts, 3);
+  assert.equal(dash.guardian.mode, "stunned");
+  assert.ok(dash.events.includes("stun"));
+});
+
+test("final escape expires without granting passive victory and pause freezes guardian warning", () => {
+  const s = start();
+  s.fragments = [true, true, true];
+  s.escapeDeadline = 1;
+  s.player = { x: 208, y: 362 };
+  advance(s, 1.1);
+  assert.equal(s.phase, "lost");
+  const p = start();
+  p.guardian.active = true;
+  p.guardian.mode = "warning";
+  p.guardian.timer = 0.9;
+  p.phase = "paused";
+  advance(p, 4);
+  assert.equal(p.guardian.timer, 0.9);
+  assert.equal(p.elapsed, 0);
+});
