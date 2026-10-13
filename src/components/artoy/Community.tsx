@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Download } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import lunarieOriginal from "@/assets/artoy/case-study/lunarie-original-v1.webp";
@@ -53,6 +53,7 @@ function ConceptPanel({
   alt: string;
   wide?: boolean;
 }) {
+  const clipId = `case-panel-${useId().replace(/:/g, "")}`;
   return (
     <svg
       className="case-sheet-panel"
@@ -61,7 +62,12 @@ function ConceptPanel({
       role="img"
       aria-label={alt}
     >
-      <image href={src} width="1536" height="1024" />
+      <defs>
+        <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+          <rect x={column * 512} y={row * 512} width="512" height="512" />
+        </clipPath>
+      </defs>
+      <image href={src} width="1536" height="1024" clipPath={`url(#${clipId})`} />
     </svg>
   );
 }
