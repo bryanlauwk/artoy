@@ -1,0 +1,28 @@
+{
+  "character": "Lunarie",
+  "status": "curated-case-study-partially-live-verified",
+  "artoy_live_assets": [
+    "lunarie-character-v1.webp",
+    "lunarie-figurine-v1.webp"
+  ],
+  "earlier_live_report": "13 October 2026, all 10 images returned in 38 seconds; character and figurine saved",
+  "curated_assets": {
+    "lunarie-concepts-v1.webp": [
+      "world",
+      "diorama",
+      "acrylic charm",
+      "product views",
+      "packaging",
+      "series"
+    ]
+  },
+  "curation_method": "Built-in image generation using original artwork and verified figurine as references; one 3x2 concept sheet",
+  "current_live_test": "14 October 2026 MYT: one upload attempted; observed Generation is temporarily unavailable UI. No retry. Full new workflow success not verified.",
+  "physical_status": "Paper print proof created and render-reviewed; acrylic unit not fabricated or tested",
+  "assets": {
+    "lunarie-original-v1.webp": "0ed3892674a13ff1363a5b7dbec076ae37d29aa9aa8bceeaa74ec5f6176ae1f5",
+    "lunarie-character-v1.webp": "da66bfdc16eec15d5223c90ac13b08fad05f53ade62bdb76d44508776cc85f30",
+    "lunarie-figurine-v1.webp": "01f05206b345f9ec50fcf704ba5429b0620ded1e7cacf206e27af1d4acf14f93",
+    "lunarie-concepts-v1.webp": "cdcb51309650b7dfb85d7d90280ddaa8508ce7365a3f53e7e6afe431cd7a9e00"
+  }
+}
