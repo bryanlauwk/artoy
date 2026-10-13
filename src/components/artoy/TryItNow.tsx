@@ -14,29 +14,48 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { joinWaitlist } from "@/lib/waitlist.functions";
-import { PixelSocialSim } from "./PixelSocialSim";
+import { FragmentQuest } from "./FragmentQuest";
 import { SAMPLES, type Creation, type CreatorSession } from "./useCreatorSession";
 
-function SampleGame() {
+function UniverseGame({
+  source,
+  heroSrc,
+}: {
+  source?: CreatorSession["source"];
+  heroSrc?: string | null;
+}) {
   const [sample, setSample] = useState(SAMPLES[0]);
+  const artwork = source ?? { image: sample.src, name: sample.name };
   return (
     <div className="studio-game">
       <p className="studio-tab-note">
-        A ready-to-play sample game. Clear Nova to unlock Mochi, then Hexx. Your generated images
-        don’t change these stages.
+        {source
+          ? "Your character, your colors, one little world to restore. Recover three art fragments and return to the portal."
+          : "Meet The Lost Fragments: one curated adventure, reimagined with each character. Choose a hero and jump in."}
       </p>
-      <div className="studio-game-options" role="group" aria-label="Choose a game stage">
-        {SAMPLES.map((option) => (
-          <button
-            key={option.id}
-            aria-pressed={sample.id === option.id}
-            onClick={() => setSample(option)}
-          >
-            {option.name}
-          </button>
-        ))}
-      </div>
-      <PixelSocialSim key={sample.id} avatarSrc={sample.src} sampleId={sample.id} />
+      {!source && (
+        <div
+          className="studio-game-options"
+          role="group"
+          aria-label="Choose an adventure character"
+        >
+          {SAMPLES.map((option) => (
+            <button
+              key={option.id}
+              aria-pressed={sample.id === option.id}
+              onClick={() => setSample(option)}
+            >
+              {option.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <FragmentQuest
+        key={artwork.image}
+        artworkSrc={artwork.image}
+        characterName={artwork.name}
+        heroSrc={heroSrc}
+      />
     </div>
   );
 }
@@ -123,7 +142,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
           {generating
             ? "We’re turning your artwork into AI images and merch concepts."
             : results
-              ? "Explore your creations, download your favorites, or try the game demo."
+              ? "Explore your creations, download your favorites, or play with your character."
               : "Upload your art or choose a sample. Make it a world of its own."}
         </p>
         <ol className="studio-steps" aria-label="Creation progress">
@@ -250,11 +269,15 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               onClick={() => setShowGame(!showGame)}
             >
               <Gamepad2 size={17} />{" "}
-              {showGame ? "Close sample game" : "Just want to play? Try the sample game"}
+              {showGame
+                ? "Close adventure"
+                : source
+                  ? `Play with ${source.name}`
+                  : "Try a sample adventure"}
             </button>
             {showGame && (
               <div id="sample-game">
-                <SampleGame />
+                <UniverseGame source={source} />
               </div>
             )}
           </div>
@@ -342,7 +365,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               </TabsTrigger>
               <TabsTrigger value="play">
                 <Gamepad2 size={16} />
-                Play demo
+                Play my universe
               </TabsTrigger>
             </TabsList>
             <TabsContent value="creations">
@@ -355,7 +378,10 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <ResultCards items={merch} />
             </TabsContent>
             <TabsContent value="play">
-              <SampleGame />
+              <UniverseGame
+                source={source}
+                heroSrc={experiences.find((item) => item.label === "Game Character")?.image}
+              />
             </TabsContent>
           </Tabs>
           <div className="studio-output-actions">

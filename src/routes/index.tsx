@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Reimagine your character as AI artwork and merch concepts. Upload a drawing, explore original characters, and try a playable sample game.",
+          "Reimagine your character as AI artwork and merch concepts. Upload a drawing and play The Lost Fragments with your own artwork hero.",
       },
       { property: "og:title", content: "ARTOY — Turn Your Art Into A Playable Universe" },
       {

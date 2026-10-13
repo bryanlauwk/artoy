@@ -6,10 +6,10 @@ type Item = { label: string; kind: "experience" | "merch"; prompt: string };
 
 const ITEMS: Item[] = [
   {
-    label: "Mini Game",
+    label: "Game Character",
     kind: "experience",
     prompt:
-      "Transform this character into a vibrant pixel-art sprite sheet for a retro 2D mini game: 4 poses (idle, run, jump, attack) on a clean checkerboard background. Preserve the character's colors, silhouette and personality. Crisp pixels, playful arcade vibe.",
+      "Create ONE isolated full-body game character for ARTOY's The Lost Fragments adventure. Use the supplied artwork as the sole identity reference. Preserve its distinctive face, silhouette, costume, markings and palette; do not substitute a generic mascot. If the artwork is abstract or has several characters, interpret its central subject as one coherent little art spirit. Polished hand-painted 2.5D storybook game art, readable chunky silhouette, gentle three-quarter front view, standing idle, complete body and feet visible, centered with minimal empty margin. Soft warm light from the upper left. Plain pure white background (#FFFFFF) for compositing. No floor, shadow, scene, UI, text, border, checkerboard, sprite sheet or additional poses. This single image will be used as the actual playable hero in a fixed explore-and-dash game; do not generate game rules or a game screenshot.",
   },
   {
     label: "Virtual Pet",
@@ -78,12 +78,18 @@ async function generateOne(apiKey: string, imageDataUrl: string, item: Item): Pr
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    return { label: item.label, kind: item.kind, image: null, error: `${res.status}: ${text.slice(0, 200)}` };
+    return {
+      label: item.label,
+      kind: item.kind,
+      image: null,
+      error: `${res.status}: ${text.slice(0, 200)}`,
+    };
   }
 
   const json = (await res.json()) as { data?: Array<{ b64_json?: string }> };
   const b64 = json.data?.[0]?.b64_json;
-  if (!b64) return { label: item.label, kind: item.kind, image: null, error: "No image data returned" };
+  if (!b64)
+    return { label: item.label, kind: item.kind, image: null, error: "No image data returned" };
   return { label: item.label, kind: item.kind, image: `data:image/png;base64,${b64}` };
 }
 
@@ -103,10 +109,26 @@ export const Route = createFileRoute("/api/generate-universe")({
 
         const { imageDataUrl } = body;
         if (!imageDataUrl || !imageDataUrl.startsWith("data:image/")) {
-          return Response.json({ error: "imageDataUrl must be a data:image/... URL" }, { status: 400 });
+          return Response.json(
+            { error: "imageDataUrl must be a data:image/... URL" },
+            { status: 400 },
+          );
         }
 
-        const results = await Promise.all(ITEMS.map((i) => generateOne(apiKey, imageDataUrl, i)));
+        const results = await Promise.all(
+          ITEMS.map(async (item): Promise<Result> => {
+            try {
+              return await generateOne(apiKey, imageDataUrl, item);
+            } catch {
+              return {
+                label: item.label,
+                kind: item.kind,
+                image: null,
+                error: "Asset generation unavailable",
+              };
+            }
+          }),
+        );
 
         const anySuccess = results.some((r) => r.image);
         if (!anySuccess) {
