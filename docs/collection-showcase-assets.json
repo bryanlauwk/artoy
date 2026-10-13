@@ -1,0 +1,18 @@
+[
+  {
+    "path": "src/assets/artoy/case-study/booboi-concepts-v1.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "9afa9a3a79baeae34ef8a06272e5ab16bac32a1247c3da5bdd3ccecec347a900",
+    "source": "built-in imagegen, original character + approved figurine reference",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/jaygyii-concepts-v1.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "c1fc7307ffa5ee4a7da4f6b89d2de1729c88a427c47838927eb9f2f9175d2f9e",
+    "source": "built-in imagegen, original character + approved figurine reference",
+    "live_pipeline_verified": false
+  }
+]
