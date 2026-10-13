@@ -1,158 +1,63 @@
-import { useRef, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ArrowRight } from "lucide-react";
 import lunarie from "@/assets/artoy/lunarie.png";
 import booboi from "@/assets/artoy/booboi.png";
 import jaygyii from "@/assets/artoy/jaygyii.png";
-import nova from "@/assets/artoy/avatar-1.png";
-import mochi from "@/assets/artoy/avatar-2.png";
-import hexx from "@/assets/artoy/avatar-3.png";
-
-const characters = [
-  {
-    name: "Lunarie",
-    type: "Character + collectible concepts",
-    image: lunarie,
-    description:
-      "A pink-haired rebel with a universe of possibilities. Imagine her next collectible.",
-  },
-  {
-    name: "Booboi",
-    type: "Collectible character",
-    image: booboi,
-    description:
-      "Big personality, little character. A playful starting point for your next collectible.",
-  },
-  {
-    name: "Jaygyii",
-    type: "Art + Collectibles",
-    image: jaygyii,
-    description: "A world of character, ready to inspire a new story.",
-  },
-  {
-    name: "Nova",
-    type: "Sci-fi character",
-    image: nova,
-    description: "A sci-fi pilot exploring a cyan-lit plaza. Try the Nova sample in the creator.",
-  },
-  {
-    name: "Mochi",
-    type: "Pastel character",
-    image: mochi,
-    description: "A pastel mascot at home in a pink town. Choose Mochi as a sample in the studio.",
-  },
-  {
-    name: "Hexx",
-    type: "Neon character",
-    image: hexx,
-    description: "Neon punk energy in an arcade alley. Choose Hexx as a sample in the studio.",
-  },
+import lunarieToy from "@/assets/artoy/game/lunarie-collectible-v1.webp";
+import booboiToy from "@/assets/artoy/game/booboi-collectible-v1.webp";
+import jaygyiiToy from "@/assets/artoy/game/jaygyii-collectible-v1.webp";
+const examples = [
+  { name: "Lunarie", art: lunarie, toy: lunarieToy },
+  { name: "BooBoi", art: booboi, toy: booboiToy },
+  { name: "Jaygyii", art: jaygyii, toy: jaygyiiToy },
 ];
 export function Community({ onCreate }: { onCreate: () => void }) {
-  const gallery = useRef<HTMLDivElement>(null);
-  const selectedCard = useRef<HTMLButtonElement | null>(null);
-  const openingCreator = useRef(false);
-  const [active, setActive] = useState<(typeof characters)[number] | null>(null);
-  const [expanded, setExpanded] = useState(false);
   return (
-    <section id="explore" className="artoy-community">
+    <section id="explore" className="artoy-example-strip">
       <div className="artoy-container">
-        <div className="section-heading">
+        <div className="example-strip-heading">
           <div>
-            <h2>Meet the ARTOY characters</h2>
-            <p>Imagine what yours could become.</p>
+            <p className="collection-kicker">A LITTLE PREVIEW OF WHAT YOURS COULD BECOME</p>
+            <h2>From artwork to collectible.</h2>
           </div>
-          <button
-            className="artoy-text-link"
-            onClick={() => setExpanded(!expanded)}
-            aria-expanded={expanded}
-            aria-controls="character-gallery"
-          >
-            {expanded ? "Show less" : "View all"} <ArrowRight size={17} />
+          <button className="artoy-text-link" onClick={onCreate}>
+            Create your collection <ArrowRight size={16} />
           </button>
         </div>
         <div
-          id="character-gallery"
-          ref={gallery}
-          className={`character-gallery ${expanded ? "expanded" : ""}`}
+          className="example-transformations"
+          tabIndex={0}
+          aria-label="Artwork to collectible examples"
         >
-          {characters.map((character) => (
-            <button
-              key={character.name}
-              className="character-card"
-              onClick={(event) => {
-                selectedCard.current = event.currentTarget;
-                openingCreator.current = false;
-                setActive(character);
-              }}
-              aria-label={`Explore ${character.name}: ${character.type}`}
-            >
-              <img src={character.image} alt="" width="300" height="360" loading="lazy" />
-              <span className="character-info">
-                <strong>{character.name}</strong>
-                <span>{character.type}</span>
-                <small>
-                  <Sparkles size={12} /> ARTOY original
-                </small>
-              </span>
-              <ArrowRight className="card-arrow" size={18} />
-            </button>
+          {examples.map((example) => (
+            <article key={example.name} className="example-transformation">
+              <div className="example-art">
+                <img
+                  src={example.art}
+                  alt={`${example.name} original character artwork`}
+                  width="120"
+                  height="120"
+                  loading="lazy"
+                />
+                <span>Original art</span>
+              </div>
+              <ArrowRight size={18} aria-hidden="true" />
+              <div className="example-toy">
+                <img
+                  src={example.toy}
+                  alt={`${example.name} matching figurine concept`}
+                  width="180"
+                  height="180"
+                  loading="lazy"
+                />
+                <span>{example.name} collectible</span>
+              </div>
+            </article>
           ))}
         </div>
-        <div className="gallery-bottom">
-          <div>
-            <button
-              className="icon-button"
-              aria-label="Previous characters"
-              onClick={() => gallery.current?.scrollBy({ left: -280, behavior: "smooth" })}
-              hidden={expanded}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              className="icon-button"
-              aria-label="Next characters"
-              onClick={() => gallery.current?.scrollBy({ left: 280, behavior: "smooth" })}
-              hidden={expanded}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
+        <p className="example-strip-note">
+          Illustrative concept examples. Your collection is generated from your own artwork.
+        </p>
       </div>
-      <Dialog
-        open={!!active}
-        onOpenChange={(open) => {
-          if (!open) setActive(null);
-        }}
-      >
-        <DialogContent
-          className="character-dialog"
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            if (!openingCreator.current) selectedCard.current?.focus();
-          }}
-        >
-          {active && (
-            <>
-              <img src={active.image} alt={`${active.name} character artwork`} />
-              <p className="eyebrow">ARTOY CHARACTER SHOWCASE</p>
-              <DialogTitle>{active.name}</DialogTitle>
-              <DialogDescription>{active.description}</DialogDescription>
-              <button
-                className="artoy-cta"
-                onClick={() => {
-                  openingCreator.current = true;
-                  setActive(null);
-                  onCreate();
-                }}
-              >
-                Create your own character <ArrowRight size={16} />
-              </button>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
