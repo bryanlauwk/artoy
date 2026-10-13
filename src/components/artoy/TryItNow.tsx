@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import {
   ArrowRight,
-  ArrowLeft,
   Check,
   CloudUpload,
   Download,
@@ -81,38 +80,43 @@ export function TryItNow({ session }: { session: CreatorSession }) {
     }
   }
   return (
-    <section id="try" className="creator-studio">
-      <header className="studio-header">
-        <p className="studio-eyebrow">
-          <Sparkles size={14} /> Your creative studio
-        </p>
-        <h2>
-          {generating
-            ? "A new world is taking shape."
-            : results
-              ? `${source?.name}’s universe`
-              : "Start with a character."}
-        </h2>
-        <p>
-          {generating
-            ? "Creating your character identity, illustrated world and three collectible concepts."
-            : results
-              ? "Your character. Its world. Your collection."
-              : "Upload your art or choose a sample. Make it a world of its own."}
-        </p>
-        <ol className="studio-steps" aria-label="Creation progress">
-          {["Choose artwork", "Generate", "Explore"].map((label, index) => (
-            <li
-              key={label}
-              className={index + 1 === step ? "current" : index + 1 < step ? "complete" : ""}
-              aria-current={index + 1 === step ? "step" : undefined}
-            >
-              <span>{index + 1 < step ? <Check size={13} /> : index + 1}</span>
-              {label}
-            </li>
-          ))}
-        </ol>
-      </header>
+    <section
+      id="try"
+      className={`creator-studio ${results && !generating ? "collection-active" : ""}`}
+    >
+      {(!results || generating) && (
+        <header className="studio-header">
+          <p className="studio-eyebrow">
+            <Sparkles size={14} /> Your creative studio
+          </p>
+          <h2>
+            {generating
+              ? "A new world is taking shape."
+              : results
+                ? `${source?.name}’s universe`
+                : "Start with a character."}
+          </h2>
+          <p>
+            {generating
+              ? "Creating your character identity, illustrated world and three collectible concepts."
+              : results
+                ? "Your character. Its world. Your collection."
+                : "Upload your art or choose a sample. Make it a world of its own."}
+          </p>
+          <ol className="studio-steps" aria-label="Creation progress">
+            {["Choose artwork", "Generate", "Explore"].map((label, index) => (
+              <li
+                key={label}
+                className={index + 1 === step ? "current" : index + 1 < step ? "complete" : ""}
+                aria-current={index + 1 === step ? "step" : undefined}
+              >
+                <span>{index + 1 < step ? <Check size={13} /> : index + 1}</span>
+                {label}
+              </li>
+            ))}
+          </ol>
+        </header>
+      )}
 
       {error && (
         <div className="studio-error" role="alert">
@@ -253,29 +257,32 @@ export function TryItNow({ session }: { session: CreatorSession }) {
 
       {!generating && results && source && (
         <div className="studio-output">
-          <div className="studio-output-summary">
-            <div className="studio-source">
-              <img src={source.image} alt="Your original artwork" />
+          <header className="collection-page-header">
+            <div className="collection-topline">
+              <span className="collection-wordmark">ARTOY</span>
               <div>
-                <strong>
+                <span className="collection-ready">
                   {completed} of {results.length} images ready
-                </strong>
-                <span>
-                  {completed < results.length
-                    ? "Some images didn’t finish. You can still download the completed ones."
-                    : "Your character, reimagined."}
                 </span>
+                <button
+                  className="studio-text-button"
+                  disabled={busy}
+                  onClick={() => setChangingCharacter(true)}
+                >
+                  New character <ArrowRight size={15} />
+                </button>
               </div>
             </div>
-            <button
-              className="studio-text-button"
-              disabled={busy}
-              onClick={() => setChangingCharacter(true)}
-            >
-              <ArrowLeft size={15} />
-              New character
-            </button>
-          </div>
+            <h2>
+              {source.name}’s collection<span aria-hidden="true"> ✦</span>
+            </h2>
+            <p>Your character. Its world. Your collection.</p>
+            {completed < results.length && (
+              <small>
+                Some images didn’t finish. You can still explore and save the completed ones.
+              </small>
+            )}
+          </header>
           {changingCharacter && (
             <div className="studio-change-prompt" role="group" aria-label="Start a new character">
               <p>Download your favorites first. Starting a new character clears these results.</p>
@@ -306,10 +313,6 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             </div>
           )}
           <div className="collection-board">
-            <div className="collection-board-heading">
-              <span>ARTOY / CHARACTER COLLECTION</span>
-              <p>From your illustration to a little world worth collecting.</p>
-            </div>
             <section className="collection-identity" aria-labelledby="identity-heading">
               <div>
                 <p className="collection-kicker">01 / THE CHARACTER & ITS WORLD</p>
@@ -337,11 +340,6 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                         aria-pressed={chosen?.label === item.label}
                         onClick={() => setSelectedConcept(item.label)}
                       >
-                        <img
-                          src={item.image}
-                          alt={`${item.label} concept from ${source.name}`}
-                          loading="lazy"
-                        />
                         <span>
                           {item.label}
                           <small>
@@ -350,6 +348,11 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                               : "Explore this concept"}
                           </small>
                         </span>
+                        <img
+                          src={item.image}
+                          alt={`${item.label} concept from ${source.name}`}
+                          loading="lazy"
+                        />
                       </button>
                     ) : (
                       <div className="studio-result-missing">
