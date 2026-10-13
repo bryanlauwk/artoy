@@ -17,7 +17,11 @@ test("identity and motion requests upload references through the multipart edit 
     assert.equal(requests.length, 2);
     assert.equal(requests[0].url, "https://ai.gateway.lovable.dev/v1/images/edits");
     assert.equal(requests[0].options.headers["Content-Type"], undefined);
-    assert.equal(requests[0].options.body.getAll("image[]").length, 1);
+    assert.equal(requests[0].options.headers["Lovable-API-Key"], "test-key");
+    assert.equal(requests[0].options.headers["X-Lovable-AIG-SDK"], "tanstack-ai");
+    assert.equal(requests[0].options.body.get("stream"), "false");
+    assert.equal(requests[0].options.body.getAll("image").length, 1);
+    assert.equal(requests[0].options.body.getAll("image[]").length, 0);
     const form = requests[1].options.body;
     assert.equal(form.get("size"), "1536x1024");
     assert.equal(form.getAll("image[]").length, 2);
@@ -26,10 +30,10 @@ test("identity and motion requests upload references through the multipart edit 
     assert.match(form.get("prompt"), /original identity/);
     await generateOne("test-key", original, WORLD_RELICS, hero);
     const world = requests[2].options.body;
-    assert.equal(world.get("size"), "2048x512");
+    assert.equal(world.get("size"), "1536x1024");
     assert.equal(world.getAll("image[]").length, 2);
     assert.equal(await world.getAll("image[]")[1].text(), "hero");
-    assert.match(world.get("prompt"), /THREE equal cells/);
+    assert.match(world.get("prompt"), /THREE equal vertical cells/);
   } finally {
     globalThis.fetch = realFetch;
   }

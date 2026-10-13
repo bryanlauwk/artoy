@@ -65,8 +65,12 @@ export function prepareRelics(
   identity: WorldIdentity,
 ): WorldRelics | null {
   const aspect = image.naturalWidth / image.naturalHeight;
-  // The provider emits a wide 4:1 canvas containing three equal columns.
-  if (layout === "strip-3x1" && (aspect < 2.5 || aspect > 4.3)) return null;
+  // Three columns on the gateway's 3:2 canvas; older wide strips remain compatible.
+  if (
+    layout === "strip-3x1" &&
+    !((aspect >= 1.4 && aspect <= 1.6) || (aspect >= 2.5 && aspect <= 4.3))
+  )
+    return null;
   if (layout === "atlas-3x3" && (aspect < 0.85 || aspect > 1.15 || identity.relicRow === null))
     return null;
   const row = layout === "atlas-3x3" ? identity.relicRow! : 0;

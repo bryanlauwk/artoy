@@ -64,7 +64,7 @@ export const WORLD_RELICS: Item = {
   label: "World Relics",
   kind: "experience",
   prompt:
-    "Create a precise environment asset strip for the supplied character's mysterious game world. First reference is the original artwork and second is the approved playable hero: preserve their distinctive visual motifs, costume details, shapes and palette. ONE wide 4:1 horizontal strip with exactly THREE equal cells side by side in one row. Cell 1: a small shrine crown inspired by the character's most recognizable accessory. Cell 2: an ancient guardian faceplate inspired by the character, with readable glowing eyes. Cell 3: a magical portal crest inspired by that same identity. Each is ONE isolated painted 2.5D object, gentle three-quarter front camera, upper-left moonlight, restrained luminous accents, rich material detail, clear silhouette. Every object completely inside its own cell with at least 15 percent blank margin on all sides. Same scale and camera. Pure white background (#FFFFFF) for compositing; no floor, shadows, landscape, scene, UI, text, grid lines, borders or checkerboard. Do not include a full character or a screenshot. The objects decorate a fixed game map; do not invent mechanics.",
+    "Create a precise environment asset sheet for the supplied character's mysterious game world. First reference is the original artwork and second is the approved playable hero: preserve their distinctive visual motifs, costume details, shapes and palette. ONE landscape 3:2 image with exactly THREE equal vertical cells side by side in one row. Cell 1: a small shrine crown inspired by the character's most recognizable accessory. Cell 2: an ancient guardian faceplate inspired by the character, with readable glowing eyes. Cell 3: a magical portal crest inspired by that same identity. Each is ONE isolated painted 2.5D object, gentle three-quarter front camera, upper-left moonlight, restrained luminous accents, rich material detail, clear silhouette. Every object completely inside its own cell with at least 15 percent blank margin on all sides. Same scale and camera. Pure white background (#FFFFFF) for compositing; no floor, shadows, landscape, scene, UI, text, grid lines, borders or checkerboard. Do not include a full character or a screenshot. The objects decorate a fixed game map; do not invent mechanics.",
 };
 
 export async function generateOne(
@@ -78,23 +78,28 @@ export async function generateOne(
   form.set("model", "google/gemini-3.1-flash-image");
   form.set("prompt", item.prompt);
   form.set("n", "1");
+  form.set("stream", "false");
   form.set("output_format", "png");
-  if (item.label === "Game Motion") form.set("size", "1536x1024");
-  if (item.label === "World Relics") form.set("size", "2048x512");
-  for (const [index, source] of [imageDataUrl, heroReference].filter(Boolean).entries()) {
+  if (item.label === "Game Motion" || item.label === "World Relics") form.set("size", "1536x1024");
+  const sources = [imageDataUrl, heroReference].filter(Boolean);
+  for (const [index, source] of sources.entries()) {
     const match = source!.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
     if (!match)
       return { label: item.label, kind: item.kind, image: null, error: "Invalid reference image" };
     const bytes = Buffer.from(match[2], "base64");
     form.append(
-      "image[]",
+      sources.length === 1 ? "image" : "image[]",
       new Blob([bytes], { type: match[1] }),
       `source-${index}.${match[1].split("/")[1]}`,
     );
   }
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}` },
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Lovable-API-Key": apiKey,
+      "X-Lovable-AIG-SDK": "tanstack-ai",
+    },
     body: form,
     signal: AbortSignal.timeout(120_000),
   });
