@@ -58,6 +58,44 @@ export function resolveWorldIdentity(id?: string | null, name?: string): WorldId
  */
 export const BACKDROP_RECT = { x: 0, y: 29, width: 960, height: 720 } as const;
 
+/** Remove only a thin, full-height grid divider with a clean white gutter beside it. */
+function removeGeneratedDividers(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  const pixels = ctx.getImageData(0, 0, width, height).data;
+  const limit = Math.min(10, Math.max(3, Math.floor(width * 0.025)));
+  for (const side of ["left", "right"] as const) {
+    const columns = Array.from({ length: limit + 3 }, (_, offset) => {
+      const x = side === "left" ? offset : width - 1 - offset;
+      let blank = 0;
+      let neutralDark = 0;
+      for (let y = 0; y < height; y++) {
+        const i = (y * width + x) * 4;
+        const r = pixels[i],
+          g = pixels[i + 1],
+          b = pixels[i + 2],
+          a = pixels[i + 3];
+        if (a < 30 || (r > 238 && g > 238 && b > 238)) blank++;
+        else if (a > 230 && Math.max(r, g, b) < 160 && Math.max(r, g, b) - Math.min(r, g, b) < 30)
+          neutralDark++;
+      }
+      return { blank: blank / height, dark: neutralDark / height };
+    });
+    let divider = false;
+    for (let offset = 0; offset < limit; offset++) {
+      if (columns[offset].dark > 0.97) divider = true;
+      if (
+        divider &&
+        columns[offset].blank > 0.995 &&
+        columns[offset + 1].blank > 0.995 &&
+        columns[offset + 2].blank > 0.995
+      ) {
+        // Keep the gutter and every interior pixel. Normal clipping/scene checks run next.
+        ctx.clearRect(side === "left" ? 0 : width - offset, 0, offset, height);
+        break;
+      }
+    }
+  }
+}
+
 /** Reject scene strips and malformed sheets; failed relics use the original-art sigil. */
 export function prepareRelics(
   image: HTMLImageElement,
@@ -91,6 +129,7 @@ export function prepareRelics(
       const ctx = cell.getContext("2d", { willReadFrequently: true });
       if (!ctx) throw new Error("Canvas unavailable");
       ctx.drawImage(image, left, top, width, height, 0, 0, width, height);
+      if (layout === "strip-3x1") removeGeneratedDividers(ctx, width, height);
       const raw = ctx.getImageData(0, 0, width, height).data;
       let touched = 0;
       let boundary = 0;

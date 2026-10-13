@@ -161,3 +161,13 @@ The PR #6 header/cardinality correction still returned upstream HTTP 400 for all
 The endpoint now restores the exact JSON `/v1/images/generations` request and `google/gemini-3.1-flash-image-preview` model that successfully generated eight Nova outputs earlier in this session. Original artwork is passed as an `image_url` content part; optional motion and relic requests append the approved hero as a second reference. Layout remains in the prompt; no unverified size field is added to this restored contract. Reference validation, isolated failures, timeout, partial results and sanitized public errors remain in place. An `X-ARTOY-Generation-Contract: reference-json-v1` response header permits checking the deployed backend using an invalid, non-generating request before a live upload.
 
 Regression checks verify reference order and identity preservation, malformed-reference rejection and safe error handling. A successful live upload on the restored endpoint is still required; the failed multipart attempts do not establish image-generation quality.
+
+## Live upload verification and generated-sheet guards
+
+On 13 October 2026, 08:48:22–08:49:00 UTC, one real Lunarie upload to the published site returned HTTP 200 with **all ten generated images** in 38 seconds. The response identified `reference-json-v1`. This confirms the restored JSON integration works in this deployed project; the multipart migration was the cause of the earlier failures.
+
+The generated full-body hero and figurine retained the pink hair, cap, headphones and skull clothing motif. The optional motion sheet included unwanted pose captions and near-identical running poses. The relic sheet contained valid isolated identity-specific crown, guardian and portal objects, but added two full-height black divider lines. Successful generation alone therefore does not establish asset quality.
+
+The exact returned game images were saved and replayed through the public frontend without additional provider calls. Movement, dash, pause/time freeze, all three fragments, escape, win, generated figurine reveal and image download passed with no browser or network errors. An initial automated dash check read the HUD at 80ms; allowing 250ms resolved that harness timing issue without changing game controls.
+
+The parser follow-up rejects captioned motion sheets to the intact generated hero and narrowly removes thin vertical separators at known relic-cell boundaries before applying existing scene/clipping checks. It does not attempt to repair overlapping poses or infer a better walk cycle. Curated benchmark animations remain available. Broader arbitrary-art and physical-device quality coverage remain open.
