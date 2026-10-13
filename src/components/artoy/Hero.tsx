@@ -115,7 +115,9 @@ export function Hero({
           </div>
         </div>
         <p className="hand-note hero-reassurance">
-          No art? Try a sample! <span aria-hidden="true">⤴</span>
+          <a href="#explore">
+            See a complete collection <span aria-hidden="true">↓</span>
+          </a>
         </p>
       </div>
       <p className="studio-sticker">
