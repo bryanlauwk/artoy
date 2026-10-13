@@ -109,6 +109,17 @@ export function FragmentQuest({
   const [compact, setCompact] = useState(false);
   const [collectibleFailed, setCollectibleFailed] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const openArchive = () => {
+    setRevealed(true);
+    window.requestAnimationFrame(() => {
+      const reward = root.current?.querySelector<HTMLElement>(".quest-reward");
+      reward?.scrollIntoView?.({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "center",
+      });
+      reward?.focus({ preventScroll: true });
+    });
+  };
   useEffect(() => {
     setRevealed(false);
     if (hud.phase !== "won") return;
@@ -621,6 +632,11 @@ export function FragmentQuest({
               <button className="quest-primary" onClick={restart}>
                 <RotateCcw size={16} /> {hud.phase === "won" ? "Beat your score" : "Try again"}
               </button>
+              {hud.phase === "won" && (
+                <button className="quest-primary quest-archive-cta" onClick={openArchive}>
+                  <Sparkles size={16} /> Open character archive
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -629,6 +645,8 @@ export function FragmentQuest({
         <section
           className={`quest-reward ${revealed ? "is-revealed" : "is-sealed"}`}
           aria-label="Collectible preview revealed"
+          aria-live="polite"
+          tabIndex={-1}
         >
           {!revealed && (
             <button className="quest-unseal" onClick={() => setRevealed(true)}>

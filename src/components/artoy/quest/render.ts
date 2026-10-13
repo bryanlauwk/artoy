@@ -350,6 +350,31 @@ export function renderQuest(
     ])
       tree(ctx, x, y, z, x < 300 ? "#93a790" : p.secondary);
   }
+  // Let each creator's colors seep into the shared archive world, then brighten as
+  // their artwork fragments are restored.
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  SHRINES.forEach((shrine, i) => {
+    const restored = s.fragments[i];
+    const radius = restored ? 132 : 92;
+    const bloom = ctx.createRadialGradient(shrine.x, shrine.y, 4, shrine.x, shrine.y, radius);
+    bloom.addColorStop(0, restored ? p.glow : i === 1 ? p.secondary : p.primary);
+    bloom.addColorStop(0.24, i === 1 ? p.secondary : p.primary);
+    bloom.addColorStop(1, "transparent");
+    ctx.globalAlpha =
+      (restored ? 0.22 : 0.095) + (!assets.reducedMotion ? Math.sin(t * 1.7 + i) * 0.018 : 0);
+    ctx.fillStyle = bloom;
+    ctx.fillRect(shrine.x - radius, shrine.y - radius, radius * 2, radius * 2);
+    if (restored) {
+      ctx.globalAlpha = 0.32;
+      ctx.strokeStyle = p.glow;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(shrine.x, shrine.y + 7, 47 + Math.sin(t * 2 + i) * 3, 23, 0, 0, TAU);
+      ctx.stroke();
+    }
+  });
+  ctx.restore();
   for (const rock of ROCKS) {
     ellipse(ctx, rock.x + 5, rock.y + 9, rock.r + 4, rock.r * 0.6, "#0b253855");
     ctx.beginPath();

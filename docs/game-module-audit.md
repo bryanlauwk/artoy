@@ -92,3 +92,15 @@ Reference-image requests now use multipart `/v1/images/edits`, rather than the u
 Motion prompt: preserve Lunarie's pink bob, cap, headphones, face and skull jacket; create eight isolated full-body poses in a regular 4-by-2 sheet with clear opposite run strides and transparent background. The lower body is a curated interpretation of the portrait reference. World prompt: transform the authored island layout into a richly painted mysterious moonlit archive with violet crystals, ruined shrines, shadow grove, open traversable paths and no characters or UI. Both assets were generated from existing project references, inspected and optimized for the repository.
 
 ![Public deployment generated eight Nova outputs; this is the older deployed flow](previews/live-generation-baseline.jpg)
+
+## World and collectible follow-up (13 October 2026)
+
+The shared moonlit island now picks up a soft color bloom at each landmark from the selected artwork palette. Restored fragments brighten their shrine and add a visible resonance ring, so the world changes as the player's universe is repaired while keeping the same map and rules for every character.
+
+The win overlay now has an **Open character archive** action. It reveals the reward immediately and moves focus to the collectible card, where the player can save the concept preview or continue to the existing collectible concepts. The reduced-motion preference uses an instant scroll. The archive remains win-only; when the figurine asset is missing or fails to load, the original art card remains the fallback.
+
+### Verification and limits
+
+- Gameplay and generation contract tests pass; TypeScript, changed-file ESLint and the production build pass.
+- The supplied reference images and the repository's Lunarie, BooBoi and Jaygyii art were reviewed as visual references. The three project examples span anime, cozy mascot and fantasy-creature styles.
+- The saved DOM interaction harness could not run because its `@napi-rs/canvas` dependency is absent from this checkout. A local production preview also could not bind a port (`EPERM`). No live AI generation or real phone/desktop browser playthrough was available, so the reveal navigation, canvas rendering across inputs and responsive behavior still need hands-on confirmation.
