@@ -11,10 +11,10 @@ import hexx from "@/assets/artoy/avatar-3.png";
 const characters = [
   {
     name: "Lunarie",
-    type: "Game + toy concepts",
+    type: "Character + collectible concepts",
     image: lunarie,
     description:
-      "A pink-haired rebel with a universe of possibilities. Imagine her next adventure.",
+      "A pink-haired rebel with a universe of possibilities. Imagine her next collectible.",
   },
   {
     name: "Booboi",

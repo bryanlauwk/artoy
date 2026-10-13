@@ -56,10 +56,10 @@ export function Transformation() {
         </div>
         <ArrowRight className="transform-arrow" aria-hidden="true" />
         <div className="transform-cell">
-          <p className="hand-note">Imagine a game</p>
+          <p className="hand-note">Build a little world</p>
           <BunnyArtwork
-            variant="game"
-            alt="The same bunny jumping through a colorful platform game"
+            variant="collectible"
+            alt="The bunny as a boxed collectible with matching artwork"
           />
         </div>
         <div className="transform-cell">
@@ -67,8 +67,8 @@ export function Transformation() {
           <BunnyArtwork variant="collectible" alt="The bunny as a keychain and boxed collectible" />
         </div>
         <div className="transform-cell">
-          <p className="hand-note">Make it your own</p>
-          <BunnyArtwork variant="pet" alt="The bunny as a virtual pet on a phone" />
+          <p className="hand-note">Collect the series</p>
+          <BunnyArtwork variant="character" alt="The bunny as a collectible character" />
           <span className="worlds-bubble hand-note">
             Same art.
             <br />
