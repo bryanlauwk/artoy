@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-type SampleId = "nova" | "mochi" | "hexx";
 export type ExpansionType = "product-views" | "packaging" | "series";
 export const DETAIL_OPTIONS = [
   {
@@ -14,22 +13,13 @@ export const DETAIL_OPTIONS = [
   },
   { id: "series", label: "Collect the Series", description: "Three related themed editions" },
 ] as const;
-import nova from "@/assets/artoy/avatar-1.png";
-import mochi from "@/assets/artoy/avatar-2.png";
-import hexx from "@/assets/artoy/avatar-3.png";
-
-export const SAMPLES = [
-  { id: "nova", src: nova, name: "Nova", tagline: "Sci-fi adventurer" },
-  { id: "mochi", src: mochi, name: "Mochi", tagline: "Pastel daydreamer" },
-  { id: "hexx", src: hexx, name: "Hexx", tagline: "Neon rebel" },
-] satisfies { id: SampleId; src: string; name: string; tagline: string }[];
 export type Creation = {
   label: string;
   kind: "experience" | "merch";
   image: string | null;
   error?: string;
 };
-type Source = { image: string; name: string; sampleId: SampleId | null };
+type Source = { image: string; name: string; sampleId: null };
 
 export function useCreatorSession(initialFile?: File) {
   const [source, setSource] = useState<Source | null>(null);

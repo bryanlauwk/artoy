@@ -1,17 +1,15 @@
 import { useRef, useState } from "react";
 import {
   ArrowRight,
-  Check,
   CloudUpload,
   Download,
   Loader2,
   RefreshCw,
   Sparkles,
-  CheckCircle2,
   AlertCircle,
 } from "lucide-react";
 import { joinWaitlist } from "@/lib/waitlist.functions";
-import { SAMPLES, DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
+import { DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
 
 function ResultCards({ items }: { items: Creation[] }) {
   return (
@@ -57,7 +55,6 @@ export function TryItNow({ session }: { session: CreatorSession }) {
   const [email, setEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const step = generating ? 2 : results ? 3 : 1;
   const completed = results?.filter((item) => item.image).length ?? 0;
   const experiences = results?.filter((item) => item.kind === "experience") ?? [];
   const merch = results?.filter((item) => item.kind === "merch") ?? [];
@@ -84,37 +81,13 @@ export function TryItNow({ session }: { session: CreatorSession }) {
       id="try"
       className={`creator-studio ${results && !generating ? "collection-active" : ""}`}
     >
-      {(!results || generating) && (
+      {!results && !generating && (
         <header className="studio-header">
           <p className="studio-eyebrow">
             <Sparkles size={14} /> Your creative studio
           </p>
-          <h2>
-            {generating
-              ? "A new world is taking shape."
-              : results
-                ? `${source?.name}’s universe`
-                : "Start with a character."}
-          </h2>
-          <p>
-            {generating
-              ? "Creating your character identity, illustrated world and three collectible concepts."
-              : results
-                ? "Your character. Its world. Your collection."
-                : "Upload your art or choose a sample. Make it a world of its own."}
-          </p>
-          <ol className="studio-steps" aria-label="Creation progress">
-            {["Choose artwork", "Generate", "Explore"].map((label, index) => (
-              <li
-                key={label}
-                className={index + 1 === step ? "current" : index + 1 < step ? "complete" : ""}
-                aria-current={index + 1 === step ? "step" : undefined}
-              >
-                <span>{index + 1 < step ? <Check size={13} /> : index + 1}</span>
-                {label}
-              </li>
-            ))}
-          </ol>
+          <h2>Start with your artwork.</h2>
+          <p>Create its world and three collectible concepts.</p>
         </header>
       )}
 
@@ -164,34 +137,6 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               </span>
             </button>
           </div>
-          <div className="studio-divider">
-            <span>or start with a sample</span>
-          </div>
-          <div className="studio-samples">
-            {SAMPLES.map((sample) => (
-              <button
-                key={sample.id}
-                aria-pressed={source?.sampleId === sample.id}
-                className={source?.sampleId === sample.id ? "selected" : ""}
-                onClick={() =>
-                  session.chooseSource({
-                    image: sample.src,
-                    name: sample.name,
-                    sampleId: sample.id,
-                  })
-                }
-              >
-                <img src={sample.src} alt="" />
-                <span>
-                  <strong>{sample.name}</strong>
-                  <small>{sample.tagline}</small>
-                </span>
-                {source?.sampleId === sample.id && (
-                  <CheckCircle2 size={21} className="sample-check" />
-                )}
-              </button>
-            ))}
-          </div>
           <div className="studio-selection">
             {source ? (
               <div className="studio-source">
@@ -202,7 +147,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 </div>
               </div>
             ) : (
-              <p>Select a character to get started.</p>
+              <p>Upload your artwork to get started.</p>
             )}
             <button
               className="artoy-cta"
@@ -435,11 +380,6 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                               <Sparkles size={16} />
                             )}
                             {pending ? "Creating…" : `Generate ${option.label.toLowerCase()}`}
-                          </button>
-                        )}
-                        {pending && (
-                          <button className="studio-text-button" onClick={session.cancel}>
-                            Stop expansion
                           </button>
                         )}
                       </article>

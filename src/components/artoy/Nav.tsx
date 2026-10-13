@@ -13,14 +13,6 @@ export function Nav({ onCreate }: { onCreate: () => void }) {
         className={menuOpen ? "artoy-links is-open" : "artoy-links"}
         aria-label="Main navigation"
       >
-        <button
-          onClick={() => {
-            setMenuOpen(false);
-            onCreate();
-          }}
-        >
-          Create
-        </button>
         <a href="#explore" onClick={() => setMenuOpen(false)}>
           Explore
         </a>

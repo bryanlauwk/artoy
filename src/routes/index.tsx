@@ -2,7 +2,6 @@ import { lazy, Suspense, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
-import { Transformation } from "@/components/artoy/Transformation";
 import { Community } from "@/components/artoy/Community";
 import { createFileRoute } from "@tanstack/react-router";
 import { Nav } from "@/components/artoy/Nav";
@@ -55,9 +54,8 @@ function Index() {
       <Nav onCreate={() => openCreator()} />
       <main id="main">
         <Hero onCreate={openCreator} hasSession={!!creatorSession.source} />
-        <Transformation />
-        <Community onCreate={() => openCreator()} />
-        <HowItWorks onCreate={() => openCreator()} />
+        <Community />
+        <HowItWorks />
       </main>
       <SiteFooter />
       <Dialog open={creatorOpen} onOpenChange={setCreatorOpen}>
@@ -72,8 +70,7 @@ function Index() {
         >
           <DialogTitle className="sr-only">Create your ARTOY universe</DialogTitle>
           <DialogDescription className="sr-only">
-            Upload character artwork or choose a sample to create and explore your collectible
-            collection.
+            Upload character artwork to create and explore your collectible collection.
           </DialogDescription>
           <Suspense
             fallback={

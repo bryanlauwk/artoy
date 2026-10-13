@@ -10,7 +10,7 @@ const examples = [
   { name: "BooBoi", art: booboi, toy: booboiToy },
   { name: "Jaygyii", art: jaygyii, toy: jaygyiiToy },
 ];
-export function Community({ onCreate }: { onCreate: () => void }) {
+export function Community() {
   return (
     <section id="explore" className="artoy-example-strip">
       <div className="artoy-container">
@@ -19,9 +19,6 @@ export function Community({ onCreate }: { onCreate: () => void }) {
             <p className="collection-kicker">A LITTLE PREVIEW OF WHAT YOURS COULD BECOME</p>
             <h2>From artwork to collectible.</h2>
           </div>
-          <button className="artoy-text-link" onClick={onCreate}>
-            Create your collection <ArrowRight size={16} />
-          </button>
         </div>
         <div
           className="example-transformations"
