@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 type Body = { imageDataUrl?: string };
 
-import { ITEMS, MOTION, generateOne } from "@/lib/universe-generation";
+import { ITEMS, MOTION, WORLD_RELICS, generateOne } from "@/lib/universe-generation";
 
 type Result = Awaited<ReturnType<typeof generateOne>>;
 
@@ -49,16 +49,21 @@ export const Route = createFileRoute("/api/generate-universe")({
 
         const hero = results.find((item) => item.label === "Game Character")?.image;
         if (hero) {
-          try {
-            results.push(await generateOne(apiKey, imageDataUrl, MOTION, hero));
-          } catch {
-            results.push({
-              label: MOTION.label,
-              kind: MOTION.kind,
-              image: null,
-              error: "Animation generation unavailable",
-            });
-          }
+          const gameAssets = await Promise.all(
+            [MOTION, WORLD_RELICS].map(async (item): Promise<Result> => {
+              try {
+                return await generateOne(apiKey, imageDataUrl, item, hero);
+              } catch {
+                return {
+                  label: item.label,
+                  kind: item.kind,
+                  image: null,
+                  error: "Game asset generation unavailable",
+                };
+              }
+            }),
+          );
+          results.push(...gameAssets);
         }
         const anySuccess = results.some((r) => r.image);
         if (!anySuccess) {

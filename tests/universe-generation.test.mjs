@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { generateOne, ITEMS, MOTION } from "../src/lib/universe-generation.ts";
+import { generateOne, ITEMS, MOTION, WORLD_RELICS } from "../src/lib/universe-generation.ts";
 const original = "data:image/png;base64,aGVsbG8=";
 const hero = "data:image/png;base64,aGVybw==";
 test("identity and motion requests upload references through the multipart edit contract", async () => {
@@ -24,6 +24,12 @@ test("identity and motion requests upload references through the multipart edit 
     assert.equal(await form.getAll("image[]")[0].text(), "hello");
     assert.equal(await form.getAll("image[]")[1].text(), "hero");
     assert.match(form.get("prompt"), /original identity/);
+    await generateOne("test-key", original, WORLD_RELICS, hero);
+    const world = requests[2].options.body;
+    assert.equal(world.get("size"), "2048x512");
+    assert.equal(world.getAll("image[]").length, 2);
+    assert.equal(await world.getAll("image[]")[1].text(), "hero");
+    assert.match(world.get("prompt"), /THREE equal cells/);
   } finally {
     globalThis.fetch = realFetch;
   }

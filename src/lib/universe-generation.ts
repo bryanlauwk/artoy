@@ -60,6 +60,13 @@ export const MOTION: Item = {
     "Create a precise animation sprite sheet for the supplied game hero. First reference is the original identity, second is the approved full-body hero: preserve its face, silhouette, clothing, markings and palette exactly. One rectangular 4-column by 2-row grid with EIGHT isolated full-body poses. Row 1: idle eyes open, idle blink, running stride A, running opposite stride B. Row 2: dash anticipation, dash extension, hit recoil, recovery. Every pose completely inside its own cell with at least 12% blank margin on all four sides. Same camera, scale, ground line and lighting. No overlap or cropped limbs. Clear opposite arm and leg positions for the run pair. Polished hand-painted 2.5D art. Pure white background, no floor shadow, text, labels, borders, panels or checkerboard. No scene or game UI.",
 };
 
+export const WORLD_RELICS: Item = {
+  label: "World Relics",
+  kind: "experience",
+  prompt:
+    "Create a precise environment asset strip for the supplied character's mysterious game world. First reference is the original artwork and second is the approved playable hero: preserve their distinctive visual motifs, costume details, shapes and palette. ONE wide 4:1 horizontal strip with exactly THREE equal cells side by side in one row. Cell 1: a small shrine crown inspired by the character's most recognizable accessory. Cell 2: an ancient guardian faceplate inspired by the character, with readable glowing eyes. Cell 3: a magical portal crest inspired by that same identity. Each is ONE isolated painted 2.5D object, gentle three-quarter front camera, upper-left moonlight, restrained luminous accents, rich material detail, clear silhouette. Every object completely inside its own cell with at least 15 percent blank margin on all sides. Same scale and camera. Pure white background (#FFFFFF) for compositing; no floor, shadows, landscape, scene, UI, text, grid lines, borders or checkerboard. Do not include a full character or a screenshot. The objects decorate a fixed game map; do not invent mechanics.",
+};
+
 export async function generateOne(
   apiKey: string,
   imageDataUrl: string,
@@ -73,6 +80,7 @@ export async function generateOne(
   form.set("n", "1");
   form.set("output_format", "png");
   if (item.label === "Game Motion") form.set("size", "1536x1024");
+  if (item.label === "World Relics") form.set("size", "2048x512");
   for (const [index, source] of [imageDataUrl, heroReference].filter(Boolean).entries()) {
     const match = source!.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
     if (!match)
