@@ -185,6 +185,17 @@ export function useCreatorSession(initialFile?: File) {
   const generate = () => {
     if (source && !reading) return generateSource(source);
   };
+  const chooseSample = (sample: { id: string; name: string; image: string; results: Creation[] }) => {
+    stopWork();
+    setSource({ image: sample.image, name: sample.name, sampleId: sample.id });
+    setResults(sample.results);
+    setDetails({});
+    setExpanding(null);
+    setError("");
+    setGenerating(false);
+    setReading(false);
+    setEmailSaved(false);
+  };
   const cancel = () => {
     stopWork();
     setGenerating(false);
@@ -216,6 +227,7 @@ export function useCreatorSession(initialFile?: File) {
     setError,
     uploadFile,
     chooseSource,
+    chooseSample,
     generate,
     cancel,
     reset,
