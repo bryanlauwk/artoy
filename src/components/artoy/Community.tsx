@@ -210,7 +210,7 @@ export function Community() {
                       <img
                         className="case-figurine"
                         src={example.figurine}
-                        alt={`${example.name} character figurine concept`}
+                        alt={`${example.name} character figurine`}
                         width="1024"
                         height="1024"
                         loading="lazy"
@@ -220,7 +220,7 @@ export function Community() {
                         src={example.sheet}
                         column={product.column}
                         row={0}
-                        alt={`${example.name} ${product.title.toLowerCase()} concept`}
+                        alt={`${example.name} ${product.title.toLowerCase()}`}
                       />
                     )}{" "}
                   </button>
@@ -261,7 +261,7 @@ export function Community() {
                         src={example.sheet}
                         column={item.column}
                         row={1}
-                        alt={`${example.name} ${item.title.toLowerCase()} concept`}
+                        alt={`${example.name} ${item.title.toLowerCase()}`}
                       />
                     )}
                   </button>
@@ -313,7 +313,7 @@ export function Community() {
                   {example.name}: {preview.title}
                 </DialogTitle>
                 <DialogDescription>
-                  Concept preview. Explore the details, then return to the collection.
+                  A closer look. Explore the details, then return to the collection.
                 </DialogDescription>
                 {preview.image ? (
                   <img src={preview.image} alt={`${example.name} ${preview.title}`} />
