@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { joinWaitlist } from "@/lib/waitlist.functions";
 import { DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
+import { SAMPLE_CHARACTERS } from "./prebaked";
 
 function ResultCards({ items }: { items: Creation[] }) {
   return (
@@ -63,6 +64,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
     merch.find((item) => item.image);
   const chosenDetails = chosen ? (session.details[chosen.label] ?? []) : [];
   const busy = generating || !!session.expanding;
+  const isPrebaked = !!source?.sampleId;
 
   async function saveEmail() {
     setSavingEmail(true);
