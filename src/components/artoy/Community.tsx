@@ -192,7 +192,7 @@ export function Community() {
             </figure>
           </section>
           <section className="case-study-section" aria-labelledby="case-products-title">
-            <p className="collection-kicker">02 / FROM ILLUSTRATION TO COLLECTIBLE</p>
+            <p className="collection-kicker">02 / FROM DRAWING TO KEEPSAKE</p>
             <h3 id="case-products-title">Find your favorite form.</h3>
             <div className="case-product-grid">
               {products.map((product) => (
@@ -274,18 +274,18 @@ export function Community() {
               Tap a concept to inspect it. Curated examples; products are not available to purchase.
             </p>
             <details className="case-evidence">
-              <summary>Concept sources & prototype notes</summary>
+              <summary>How these examples were made</summary>
               <div>
                 <p>
                   {example.liveVerified
-                    ? "Lunarie’s figurine is a verified saved ARTOY production output from its earlier coloured artwork. The new demo sketch is an AI-created reinterpretation, not that historic upload. World, packaging and supporting panels are curated AI visuals."
-                    : `${example.name}’s figurine and supporting panels and demo sketch are curated AI visuals based on its earlier artwork and approved collectible. They are illustrative examples, not a verified live upload-to-series run.`}
+                    ? "Lunarie’s figurine is a real saved ARTOY result from its earlier colored artwork. The new demo drawing is AI-made, not that original upload. The world, gift box and other pictures are hand-picked AI artwork."
+                    : `${example.name}’s figurine, demo drawing and supporting pictures are hand-picked AI artwork based on its earlier art and approved collectible. They are examples, not a live upload-to-collection run.`}
                 </p>
                 <p>
-                  The creator studio completed an eight-image live run from the Lunarie demo sketch
-                  on 14 October 2026. These showcase panels remain curated examples. Reference views
-                  and packaging are visual concepts, not manufacturing drawings. No physical unit
-                  has been manufactured or tested.
+                  The studio completed a full eight-picture live run from the Lunarie demo drawing
+                  on 14 October 2026. These showcase pictures remain hand-picked examples. The
+                  product views and gift box are ideas, not factory plans. No physical toy has been
+                  made or tested yet.
                 </p>
                 {example.id === "lunarie" && (
                   <a
