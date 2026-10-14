@@ -85,14 +85,14 @@ function ConceptPanel({
   );
 }
 const products = [
-  { title: "Character Figurine", note: "The character, made collectible.", column: null },
-  { title: "Miniature World", note: "A signature scene on a small base.", column: 1 },
-  { title: "Acrylic Charm", note: "The same identity, ready to carry.", column: 2 },
+  { title: "Character Figurine", note: "Your character, made collectible.", column: null },
+  { title: "Mini World", note: "A favorite scene on a small base.", column: 1 },
+  { title: "Acrylic Charm", note: "The same character, ready to carry.", column: 2 },
 ];
 const breakdown = [
-  { title: "Product Views", note: "Front / side / back", column: 0 },
-  { title: "Packaging Concept", note: "Signature box / wordmark / miniature", column: 1 },
-  { title: "Collect the Series", note: "Three related themed editions", column: 2 },
+  { title: "Every Angle", note: "Front / side / back", column: 0 },
+  { title: "Gift Box", note: "A special box with its name and a mini inside", column: 1 },
+  { title: "Collect the Series", note: "Three matching themed editions", column: 2 },
 ];
 export function Community() {
   const [selected, setSelected] = useState(0);
@@ -152,17 +152,33 @@ export function Community() {
           </div>
           <section className="case-study-section" aria-labelledby="case-world-title">
             <p className="collection-kicker" id="case-world-title">
-              01 / THE CHARACTER & ITS WORLD
+              01 / IT STARTS WITH A DRAWING
             </p>
+            <div className="case-sketch-strip">
+              <button
+                className="case-inspect"
+                aria-label={`Inspect ${example.name} demo drawing`}
+                onClick={() => setPreview({ title: "Demo drawing", image: example.original })}
+              >
+                <img src={example.original} alt={`${example.name} demo pencil drawing`} />
+                <span>Demo drawing</span>
+              </button>
+              <ArrowRight size={22} />
+              <div>
+                <strong>From a drawing to a whole collection.</strong>
+                <p>{example.motifs}</p>
+                <small>An AI-made drawing starts this example.</small>
+              </div>
+            </div>
             <figure className="case-world-hero">
               <button
                 className="case-inspect"
-                aria-label={`Inspect ${example.name} illustrated universe`}
-                onClick={() => setPreview({ title: "Illustrated Universe", image: example.world })}
+                aria-label={`Inspect ${example.name} artwork world`}
+                onClick={() => setPreview({ title: "Artwork World", image: example.world })}
               >
                 <img
                   src={example.world}
-                  alt={`${example.name} rich illustrated universe`}
+                  alt={`${example.name} colorful artwork world`}
                   width="1536"
                   height="1024"
                   loading="lazy"
@@ -170,29 +186,13 @@ export function Community() {
                 <Maximize2 size={20} />
               </button>
               <figcaption>
-                <strong>Illustrated Universe</strong>
+                <strong>Artwork World</strong>
                 <span>Explore the details</span>
               </figcaption>
             </figure>
-            <div className="case-sketch-strip">
-              <button
-                className="case-inspect"
-                aria-label={`Inspect ${example.name} demo sketch`}
-                onClick={() => setPreview({ title: "Demo sketch", image: example.original })}
-              >
-                <img src={example.original} alt={`${example.name} demo pencil sketch`} />
-                <span>Demo sketch</span>
-              </button>
-              <ArrowRight size={22} />
-              <div>
-                <strong>From a sketch to a whole collection.</strong>
-                <p>{example.motifs}</p>
-                <small>AI-created sketch input for this curated example.</small>
-              </div>
-            </div>
           </section>
           <section className="case-study-section" aria-labelledby="case-products-title">
-            <p className="collection-kicker">02 / FROM ILLUSTRATION TO COLLECTIBLE</p>
+            <p className="collection-kicker">02 / FROM DRAWING TO KEEPSAKE</p>
             <h3 id="case-products-title">Find your favorite form.</h3>
             <div className="case-product-grid">
               {products.map((product) => (
@@ -210,7 +210,7 @@ export function Community() {
                       <img
                         className="case-figurine"
                         src={example.figurine}
-                        alt={`${example.name} character figurine concept`}
+                        alt={`${example.name} character figurine`}
                         width="1024"
                         height="1024"
                         loading="lazy"
@@ -220,7 +220,7 @@ export function Community() {
                         src={example.sheet}
                         column={product.column}
                         row={0}
-                        alt={`${example.name} ${product.title.toLowerCase()} concept`}
+                        alt={`${example.name} ${product.title.toLowerCase()}`}
                       />
                     )}{" "}
                   </button>
@@ -229,8 +229,8 @@ export function Community() {
             </div>
           </section>
           <section className="case-study-section" aria-labelledby="case-breakdown-title">
-            <p className="collection-kicker">03 / THE COLLECTION BREAKDOWN</p>
-            <h3 id="case-breakdown-title">The complete presentation.</h3>
+            <p className="collection-kicker">03 / THE COMPLETE COLLECTION</p>
+            <h3 id="case-breakdown-title">Ready to share and gift.</h3>
             <div className="case-product-grid">
               {breakdown.map((item) => (
                 <article className="case-product" key={item.title}>
@@ -261,7 +261,7 @@ export function Community() {
                         src={example.sheet}
                         column={item.column}
                         row={1}
-                        alt={`${example.name} ${item.title.toLowerCase()} concept`}
+                        alt={`${example.name} ${item.title.toLowerCase()}`}
                       />
                     )}
                   </button>
@@ -271,21 +271,21 @@ export function Community() {
           </section>
           <div className="case-compact-footer">
             <p>
-              Tap a concept to inspect it. Curated examples; products are not available to purchase.
+              Tap any picture to see it up close. These are examples; the toys are not for sale yet.
             </p>
             <details className="case-evidence">
-              <summary>Concept sources & prototype notes</summary>
+              <summary>How these examples were made</summary>
               <div>
                 <p>
                   {example.liveVerified
-                    ? "Lunarie’s figurine is a verified saved ARTOY production output from its earlier coloured artwork. The new demo sketch is an AI-created reinterpretation, not that historic upload. World, packaging and supporting panels are curated AI visuals."
-                    : `${example.name}’s figurine and supporting panels and demo sketch are curated AI visuals based on its earlier artwork and approved collectible. They are illustrative examples, not a verified live upload-to-series run.`}
+                    ? "Lunarie’s figurine is a real saved ARTOY result from its earlier colored artwork. The new demo drawing is AI-made, not that original upload. The world, gift box and other pictures are hand-picked AI artwork."
+                    : `${example.name}’s figurine, demo drawing and supporting pictures are hand-picked AI artwork based on its earlier art and approved collectible. They are examples, not a live upload-to-collection run.`}
                 </p>
                 <p>
-                  The creator studio completed an eight-image live run from the Lunarie demo sketch
-                  on 14 October 2026. These showcase panels remain curated examples. Reference views
-                  and packaging are visual concepts, not manufacturing drawings. No physical unit
-                  has been manufactured or tested.
+                  The studio completed a full eight-picture live run from the Lunarie demo drawing
+                  on 14 October 2026. These showcase pictures remain hand-picked examples. The
+                  product views and gift box are ideas, not factory plans. No physical toy has been
+                  made or tested yet.
                 </p>
                 {example.id === "lunarie" && (
                   <a
@@ -313,7 +313,7 @@ export function Community() {
                   {example.name}: {preview.title}
                 </DialogTitle>
                 <DialogDescription>
-                  Concept preview. Explore the details, then return to the collection.
+                  A closer look. Explore the details, then return to the collection.
                 </DialogDescription>
                 {preview.image ? (
                   <img src={preview.image} alt={`${example.name} ${preview.title}`} />
