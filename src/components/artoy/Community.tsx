@@ -28,7 +28,6 @@ const examples = [
     world: lunarieWorld,
     packaging: lunariePackaging,
     motifs: "Pink hair, cap, headphones and skull motif.",
-    liveVerified: true,
   },
   {
     id: "booboi",
@@ -39,7 +38,6 @@ const examples = [
     world: booboiWorld,
     packaging: booboiPackaging,
     motifs: "Bear ears, yellow cap, blue hoodie and camera details.",
-    liveVerified: false,
   },
   {
     id: "miko",
@@ -50,7 +48,6 @@ const examples = [
     world: mikoWorld,
     packaging: mikoPackaging,
     motifs: "Teal hair, cat features and spectral flame accents.",
-    liveVerified: false,
   },
 ];
 function ConceptPanel({
@@ -109,8 +106,11 @@ export function Community() {
         <header className="case-study-header">
           <div>
             <p className="collection-kicker">ARTOY / COMPLETE COLLECTION EXAMPLES</p>
-            <h2 id="case-title">One character. A whole collection.</h2>
-            <p>Explore the same journey through three distinct personalities.</p>
+            <h2 id="case-title">Your sketch becomes a whole collection.</h2>
+            <p>
+              Start with a drawing. See it reimagined as an artwork world, figurine, mini world,
+              charm and matching gift box.
+            </p>
           </div>
           <div
             className="case-character-toggle"
@@ -152,24 +152,61 @@ export function Community() {
           </div>
           <section className="case-study-section" aria-labelledby="case-world-title">
             <p className="collection-kicker" id="case-world-title">
-              01 / IT STARTS WITH A DRAWING
+              01 / BEFORE & AFTER
             </p>
-            <div className="case-sketch-strip">
-              <button
-                className="case-inspect"
-                aria-label={`Inspect ${example.name} demo drawing`}
-                onClick={() => setPreview({ title: "Demo drawing", image: example.original })}
-              >
-                <img src={example.original} alt={`${example.name} demo pencil drawing`} />
-                <span>Demo drawing</span>
-              </button>
-              <ArrowRight size={22} />
-              <div>
-                <strong>From a drawing to a whole collection.</strong>
-                <p>{example.motifs}</p>
-                <small>An AI-made drawing starts this example.</small>
-              </div>
+            <div className="case-transformation">
+              <figure className="case-before">
+                <figcaption>
+                  <strong>Before · The starting sketch</strong>
+                  <span>A simple character drawing</span>
+                </figcaption>
+                <button
+                  className="case-inspect"
+                  aria-label={`Enlarge ${example.name} starting sketch`}
+                  onClick={() => setPreview({ title: "Starting sketch", image: example.original })}
+                >
+                  <img
+                    src={example.original}
+                    alt={`${example.name} starting pencil sketch`}
+                    width="1024"
+                    height="1024"
+                  />
+                  <span className="case-zoom-hint">
+                    <Maximize2 size={16} /> Enlarge sketch
+                  </span>
+                </button>
+              </figure>
+              <ArrowRight className="case-transformation-arrow" size={28} aria-hidden="true" />
+              <figure className="case-after">
+                <figcaption>
+                  <strong>After · A matching collection</strong>
+                  <span>One character, many ways to collect</span>
+                </figcaption>
+                <button
+                  className="case-inspect"
+                  aria-label={`Enlarge ${example.name} collection preview`}
+                  onClick={() => setPreview({ title: "Collection preview", image: example.sheet })}
+                >
+                  <img
+                    src={example.sheet}
+                    alt={`${example.name} collection: figurine, mini world, acrylic charm, every angle, gift box and themed editions`}
+                    width="1536"
+                    height="1024"
+                  />
+                  <span className="case-zoom-hint">
+                    <Maximize2 size={16} /> Explore the collection
+                  </span>
+                </button>
+              </figure>
             </div>
+            <p className="case-transformation-note">
+              {example.motifs} The same details carry through every idea below.
+            </p>
+            <p className="case-saved-note">
+              Saved example pictures · switching characters never creates new images. Upload your
+              own artwork to create your collection.
+            </p>
+            <h3>A new world for the same character.</h3>
             <figure className="case-world-hero">
               <button
                 className="case-inspect"
@@ -277,15 +314,18 @@ export function Community() {
               <summary>How these examples were made</summary>
               <div>
                 <p>
-                  {example.liveVerified
-                    ? "Lunarie’s figurine is a real saved ARTOY result from its earlier colored artwork. The new demo drawing is AI-made, not that original upload. The world, gift box and other pictures are hand-picked AI artwork."
-                    : `${example.name}’s figurine, demo drawing and supporting pictures are hand-picked AI artwork based on its earlier art and approved collectible. They are examples, not a live upload-to-collection run.`}
+                  These three collections use saved, hand-picked pictures. Browsing, switching
+                  characters and enlarging pictures do not generate new images.
                 </p>
                 <p>
-                  The studio completed a full eight-picture live run from the Lunarie demo drawing
-                  on 14 October 2026. These showcase pictures remain hand-picked examples. The
-                  product views and gift box are ideas, not factory plans. No physical toy has been
-                  made or tested yet.
+                  The starting sketches and collection pictures were made with AI around the same
+                  character details. They illustrate what a collection could look like; they are not
+                  exact before-and-after results from these sketches. Lunarie’s figurine was saved
+                  from an earlier ARTOY result.
+                </p>
+                <p>
+                  Only your own uploaded artwork is used for new studio generation. The gift boxes
+                  and toys are design ideas; physical products have not been made or tested yet.
                 </p>
                 {example.id === "lunarie" && (
                   <a

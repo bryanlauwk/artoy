@@ -9,7 +9,7 @@ export const DETAIL_OPTIONS = [
   {
     id: "packaging",
     label: "Packaging Concept",
-    description: "Signature gift box, wordmark and miniature",
+    description: "A matching box with your character’s name and collectible",
   },
   { id: "series", label: "Collect the Series", description: "Three related themed editions" },
 ] as const;
@@ -77,18 +77,10 @@ export function useCreatorSession(initialFile?: File) {
       else setGenerating(true);
       setError("");
       try {
-        let imageDataUrl = selectedSource.image;
-        if (!imageDataUrl.startsWith("data:")) {
-          const imageResponse = await fetch(imageDataUrl, { signal: controller.signal });
-          if (!imageResponse.ok)
-            throw new Error("We couldn’t load that sample. Please try another.");
-          const blob = await imageResponse.blob();
-          imageDataUrl = await new Promise<string>((resolve, reject) => {
-            const fileReader = new FileReader();
-            fileReader.onload = () => resolve(String(fileReader.result));
-            fileReader.onerror = () => reject(new Error("We couldn’t read that sample."));
-            fileReader.readAsDataURL(blob);
-          });
+        // New image requests are reserved for artwork read from a customer upload.
+        const imageDataUrl = selectedSource.image;
+        if (!imageDataUrl.startsWith("data:image/")) {
+          throw new Error("Upload your own artwork to create a new collection.");
         }
         if (controller.signal.aborted) return;
         const response = await fetch("/api/generate-universe", {
