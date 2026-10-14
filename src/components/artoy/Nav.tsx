@@ -28,7 +28,7 @@ export function Nav({ onCreate }: { onCreate: () => void }) {
             onCreate();
           }}
         >
-          Try it now <ArrowRight size={16} />
+          Creator studio <ArrowRight size={16} />
         </button>
         <button
           className="icon-button mobile-menu"

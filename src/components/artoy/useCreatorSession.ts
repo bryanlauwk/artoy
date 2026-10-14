@@ -9,7 +9,7 @@ export const DETAIL_OPTIONS = [
   {
     id: "packaging",
     label: "Packaging Concept",
-    description: "Presentation box, insert and story card",
+    description: "Signature gift box, wordmark and miniature",
   },
   { id: "series", label: "Collect the Series", description: "Three related themed editions" },
 ] as const;
@@ -19,15 +19,20 @@ export type Creation = {
   image: string | null;
   error?: string;
 };
-type Source = { image: string; name: string; sampleId: string | null };
+type Source = { image: string; name: string; sampleId: null };
 
 export function useCreatorSession(initialFile?: File) {
   const [source, setSource] = useState<Source | null>(null);
   const [reading, setReading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<Creation[] | null>(null);
+  const resultsRef = useRef<Creation[] | null>(null);
+  useEffect(() => {
+    resultsRef.current = results;
+  }, [results]);
   const [details, setDetails] = useState<Record<string, Creation[]>>({});
   const [expanding, setExpanding] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [emailSaved, setEmailSaved] = useState(false);
   const request = useRef<AbortController | null>(null);
@@ -48,6 +53,7 @@ export function useCreatorSession(initialFile?: File) {
       setResults(null);
       setDetails({});
       setExpanding(null);
+      setRetrying(null);
       setError("");
       setGenerating(false);
       setReading(false);
@@ -57,11 +63,17 @@ export function useCreatorSession(initialFile?: File) {
   );
 
   const generateSource = useCallback(
-    async (selectedSource: Source, detail?: { concept: Creation; expansion: ExpansionType }) => {
+    async (
+      selectedSource: Source,
+      detail?: { concept: Creation; expansion: ExpansionType },
+      complete = true,
+      retry?: Creation,
+    ) => {
       if (request.current) return;
       const controller = new AbortController();
       request.current = controller;
-      if (detail) setExpanding(`${detail.concept.label}:${detail.expansion}`);
+      if (retry) setRetrying(retry.label);
+      else if (detail) setExpanding(`${detail.concept.label}:${detail.expansion}`);
       else setGenerating(true);
       setError("");
       try {
@@ -84,7 +96,16 @@ export function useCreatorSession(initialFile?: File) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             imageDataUrl,
-            mode: detail ? "detail" : "initial",
+            mode: retry ? "retry" : detail ? "detail" : "initial",
+            characterName: selectedSource.name,
+            ...(retry
+              ? {
+                  itemLabel: retry.label,
+                  identityImageDataUrl:
+                    resultsRef.current?.find((item) => item.label === "Character Identity")
+                      ?.image ?? undefined,
+                }
+              : {}),
             ...(detail
               ? {
                   conceptLabel: detail.concept.label,
@@ -98,8 +119,8 @@ export function useCreatorSession(initialFile?: File) {
         const json = (await response.json()) as { results?: Creation[] };
         if (!response.ok) {
           throw new Error(
-              response.status === 402
-              ? "Live generation is paused right now. Try one of the sample characters below, or leave your email and we’ll notify you when it’s back."
+            response.status === 402
+              ? "Live generation is unavailable right now. Your artwork is still here—please return to retry later. The homepage collection examples are available to explore."
               : response.status === 429
                 ? "The studio is busy. Please wait a moment and try again."
                 : "We couldn’t generate your universe. Your artwork is still here—try again.",
@@ -109,7 +130,13 @@ export function useCreatorSession(initialFile?: File) {
           throw new Error("No images were generated. Try again or choose different artwork.");
         }
         if (request.current === controller) {
-          if (detail)
+          if (retry)
+            setResults(
+              (previous) =>
+                previous?.map((item) => (item.label === retry.label ? json.results![0] : item)) ??
+                null,
+            );
+          else if (detail)
             setDetails((previous) => ({
               ...previous,
               [detail.concept.label]: [
@@ -122,6 +149,37 @@ export function useCreatorSession(initialFile?: File) {
           else {
             setResults(json.results);
             setDetails({});
+            if (complete) {
+              const concept =
+                json.results.find((item) => item.label === "Miniature World" && item.image) ??
+                json.results.find((item) => item.kind === "merch" && item.image);
+              if (concept) {
+                setGenerating(false);
+                setExpanding(`${concept.label}:complete`);
+                const presentationResponse = await fetch("/api/generate-universe", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    imageDataUrl,
+                    mode: "detail",
+                    conceptLabel: concept.label,
+                    conceptImageDataUrl: concept.image,
+                    expansion: "complete",
+                    characterName: selectedSource.name,
+                  }),
+                  signal: controller.signal,
+                });
+                const presentation = (await presentationResponse.json()) as {
+                  results?: Creation[];
+                };
+                if (request.current === controller && Array.isArray(presentation.results))
+                  setDetails({ [concept.label]: presentation.results });
+                if (!presentationResponse.ok || !Array.isArray(presentation.results))
+                  throw new Error(
+                    "Your core collection is ready. The breakdown didn’t finish—retry its panels individually.",
+                  );
+              }
+            }
           }
         }
       } catch (cause) {
@@ -134,6 +192,7 @@ export function useCreatorSession(initialFile?: File) {
           request.current = null;
           setGenerating(false);
           setExpanding(null);
+          setRetrying(null);
         }
       }
     },
@@ -161,7 +220,12 @@ export function useCreatorSession(initialFile?: File) {
         if (reader.current !== fileReader) return;
         const nextSource: Source = {
           image: String(fileReader.result),
-          name: file.name.replace(/\.[^.]+$/, "").slice(0, 60),
+          name:
+            file.name
+              .replace(/\.[^.]+$/, "")
+              .replace(/[_-]+/g, " ")
+              .trim()
+              .slice(0, 60) || "Untitled character",
           sampleId: null,
         };
         chooseSource(nextSource);
@@ -179,27 +243,17 @@ export function useCreatorSession(initialFile?: File) {
   );
 
   useEffect(() => {
-    if (initialFile) uploadFile(initialFile, true);
+    if (initialFile) uploadFile(initialFile);
   }, [initialFile, uploadFile]);
 
-  const generate = () => {
-    if (source && !reading) return generateSource(source);
-  };
-  const chooseSample = (sample: { id: string; name: string; image: string; results: Creation[] }) => {
-    stopWork();
-    setSource({ image: sample.image, name: sample.name, sampleId: sample.id });
-    setResults(sample.results);
-    setDetails({});
-    setExpanding(null);
-    setError("");
-    setGenerating(false);
-    setReading(false);
-    setEmailSaved(false);
+  const generate = (complete = true) => {
+    if (source && !reading) return generateSource(source, undefined, complete);
   };
   const cancel = () => {
     stopWork();
     setGenerating(false);
     setExpanding(null);
+    setRetrying(null);
     setReading(false);
   };
   const reset = () => {
@@ -218,6 +272,16 @@ export function useCreatorSession(initialFile?: File) {
     results,
     details,
     expanding,
+    retrying,
+    rename: (name: string) =>
+      setSource((previous) =>
+        previous
+          ? { ...previous, name: name.trim().slice(0, 60) || "Untitled character" }
+          : previous,
+      ),
+    retry: (item: Creation) => {
+      if (source && !item.image) return generateSource(source, undefined, false, item);
+    },
     expand: (concept: Creation, expansion: ExpansionType) => {
       if (source && concept.image) return generateSource(source, { concept, expansion });
     },
@@ -227,7 +291,6 @@ export function useCreatorSession(initialFile?: File) {
     setError,
     uploadFile,
     chooseSource,
-    chooseSample,
     generate,
     cancel,
     reset,

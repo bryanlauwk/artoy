@@ -1,0 +1,74 @@
+[
+  {
+    "path": "src/assets/artoy/case-study/booboi-packaging-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "330ae8e29a7d0d803165b189a884dfc313857aeb61438985b96d3c9c58064103",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/booboi-sketch-v2.webp",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "8a4cf53e1cd1bb1be66ca427ee3715ed9308f4d2491e19ca3dffdbbe121948ab",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/booboi-world-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "40396c2ad6dc06e8abf98ea8cff8166507d7e106336cc99c690077e763e12507",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/lunarie-packaging-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "ef95dd50fe7de1338c75d1f68f9f4b9a077f81478b4741f512b83d7c4a52bf33",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/lunarie-sketch-v2.webp",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "010197e26cfd75b5d54c0702847aedca27ed8647e3ff870327c8a48b4e6e7a89",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/lunarie-world-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "2e401a40c65467d64dbb0a3c87bd8acdbdc2558d5eef8d76cea977e3c5a86cff",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/miko-packaging-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "0ad3c5f617be5de58a315ee4f790ca735dea596f4baa0aa6765e17adf8d61ad0",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/miko-sketch-v2.webp",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "115125d46dbceb8a5299316ee455a6cf1212fb1774c8db4912805a9604bed4bb",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  },
+  {
+    "path": "src/assets/artoy/case-study/miko-world-v2.webp",
+    "width": 1536,
+    "height": 1024,
+    "sha256": "740c4a4e05a61e52d4ef6f5c3dfa982452cbf7355309f6cb9c3bb4e34a0ed885",
+    "source": "built-in image generation; curated reference asset",
+    "live_pipeline_verified": false
+  }
+]
