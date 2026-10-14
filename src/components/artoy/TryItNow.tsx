@@ -168,6 +168,23 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             Start with 5 images: your character, its world and 3 collectible concepts. Expand a
             favorite when you’re ready.
           </p>
+          <div className="studio-samples">
+            <p>Or explore a sample character — instant, no waiting:</p>
+            <div>
+              {SAMPLE_CHARACTERS.map((sample) => (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    setSelectedConcept(null);
+                    session.chooseSample(sample);
+                  }}
+                >
+                  <img src={sample.image} alt={`${sample.name} sample character`} />
+                  <span>{sample.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
