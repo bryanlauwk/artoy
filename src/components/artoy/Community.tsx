@@ -282,9 +282,10 @@ export function Community() {
                     : `${example.name}’s figurine and supporting panels and demo sketch are curated AI visuals based on its earlier artwork and approved collectible. They are illustrative examples, not a verified live upload-to-series run.`}
                 </p>
                 <p>
-                  Full live collection testing is pending: the latest upload returned generation
-                  unavailable. Reference views and packaging are visual concepts, not manufacturing
-                  drawings. No physical unit has been manufactured or tested.
+                  The creator studio completed an eight-image live run from the Lunarie demo sketch
+                  on 14 October 2026. These showcase panels remain curated examples. Reference views
+                  and packaging are visual concepts, not manufacturing drawings. No physical unit
+                  has been manufactured or tested.
                 </p>
                 {example.id === "lunarie" && (
                   <a

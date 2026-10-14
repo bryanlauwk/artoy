@@ -449,6 +449,16 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                               onInspect={setPreview}
                             />
                             <SaveImage image={result.image} title={option.label} />
+                            {option.id === "packaging" && (
+                              <button
+                                className="studio-text-button"
+                                disabled={busy}
+                                onClick={() => void session.expand(chosen, option.id)}
+                              >
+                                <Sparkles size={15} />{" "}
+                                {pending ? "Redesigning…" : "Redesign box · 1 image"}
+                              </button>
+                            )}
                           </>
                         ) : (
                           <>

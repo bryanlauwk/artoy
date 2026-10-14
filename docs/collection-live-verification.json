@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-14",
+  "environment": "Unpublished Lovable preview",
+  "main_commit": "124aa718b2954b2b607e665fee085dacd85ffd48",
+  "input": "src/assets/artoy/case-study/lunarie-sketch-v2.webp",
+  "character_name": "Lunarie",
+  "complete_presentation": true,
+  "core_images_ready": 5,
+  "breakdown_images_ready": 3,
+  "breakdown_reference": "Miniature World",
+  "retries": 0,
+  "loaded_images": [
+    { "label": "Illustrated Universe", "width": 1264, "height": 848 },
+    { "label": "Character Identity", "width": 1024, "height": 1024 },
+    { "label": "Character Figurine", "width": 1024, "height": 1024 },
+    { "label": "Miniature World", "width": 1024, "height": 1024 },
+    { "label": "Acrylic Charm", "width": 1024, "height": 1024 },
+    { "label": "Product Views", "width": 1376, "height": 768 },
+    { "label": "Packaging Concept", "width": 1024, "height": 1024 },
+    { "label": "Collect the Series", "width": 1376, "height": 768 }
+  ],
+  "observed_checks": [
+    "Five core results appear before presentation finishes",
+    "All three breakdown images complete without retries",
+    "All eight output images decode and display in the browser",
+    "Miniature remains selected for all breakdown panels",
+    "Name edited to Lunarie Studio and restored to Lunarie; eight images retained",
+    "Enlarged world dialog displays the full image and closes back to results",
+    "Miko sample packaging loads at 1536x1024 and opens for inspection",
+    "Studio upload screen contains no sample selector or showcase"
+  ],
+  "screenshots": [
+    "docs/previews/lunarie-live-world-v3.jpg",
+    "docs/previews/lunarie-live-collection-v3.jpg"
+  ],
+  "limitation": "The initial live package had weak lettering; the subsequent packaging prompt requires larger high-contrast branding. This record verifies the eight-image flow, not that later prompt refinement. Desktop-only inspection; no physical manufacturing verification.",
+  "public_publication_performed": false
+}
