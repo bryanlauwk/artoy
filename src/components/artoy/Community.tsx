@@ -85,14 +85,14 @@ function ConceptPanel({
   );
 }
 const products = [
-  { title: "Character Figurine", note: "The character, made collectible.", column: null },
-  { title: "Miniature World", note: "A signature scene on a small base.", column: 1 },
-  { title: "Acrylic Charm", note: "The same identity, ready to carry.", column: 2 },
+  { title: "Character Figurine", note: "Your character, made collectible.", column: null },
+  { title: "Mini World", note: "A favorite scene on a small base.", column: 1 },
+  { title: "Acrylic Charm", note: "The same character, ready to carry.", column: 2 },
 ];
 const breakdown = [
-  { title: "Product Views", note: "Front / side / back", column: 0 },
-  { title: "Packaging Concept", note: "Signature box / wordmark / miniature", column: 1 },
-  { title: "Collect the Series", note: "Three related themed editions", column: 2 },
+  { title: "Every Angle", note: "Front / side / back", column: 0 },
+  { title: "Gift Box", note: "A special box with its name and a mini inside", column: 1 },
+  { title: "Collect the Series", note: "Three matching themed editions", column: 2 },
 ];
 export function Community() {
   const [selected, setSelected] = useState(0);
