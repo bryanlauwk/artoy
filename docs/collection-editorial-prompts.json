@@ -1,0 +1,50 @@
+{
+  "tool": "Built-in image generation",
+  "assets": [
+    {
+      "name": "lunarie-sketch",
+      "referenceRoles": "Character identity / collection sheet",
+      "prompt": "Use case: style-transfer. Edit the first reference into a loose hand-drawn graphite character sketch on clean warm white paper, no scene/background. Full body, lively uneven pencil outlines with sparse pink pencil accents. Preserve her pink bob, cap, over-ear headphones, black jacket, skull shirt and shoes. Clearly a sketchbook concept rather than a finished rendered image. One character, no text, no border, square format."
+    },
+    {
+      "name": "booboi-sketch",
+      "referenceRoles": "Character identity / collection sheet",
+      "prompt": "Use case: style-transfer. The reference is a collection sheet. Extract the SAME yellow-hat bear character into one full-body hand-drawn graphite sketch on plain warm white paper. Preserve round ears, small bear face, yellow rain hat, blue hoodie, camera held at chest, shorts and paws. Loose lively uneven pencil lines, just a few yellow and blue pencil accents, no environment, no polished 3D rendering, no text, no border, square format."
+    },
+    {
+      "name": "miko-sketch",
+      "referenceRoles": "Character identity / collection sheet",
+      "prompt": "Use case: style-transfer. The reference is a collection sheet. Extract the SAME teal-haired cat character into one full-body hand-drawn graphite sketch on plain warm white paper. Preserve orange-gold eyes, cat ears, swept teal fringe, dark cat body, cream chest and tail, a few teal flame strokes. Loose uneven pencil lines, sparse teal pencil accents, no environment, no polished 3D rendering, no text, no border, square format."
+    },
+    {
+      "name": "lunarie-world",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: illustration-story. First reference locks Lunarie's identity and city motifs; second is STYLE only, do not copy Tesla objects or logos. Create one wide 1536x1024 editorial illustrated universe on warm ivory paper. Dense playful hand-inked architecture with restrained pink and cyan washes, neo-Tokyo canal, arched bridges, cherry blossom gardens, tiny headphone record shops, skull neon tower, rooftop studios and paths connecting meaningful places. Lunarie small but recognisable in foreground with pink bob, cap, headphones, black jacket and skull shirt. Composition spread across full width, all rich city details visible with small paper margin. Confident black ink outlines and textured watercolor, like the Tesla world map, not a glossy 3D screenshot. No text, logos, captions, panel grid or UI."
+    },
+    {
+      "name": "booboi-world",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: illustration-story. First reference locks BooBoi bear identity and woodland motifs; second is STYLE only, do not copy Tesla objects or logos. Create one wide 1536x1024 editorial illustrated universe on warm ivory paper. Dense playful hand-inked woodland village with yellow and amber washes, camera-lens observatory, treehouse photography studio, bridges, forest trails, lantern camp, waterfalls, tiny wildlife and travel details. BooBoi small but recognisable in foreground with round bear ears, yellow rain hat, blue hoodie, camera. Composition spread across full width, full world visible with small paper margin. Confident black ink and watercolor texture, like the Tesla world map, not glossy 3D. No text, logos, captions, panels or UI."
+    },
+    {
+      "name": "miko-world",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: illustration-story. First reference locks the teal cat identity and ghostly motifs; second is STYLE only, do not copy Tesla objects or logos. Create one wide 1536x1024 editorial illustrated universe on warm ivory paper. Dense playful hand-inked moonlit cat kingdom with teal and antique-gold washes, eye-shaped lantern towers, cat-ear archways, waterfalls, moon observatory, winding bridges, floating spectral cat flames and hidden tiny cat spirits. Miko small but recognisable in foreground with teal fringe, orange eyes, dark cat body and cream chest. Composition spread across full width, full rich world visible with small paper margin. Confident black ink and watercolor texture, like the Tesla world map, not glossy 3D. No text, logos, captions, panels or UI."
+    },
+    {
+      "name": "lunarie-packaging",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: product-mockup. First reference locks the pink-haired Lunarie diorama from top-middle cell; second reference is packaging STYLE only. Create one premium retail gift box photograph on warm ivory, landscape 1536x1024. Large substantial closed cuboid box, three-quarter view, thick matte ivory board, saturated pink side panel. Exact wordmark 'LUNARIE' large on front near top, small skull-headphone emblem on side. Front carries intricate hand-inked illustration of the same canal city and a prominent image of the miniature diorama. The actual matching diorama sits beside the big box at half its height, cap/headphones/skull motif/pink bob consistent. Show credible substantial thickness, crisp print, embossed title, warm paper textures, gentle studio shadows, whole box uncropped. Aspire to the Tesla reference's buyable substantial branded carton, not a tiny figurine window box. No Tesla branding, no other readable words, no UI."
+    },
+    {
+      "name": "booboi-packaging",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: product-mockup. First reference locks BooBoi woodland diorama from top-middle cell; second reference packaging STYLE only. Create one premium retail gift box photograph on warm ivory, landscape 1536x1024. Large substantial closed cuboid box, three-quarter view, thick matte ivory board, warm mustard-yellow side panel. Exact wordmark 'BOOBOI' large on front near top, small camera-lens emblem on side. Front carries intricate hand-inked woodland village and prominent image of the miniature diorama. Actual matching diorama sits beside big box at half its height, bear ears/yellow rain hat/blue hoodie/camera consistent. Credible substantial thickness, crisp print, embossed title, tactile paper, studio shadows, whole box uncropped. Aspire to the Tesla reference's buyable branded carton, not tiny window box. No Tesla branding, no other readable words, no UI."
+    },
+    {
+      "name": "miko-packaging",
+      "referenceRoles": "Character identity / collection sheet; Tesla reference for visual style only",
+      "prompt": "Use case: product-mockup. First reference locks the teal-haired cat diorama from top-middle cell; second reference packaging STYLE only. Create one premium retail gift box photograph on warm ivory, landscape 1536x1024. Large substantial closed cuboid box, three-quarter view, thick matte ivory board, deep teal side panel, antique-gold accents. Exact wordmark 'MIKO' large on front near top, small gold cat-eye emblem on side. Front carries intricate hand-inked spectral cat kingdom and prominent image of the miniature diorama. Actual matching diorama sits beside big box at half its height, teal fringe/orange eyes/cat body/cream chest/teal flames consistent. Credible substantial thickness, crisp print, embossed title, tactile paper, studio shadows, whole box uncropped. Aspire to Tesla reference's buyable branded carton, not tiny window box. No Tesla branding, no other readable words, no UI."
+    }
+  ]
+}

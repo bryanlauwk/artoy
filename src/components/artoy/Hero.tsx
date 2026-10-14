@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { ArrowRight, CloudUpload, Sparkles, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, CloudUpload, Sparkles } from "lucide-react";
 import heroArt from "@/assets/artoy/hero-studio.png";
 
 export function Hero({
@@ -9,23 +9,7 @@ export function Hero({
   onCreate: (file?: File) => void;
   hasSession: boolean;
 }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File>();
-  const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
-  function chooseFile(next?: File) {
-    if (!next) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(next.type)) {
-      setError("Please choose a PNG, JPG or WebP image.");
-      return;
-    }
-    if (next.size > 8 * 1024 * 1024) {
-      setError("Your image must be 8 MB or smaller.");
-      return;
-    }
-    setError("");
-    setFile(next);
-  }
   return (
     <section id="top" className="artoy-hero" aria-labelledby="hero-title">
       <img
@@ -62,56 +46,16 @@ export function Hero({
           onDrop={(e) => {
             e.preventDefault();
             setDragging(false);
-            chooseFile(e.dataTransfer.files[0]);
+            onCreate(e.dataTransfer.files[0]);
           }}
         >
           <div className="upload-dashed">
-            <input
-              ref={input}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              aria-label="Upload your character artwork"
-              className="sr-only"
-              tabIndex={-1}
-              onChange={(e) => {
-                chooseFile(e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-            <button className="upload-picker" onClick={() => input.current?.click()}>
-              <CloudUpload size={36} strokeWidth={1.5} />
-              <span>
-                <strong>{file ? file.name : "Drop your art here"}</strong>
-                <small>
-                  {file ? "Ready to create · Click to change" : "PNG, JPG or WebP · up to 8 MB"}
-                </small>
-              </span>
-            </button>
-            {file && (
-              <button
-                className="remove-upload"
-                onClick={() => {
-                  setFile(undefined);
-                  setError("");
-                }}
-                aria-label="Remove selected artwork"
-              >
-                <X size={15} />
-              </button>
-            )}
-            <button
-              className="artoy-cta"
-              onClick={() => {
-                onCreate(file);
-                setFile(undefined);
-              }}
-            >
-              {!file && hasSession ? "Return to my studio" : "Create my character"}{" "}
+            <button className="artoy-cta hero-studio-entry" onClick={() => onCreate()}>
+              <CloudUpload size={22} />
+              {hasSession ? "Return to my collection" : "Upload your artwork"}
               <ArrowRight size={17} />
             </button>
-            <p className="upload-error" role="status">
-              {error}
-            </p>
+            <p className="hero-upload-note">PNG, JPG or WebP · up to 8 MB</p>
           </div>
         </div>
         <p className="hand-note hero-reassurance">

@@ -1,15 +1,22 @@
 import { useId, useState } from "react";
-import { Download } from "lucide-react";
+import { ArrowRight, Download, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import lunarieOriginal from "@/assets/artoy/case-study/lunarie-original-v1.webp";
+import lunarieOriginal from "@/assets/artoy/case-study/lunarie-sketch-v2.webp";
 import lunarieFigurine from "@/assets/artoy/case-study/lunarie-figurine-v1.webp";
 import lunarieSheet from "@/assets/artoy/case-study/lunarie-concepts-v1.webp";
-import booboiOriginal from "@/assets/artoy/booboi.png";
+import booboiOriginal from "@/assets/artoy/case-study/booboi-sketch-v2.webp";
 import booboiFigurine from "@/assets/artoy/game/booboi-collectible-v1.webp";
 import booboiSheet from "@/assets/artoy/case-study/booboi-concepts-v1.webp";
-import jaygyiiOriginal from "@/assets/artoy/jaygyii.png";
+import jaygyiiOriginal from "@/assets/artoy/case-study/miko-sketch-v2.webp";
 import jaygyiiFigurine from "@/assets/artoy/game/jaygyii-collectible-v1.webp";
 import jaygyiiSheet from "@/assets/artoy/case-study/jaygyii-concepts-v1.webp";
+
+import lunarieWorld from "@/assets/artoy/case-study/lunarie-world-v2.webp";
+import booboiWorld from "@/assets/artoy/case-study/booboi-world-v2.webp";
+import mikoWorld from "@/assets/artoy/case-study/miko-world-v2.webp";
+import lunariePackaging from "@/assets/artoy/case-study/lunarie-packaging-v2.webp";
+import booboiPackaging from "@/assets/artoy/case-study/booboi-packaging-v2.webp";
+import mikoPackaging from "@/assets/artoy/case-study/miko-packaging-v2.webp";
 
 const examples = [
   {
@@ -18,6 +25,8 @@ const examples = [
     original: lunarieOriginal,
     figurine: lunarieFigurine,
     sheet: lunarieSheet,
+    world: lunarieWorld,
+    packaging: lunariePackaging,
     motifs: "Pink hair, cap, headphones and skull motif.",
     liveVerified: true,
   },
@@ -27,15 +36,19 @@ const examples = [
     original: booboiOriginal,
     figurine: booboiFigurine,
     sheet: booboiSheet,
+    world: booboiWorld,
+    packaging: booboiPackaging,
     motifs: "Bear ears, yellow cap, blue hoodie and camera details.",
     liveVerified: false,
   },
   {
-    id: "jaygyii",
-    name: "Jaygyii",
+    id: "miko",
+    name: "Miko",
     original: jaygyiiOriginal,
     figurine: jaygyiiFigurine,
     sheet: jaygyiiSheet,
+    world: mikoWorld,
+    packaging: mikoPackaging,
     motifs: "Teal hair, cat features and spectral flame accents.",
     liveVerified: false,
   },
@@ -78,15 +91,16 @@ const products = [
 ];
 const breakdown = [
   { title: "Product Views", note: "Front / side / back", column: 0 },
-  { title: "Packaging Concept", note: "Box / story card", column: 1 },
+  { title: "Packaging Concept", note: "Signature box / wordmark / miniature", column: 1 },
   { title: "Collect the Series", note: "Three related themed editions", column: 2 },
 ];
 export function Community() {
   const [selected, setSelected] = useState(0);
   const [preview, setPreview] = useState<{
     title: string;
-    column: number | null;
-    row: number;
+    column?: number | null;
+    row?: number;
+    image?: string;
   } | null>(null);
   const example = examples[selected];
   return (
@@ -140,27 +154,41 @@ export function Community() {
             <p className="collection-kicker" id="case-world-title">
               01 / THE CHARACTER & ITS WORLD
             </p>
-            <div className="case-world-grid">
-              <figure className="case-source">
+            <figure className="case-world-hero">
+              <button
+                className="case-inspect"
+                aria-label={`Inspect ${example.name} illustrated universe`}
+                onClick={() => setPreview({ title: "Illustrated Universe", image: example.world })}
+              >
                 <img
-                  src={example.original}
-                  alt={`${example.name} original character artwork`}
-                  width="768"
-                  height="768"
+                  src={example.world}
+                  alt={`${example.name} rich illustrated universe`}
+                  width="1536"
+                  height="1024"
                   loading="lazy"
                 />
-                <figcaption>Original artwork</figcaption>
-              </figure>
-              <figure className="case-world">
-                <ConceptPanel
-                  src={example.sheet}
-                  column={0}
-                  row={0}
-                  alt={`${example.name} illustrated universe`}
-                  wide
-                />
-                <figcaption>Illustrated Universe</figcaption>
-              </figure>
+                <Maximize2 size={20} />
+              </button>
+              <figcaption>
+                <strong>Illustrated Universe</strong>
+                <span>Explore the details</span>
+              </figcaption>
+            </figure>
+            <div className="case-sketch-strip">
+              <button
+                className="case-inspect"
+                aria-label={`Inspect ${example.name} demo sketch`}
+                onClick={() => setPreview({ title: "Demo sketch", image: example.original })}
+              >
+                <img src={example.original} alt={`${example.name} demo pencil sketch`} />
+                <span>Demo sketch</span>
+              </button>
+              <ArrowRight size={22} />
+              <div>
+                <strong>From a sketch to a whole collection.</strong>
+                <p>{example.motifs}</p>
+                <small>AI-created sketch input for this curated example.</small>
+              </div>
             </div>
           </section>
           <section className="case-study-section" aria-labelledby="case-products-title">
@@ -202,7 +230,7 @@ export function Community() {
           </section>
           <section className="case-study-section" aria-labelledby="case-breakdown-title">
             <p className="collection-kicker">03 / THE COLLECTION BREAKDOWN</p>
-            <h3 id="case-breakdown-title">Explore your character figurine.</h3>
+            <h3 id="case-breakdown-title">The complete presentation.</h3>
             <div className="case-product-grid">
               {breakdown.map((item) => (
                 <article className="case-product" key={item.title}>
@@ -211,14 +239,31 @@ export function Community() {
                   <button
                     className="case-inspect"
                     aria-label={`Inspect ${example.name} ${item.title.toLowerCase()}`}
-                    onClick={() => setPreview({ title: item.title, column: item.column, row: 1 })}
+                    onClick={() =>
+                      setPreview(
+                        item.column === 1
+                          ? { title: item.title, image: example.packaging }
+                          : { title: item.title, column: item.column, row: 1 },
+                      )
+                    }
                   >
-                    <ConceptPanel
-                      src={example.sheet}
-                      column={item.column}
-                      row={1}
-                      alt={`${example.name} ${item.title.toLowerCase()} concept`}
-                    />{" "}
+                    {item.column === 1 ? (
+                      <img
+                        className="case-packaging-image"
+                        src={example.packaging}
+                        alt={`${example.name} signature gift box and miniature`}
+                        width="1536"
+                        height="1024"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <ConceptPanel
+                        src={example.sheet}
+                        column={item.column}
+                        row={1}
+                        alt={`${example.name} ${item.title.toLowerCase()} concept`}
+                      />
+                    )}
                   </button>
                 </article>
               ))}
@@ -233,8 +278,8 @@ export function Community() {
               <div>
                 <p>
                   {example.liveVerified
-                    ? "Lunarie’s figurine is a verified saved ARTOY production output. The remaining scene and breakdown panels are curated AI visuals using that same character and figurine as references."
-                    : `${example.name}’s figurine and six supporting panels are curated AI visuals, using the original artwork and approved collectible as references. They are illustrative examples, not a verified live upload-to-series run.`}
+                    ? "Lunarie’s figurine is a verified saved ARTOY production output from its earlier coloured artwork. The new demo sketch is an AI-created reinterpretation, not that historic upload. World, packaging and supporting panels are curated AI visuals."
+                    : `${example.name}’s figurine and supporting panels and demo sketch are curated AI visuals based on its earlier artwork and approved collectible. They are illustrative examples, not a verified live upload-to-series run.`}
                 </p>
                 <p>
                   Full live collection testing is pending: the latest upload returned generation
@@ -269,13 +314,15 @@ export function Community() {
                 <DialogDescription>
                   Concept preview. Explore the details, then return to the collection.
                 </DialogDescription>
-                {preview.column === null ? (
+                {preview.image ? (
+                  <img src={preview.image} alt={`${example.name} ${preview.title}`} />
+                ) : preview.column === null ? (
                   <img src={example.figurine} alt={`${example.name} ${preview.title}`} />
                 ) : (
                   <ConceptPanel
                     src={example.sheet}
-                    column={preview.column}
-                    row={preview.row}
+                    column={preview.column ?? 0}
+                    row={preview.row ?? 0}
                     alt={`${example.name} ${preview.title}`}
                   />
                 )}

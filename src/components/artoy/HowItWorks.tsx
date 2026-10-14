@@ -21,8 +21,11 @@ export function HowItWorks() {
           <li>
             <span>03</span>
             <div>
-              <h3>Expand a favorite</h3>
-              <p>Request product views, packaging or a series. Save what you love.</p>
+              <h3>See the complete collection</h3>
+              <p>
+                Product views, a signature gift box and a related series. Enlarge and save the
+                details.
+              </p>
             </div>
           </li>
         </ol>
