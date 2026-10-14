@@ -13,6 +13,19 @@ import {
 import { DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
 import { CollectionImageDialog, type ImagePreview } from "./CollectionImageDialog";
 
+function collectionLabel(label: string) {
+  return (
+    (
+      {
+        "Illustrated Universe": "Artwork World",
+        "Packaging Concept": "Gift Box",
+        "Miniature World": "Mini World",
+        "Product Views": "Every Angle",
+      } as Record<string, string>
+    )[label] ?? label
+  );
+}
+
 function InspectImage({
   image,
   title,
@@ -79,7 +92,9 @@ export function TryItNow({ session }: { session: CreatorSession }) {
         onClick={() => void session.retry(item)}
       >
         <RefreshCw size={15} />
-        {session.retrying === item.label ? "Retrying…" : `Retry ${item.label.toLowerCase()}`}
+        {session.retrying === item.label
+          ? "Retrying…"
+          : `Retry ${collectionLabel(item.label).toLowerCase()}`}
       </button>
     );
   }
@@ -177,7 +192,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <strong>Complete presentation</strong>
               <small>
                 {completePresentation
-                  ? "8 images · character, world, 3 collectibles, product views, packaging and series"
+                  ? "8 images · character, world, 3 collectibles, every angle, gift box and series"
                   : "5 images · character, world and 3 collectibles; expand later"}
               </small>
             </span>
@@ -307,7 +322,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               <Loader2 size={18} className="animate-spin" />
               <p>
                 {session.expanding.endsWith(":complete")
-                  ? "Core images are ready. Completing product views, packaging and series…"
+                  ? "Core images are ready. Completing every angle, gift box and series…"
                   : "Expanding your selected collectible…"}
               </p>
               <button className="studio-text-button" onClick={session.cancel}>
@@ -317,24 +332,30 @@ export function TryItNow({ session }: { session: CreatorSession }) {
           )}
           <div className="collection-board">
             <section className="collection-identity" aria-labelledby="identity-heading">
-              <p className="collection-kicker">01 / THE ILLUSTRATED UNIVERSE</p>
+              <p className="collection-kicker">01 / YOUR ARTWORK WORLD</p>
               <h3 id="identity-heading">A world built around your character.</h3>
               {experiences
                 .filter((item) => item.label === "Illustrated Universe")
                 .map((item) => (
                   <figure className="collection-world-hero" key={item.label}>
                     {item.image ? (
-                      <InspectImage image={item.image} title={item.label} onInspect={setPreview} />
+                      <InspectImage
+                        image={item.image}
+                        title={collectionLabel(item.label)}
+                        onInspect={setPreview}
+                      />
                     ) : (
                       <div className="studio-result-missing">
                         <AlertCircle size={24} />
-                        <p>The illustrated universe didn’t finish.</p>
+                        <p>The artwork world didn’t finish.</p>
                         {retryButton(item)}
                       </div>
                     )}
                     <figcaption>
-                      <strong>{item.label}</strong>
-                      {item.image && <SaveImage image={item.image} title={item.label} />}
+                      <strong>{collectionLabel(item.label)}</strong>
+                      {item.image && (
+                        <SaveImage image={item.image} title={collectionLabel(item.label)} />
+                      )}
                     </figcaption>
                   </figure>
                 ))}
@@ -356,10 +377,10 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                         <>
                           <InspectImage
                             image={item.image}
-                            title={item.label}
+                            title={collectionLabel(item.label)}
                             onInspect={setPreview}
                           />
-                          <SaveImage image={item.image} title={item.label} />
+                          <SaveImage image={item.image} title={collectionLabel(item.label)} />
                         </>
                       ) : (
                         <div className="studio-result-missing">
@@ -385,12 +406,12 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                     key={item.label}
                     className={`collection-concept ${chosen?.label === item.label ? "selected" : ""}`}
                   >
-                    <h4>{item.label}</h4>
+                    <h4>{collectionLabel(item.label)}</h4>
                     {item.image ? (
                       <>
                         <InspectImage
                           image={item.image}
-                          title={item.label}
+                          title={collectionLabel(item.label)}
                           onInspect={setPreview}
                         />
                         <div className="collection-card-actions">
@@ -402,7 +423,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                           >
                             {chosen?.label === item.label ? "Selected" : "Select concept"}
                           </button>
-                          <SaveImage image={item.image} title={item.label} />
+                          <SaveImage image={item.image} title={collectionLabel(item.label)} />
                         </div>
                       </>
                     ) : (
@@ -421,9 +442,11 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 <div className="collection-breakdown-heading">
                   <div>
                     <p className="collection-kicker">03 / THE COLLECTION BREAKDOWN</p>
-                    <h3 id="breakdown-heading">{chosen.label}. The complete presentation.</h3>
+                    <h3 id="breakdown-heading">
+                      {collectionLabel(chosen.label)}. The complete presentation.
+                    </h3>
                     <p>
-                      Product views, a signature gift box and a series using this same collectible.
+                      Every angle, a matching gift box and a series using this same collectible.
                     </p>
                   </div>
                 </div>
@@ -439,16 +462,16 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                         key={`${chosen.label}:${option.id}`}
                         aria-busy={pending}
                       >
-                        <h4>{option.label}</h4>
+                        <h4>{collectionLabel(option.label)}</h4>
                         <p>{option.description}</p>
                         {result?.image ? (
                           <>
                             <InspectImage
                               image={result.image}
-                              title={option.label}
+                              title={collectionLabel(option.label)}
                               onInspect={setPreview}
                             />
-                            <SaveImage image={result.image} title={option.label} />
+                            <SaveImage image={result.image} title={collectionLabel(option.label)} />
                             {option.id === "packaging" && (
                               <button
                                 className="studio-text-button"
@@ -484,7 +507,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                               )}
                               {pending
                                 ? "Creating…"
-                                : `${result ? "Retry" : "Generate"} ${option.label.toLowerCase()}`}
+                                : `${result ? "Retry" : "Generate"} ${collectionLabel(option.label).toLowerCase()}`}
                             </button>
                           </>
                         )}

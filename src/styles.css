@@ -4390,3 +4390,99 @@
     font-size: 10px;
   }
 }
+
+/* Show the source and result together before the detailed collection. */
+.case-transformation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 2fr);
+  gap: 18px;
+  align-items: center;
+  margin: 18px 0;
+}
+.case-transformation figure {
+  margin: 0;
+  border: 1px solid #ded0b8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #faf6ed;
+  align-self: stretch;
+}
+.case-transformation figcaption {
+  padding: 14px;
+  display: grid;
+  gap: 5px;
+  border-bottom: 1px solid #e6dccb;
+}
+.case-transformation figcaption strong {
+  font-size: 16px;
+}
+.case-transformation figcaption span {
+  color: #806f58;
+  font-size: 12px;
+}
+.case-transformation .case-inspect {
+  display: block;
+  width: 100%;
+  cursor: zoom-in;
+}
+.case-transformation .case-inspect img {
+  display: block;
+  width: 100%;
+  height: clamp(240px, 30vw, 390px);
+  object-fit: contain;
+}
+.case-zoom-hint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  color: #806a4c;
+  font-size: 12px;
+}
+.case-transformation-arrow {
+  color: #a08253;
+}
+.case-transformation-note {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.case-saved-note {
+  color: #806f58;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 8px 0 24px;
+}
+.case-character-toggle img {
+  width: 52px;
+  height: 52px;
+}
+.case-character-toggle button {
+  border-radius: 12px;
+  font-size: 14px;
+  padding: 8px 12px;
+}
+@media (max-width: 640px) {
+  .case-transformation {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .case-transformation-arrow {
+    justify-self: center;
+    transform: rotate(90deg);
+  }
+  .case-transformation .case-inspect img {
+    height: auto;
+    max-height: 360px;
+  }
+  .case-before .case-inspect img {
+    height: 300px;
+  }
+  .case-character-toggle {
+    flex-wrap: wrap;
+  }
+  .case-character-toggle img {
+    width: 44px;
+    height: 44px;
+  }
+}
