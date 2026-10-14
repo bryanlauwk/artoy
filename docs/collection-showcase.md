@@ -13,3 +13,5 @@ Checks cover all three toggles, one active collection, scoped labels and images,
 Prompt provenance: `docs/collection-editorial-prompts.json`. Asset hashes and dimensions: `docs/collection-editorial-assets.json`.
 
 Merge only; owner publishes in Lovable.
+
+The creator studio's Lunarie sketch completed five core plus three miniature breakdown outputs in the unpublished preview on 14 October 2026. The curated homepage visuals remain distinct from that live test; source notes now state both facts. No other character is claimed as a live-tested run.

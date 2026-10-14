@@ -34,3 +34,11 @@ All modes, item labels and reference data URLs are validated before provider cal
 Provider requests are mocked in regression tests. They verify the five-plus-three budget, reference order, shared identity, chosen-miniature consistency, packaging lettering and isolated failures. A React StrictMode interaction fixture checks naming without regeneration, inspection, individual retries, detail scoping, cancellation, lower-usage mode, failed-breakdown recovery and absence of duplicate samples. TypeScript, changed-file ESLint and the production build are checked.
 
 The curated homepage assets were created with built-in image generation and visually reviewed. They are not evidence of the new live eight-image workflow. A current paid-provider visual run and physical fabrication remain separate checks. Publication is manual in Lovable.
+
+## Live preview check — 14 October 2026
+
+The unpublished Lovable preview on main commit `124aa718b2954b2b607e665fee085dacd85ffd48` accepted `lunarie-sketch-v2.webp`, a user-editable name of Lunarie and Complete presentation enabled. All five core images and all three Miniature World breakdown images completed without retries. The character's pink bob, cap, headphones, black jacket and skull motif remain visible across the figure, miniature, charm and related outputs. The source sketch and identity are close in style; the physical product transformation is the stronger before/after comparison.
+
+The first live box had a substantial shape and matching miniature but weak, small lettering. The packaging prompt was refined to request a large high-contrast top wordmark, saturated side/emblem and a full-colour illustrated front. Completed packaging has a single-image redesign action; core images and other breakdown panels are retained during that request. Changing a name does not itself consume generation requests or alter an existing box image.
+
+Desktop preview inspection confirms the full-width world, the renamed Miko toggle, loaded packaging artwork, image enlargement and an upload-only studio. The live eight-image check supersedes the earlier provider-unavailable outcome. It is one successful run, not a guarantee of future provider availability, output fidelity or manufacturing readiness. Phone-specific browser geometry and a physical prototype remain unverified. No public publication was performed.
