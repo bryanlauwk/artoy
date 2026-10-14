@@ -15,7 +15,7 @@ export function HowItWorks() {
             <span>02</span>
             <div>
               <h3>Meet its world</h3>
-              <p>Get a character identity, illustrated world and three collectible concepts.</p>
+              <p>Get a character story, a colorful artwork world and three collectible ideas.</p>
             </div>
           </li>
           <li>

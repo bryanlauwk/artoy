@@ -229,8 +229,8 @@ export function Community() {
             </div>
           </section>
           <section className="case-study-section" aria-labelledby="case-breakdown-title">
-            <p className="collection-kicker">03 / THE COLLECTION BREAKDOWN</p>
-            <h3 id="case-breakdown-title">The complete presentation.</h3>
+            <p className="collection-kicker">03 / THE COMPLETE COLLECTION</p>
+            <h3 id="case-breakdown-title">Ready to share and gift.</h3>
             <div className="case-product-grid">
               {breakdown.map((item) => (
                 <article className="case-product" key={item.title}>
@@ -271,7 +271,7 @@ export function Community() {
           </section>
           <div className="case-compact-footer">
             <p>
-              Tap a concept to inspect it. Curated examples; products are not available to purchase.
+              Tap any picture to see it up close. These are examples; the toys are not for sale yet.
             </p>
             <details className="case-evidence">
               <summary>How these examples were made</summary>
