@@ -152,17 +152,33 @@ export function Community() {
           </div>
           <section className="case-study-section" aria-labelledby="case-world-title">
             <p className="collection-kicker" id="case-world-title">
-              01 / THE CHARACTER & ITS WORLD
+              01 / IT STARTS WITH A DRAWING
             </p>
+            <div className="case-sketch-strip">
+              <button
+                className="case-inspect"
+                aria-label={`Inspect ${example.name} demo drawing`}
+                onClick={() => setPreview({ title: "Demo drawing", image: example.original })}
+              >
+                <img src={example.original} alt={`${example.name} demo pencil drawing`} />
+                <span>Demo drawing</span>
+              </button>
+              <ArrowRight size={22} />
+              <div>
+                <strong>From a drawing to a whole collection.</strong>
+                <p>{example.motifs}</p>
+                <small>An AI-made drawing starts this example.</small>
+              </div>
+            </div>
             <figure className="case-world-hero">
               <button
                 className="case-inspect"
-                aria-label={`Inspect ${example.name} illustrated universe`}
-                onClick={() => setPreview({ title: "Illustrated Universe", image: example.world })}
+                aria-label={`Inspect ${example.name} artwork world`}
+                onClick={() => setPreview({ title: "Artwork World", image: example.world })}
               >
                 <img
                   src={example.world}
-                  alt={`${example.name} rich illustrated universe`}
+                  alt={`${example.name} colorful artwork world`}
                   width="1536"
                   height="1024"
                   loading="lazy"
@@ -170,26 +186,10 @@ export function Community() {
                 <Maximize2 size={20} />
               </button>
               <figcaption>
-                <strong>Illustrated Universe</strong>
+                <strong>Artwork World</strong>
                 <span>Explore the details</span>
               </figcaption>
             </figure>
-            <div className="case-sketch-strip">
-              <button
-                className="case-inspect"
-                aria-label={`Inspect ${example.name} demo sketch`}
-                onClick={() => setPreview({ title: "Demo sketch", image: example.original })}
-              >
-                <img src={example.original} alt={`${example.name} demo pencil sketch`} />
-                <span>Demo sketch</span>
-              </button>
-              <ArrowRight size={22} />
-              <div>
-                <strong>From a sketch to a whole collection.</strong>
-                <p>{example.motifs}</p>
-                <small>AI-created sketch input for this curated example.</small>
-              </div>
-            </div>
           </section>
           <section className="case-study-section" aria-labelledby="case-products-title">
             <p className="collection-kicker">02 / FROM ILLUSTRATION TO COLLECTIBLE</p>
