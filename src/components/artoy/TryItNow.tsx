@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { joinWaitlist } from "@/lib/waitlist.functions";
 import { DETAIL_OPTIONS, type Creation, type CreatorSession } from "./useCreatorSession";
+import { SAMPLE_CHARACTERS } from "./prebaked";
 
 function ResultCards({ items }: { items: Creation[] }) {
   return (
@@ -63,6 +64,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
     merch.find((item) => item.image);
   const chosenDetails = chosen ? (session.details[chosen.label] ?? []) : [];
   const busy = generating || !!session.expanding;
+  const isPrebaked = !!source?.sampleId;
 
   async function saveEmail() {
     setSavingEmail(true);
@@ -166,6 +168,23 @@ export function TryItNow({ session }: { session: CreatorSession }) {
             Start with 5 images: your character, its world and 3 collectible concepts. Expand a
             favorite when you’re ready.
           </p>
+          <div className="studio-samples">
+            <p>Or explore a sample character — instant, no waiting:</p>
+            <div>
+              {SAMPLE_CHARACTERS.map((sample) => (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    setSelectedConcept(null);
+                    session.chooseSample(sample);
+                  }}
+                >
+                  <img src={sample.image} alt={`${sample.name} sample character`} />
+                  <span>{sample.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -319,7 +338,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 ))}
               </div>
             </section>
-            {chosen && (
+            {chosen && !isPrebaked && (
               <section className="collection-breakdown" aria-labelledby="breakdown-heading">
                 <div className="collection-breakdown-heading">
                   <div>
@@ -399,14 +418,16 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               Download your favorites before refreshing, starting a new character, or generating a
               new set.
             </p>
-            <button
-              className="studio-text-button"
-              disabled={busy}
-              onClick={() => void session.generate()}
-            >
-              <RefreshCw size={15} />
-              Generate a new set
-            </button>
+            {!isPrebaked && (
+              <button
+                className="studio-text-button"
+                disabled={busy}
+                onClick={() => void session.generate()}
+              >
+                <RefreshCw size={15} />
+                Generate a new set
+              </button>
+            )}
           </div>
           <details className="studio-waitlist">
             <summary>
