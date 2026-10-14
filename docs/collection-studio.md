@@ -20,7 +20,7 @@ Prompts specify interconnected hand-inked worlds on warm ivory with selective wa
 
 ## API
 
-`POST /api/generate-universe`, response header `X-ARTOY-Generation-Contract: collection-json-v3`.
+`POST /api/generate-universe`, response header `X-ARTOY-Generation-Contract: collection-json-v4`.
 
 - Core: `{ imageDataUrl, mode: "initial", characterName }`; omitted mode stays equivalent to initial.
 - Complete breakdown: `{ imageDataUrl, mode: "detail", conceptLabel, conceptImageDataUrl, expansion: "complete", characterName }`.
@@ -42,3 +42,5 @@ The unpublished Lovable preview on main commit `124aa718b2954b2b607e665fee085dac
 The first live box had a substantial shape and matching miniature but weak, small lettering. The packaging prompt was refined to request a large high-contrast top wordmark, saturated side/emblem and a full-colour illustrated front. Completed packaging has a single-image redesign action; core images and other breakdown panels are retained during that request. Changing a name does not itself consume generation requests or alter an existing box image.
 
 Desktop preview inspection confirms the full-width world, the renamed Miko toggle, loaded packaging artwork, image enlargement and an upload-only studio. The live eight-image check supersedes the earlier provider-unavailable outcome. It is one successful run, not a guarantee of future provider availability, output fidelity or manufacturing readiness. Phone-specific browser geometry and a physical prototype remain unverified. No public publication was performed.
+
+Packaging now receives a third, server-owned inline WebP layout reference. It controls carton proportions and print hierarchy only. The first two references retain character/product identity; reference branding and palette must not be copied. Only the packaging call receives it, and the five-plus-three image request budget is unchanged. The asset is bundled inline, requiring no runtime image fetch.
