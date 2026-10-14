@@ -19,7 +19,7 @@ export type Creation = {
   image: string | null;
   error?: string;
 };
-type Source = { image: string; name: string; sampleId: null };
+type Source = { image: string; name: string; sampleId: string | null };
 
 export function useCreatorSession(initialFile?: File) {
   const [source, setSource] = useState<Source | null>(null);
@@ -98,8 +98,8 @@ export function useCreatorSession(initialFile?: File) {
         const json = (await response.json()) as { results?: Creation[] };
         if (!response.ok) {
           throw new Error(
-            response.status === 402
-              ? "Generation is temporarily unavailable. Please try again later."
+              response.status === 402
+              ? "Live generation is paused right now. Try one of the sample characters below, or leave your email and we’ll notify you when it’s back."
               : response.status === 429
                 ? "The studio is busy. Please wait a moment and try again."
                 : "We couldn’t generate your universe. Your artwork is still here—try again.",
