@@ -129,3 +129,28 @@ test("partial presentation keeps successful panels and sanitizes provider failur
     globalThis.fetch = realFetch;
   }
 });
+
+test("packaging style reference is isolated to the box and never increases the image count", async () => {
+  const { generatePresentation } = await import("../src/lib/universe-generation.ts");
+  const realFetch = globalThis.fetch;
+  const style = "data:image/webp;base64,c3R5bGU=";
+  const requests = [];
+  globalThis.fetch = async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return Response.json({ data: [{ b64_json: "YXBwcm92ZWQ=" }] });
+  };
+  try {
+    const result = await generatePresentation("key", original, approved, "Miko", style);
+    assert.equal(result.length, 3);
+    assert.equal(requests.length, 3);
+    assert.equal(requests[0].messages[0].content.length, 3);
+    assert.equal(requests[2].messages[0].content.length, 3);
+    assert.equal(requests[1].messages[0].content.length, 4);
+    assert.equal(requests[1].messages[0].content[3].image_url.url, style);
+    assert.match(requests[1].messages[0].content[0].text, /LAYOUT REFERENCE ONLY/);
+    assert.match(requests[1].messages[0].content[0].text, /Never copy the reference-3 character/);
+    assert.match(requests[1].messages[0].content[0].text, /"Miko"/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

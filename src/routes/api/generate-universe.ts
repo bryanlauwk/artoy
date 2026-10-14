@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import signatureBoxStyle from "@/assets/artoy/case-study/lunarie-packaging-v2.webp?inline";
 import {
   EXPANSIONS,
   ITEMS,
@@ -10,7 +11,7 @@ import {
   type ExpansionType,
   type Result,
 } from "@/lib/universe-generation";
-const headers = { "X-ARTOY-Generation-Contract": "collection-json-v3" };
+const headers = { "X-ARTOY-Generation-Contract": "collection-json-v4" };
 export const Route = createFileRoute("/api/generate-universe")({
   server: {
     handlers: {
@@ -94,6 +95,7 @@ export const Route = createFileRoute("/api/generate-universe")({
               body.imageDataUrl,
               body.conceptImageDataUrl,
               characterName,
+              signatureBoxStyle,
             );
           } else {
             const item =
@@ -102,7 +104,13 @@ export const Route = createFileRoute("/api/generate-universe")({
                 : EXPANSIONS[body.expansion as ExpansionType];
             try {
               results = [
-                await generateOne(apiKey, body.imageDataUrl, item, body.conceptImageDataUrl),
+                await generateOne(
+                  apiKey,
+                  body.imageDataUrl,
+                  item,
+                  body.conceptImageDataUrl,
+                  body.expansion === "packaging" ? signatureBoxStyle : undefined,
+                ),
               ];
             } catch {
               results = [

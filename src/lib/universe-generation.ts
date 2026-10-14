@@ -59,7 +59,7 @@ export const EXPANSIONS = {
     label: "Packaging Concept",
     kind: "experience",
     prompt:
-      IDENTITY +
+      IDENTITY.replace("No captions, labels, watermark or UI. ", "No watermark or UI. ") +
       "The second reference is the chosen collectible. Create one aspirational retail packaging photo: a large substantial CLOSED cuboid gift box at three-quarter view with the exact matching miniature beside it at half the box height. Thick matte ivory board and a saturated side panel from the character palette. A LARGE BOLD HIGH-CONTRAST character wordmark spans the upper front face, with a prominent character-derived emblem on the side. Cover the broad front with a detailed full-colour hand-inked world illustration that wraps around the matching miniature's picture; the illustrated wrap fills most of the front, with a clear hierarchy of wordmark, world and product. Tactile printed paper, crisp foil accents, natural studio shadows. The name must be easily readable at thumbnail size; do not use small blind embossing or a mostly blank front. Box front, side and top must be visible, whole box uncropped. Make the package feel substantial and ready to gift; not a flat pouch, book cover or small window box. Warm ivory studio background. No slogans, manufacturing claims or unrelated brand logos. Do not change the collectible.",
   },
   series: {
@@ -90,12 +90,19 @@ export async function generatePresentation(
   original: string,
   reference: string,
   characterName?: string,
+  packagingStyle?: string,
 ): Promise<Result[]> {
   return Promise.all(
     [EXPANSIONS["product-views"], packagingItem(characterName), EXPANSIONS.series].map(
       async (item) => {
         try {
-          return await generateOne(apiKey, original, item, reference);
+          return await generateOne(
+            apiKey,
+            original,
+            item,
+            reference,
+            item.label === "Packaging Concept" ? packagingStyle : undefined,
+          );
         } catch {
           return {
             label: item.label,
@@ -139,8 +146,10 @@ export async function generateOne(
   imageDataUrl: string,
   item: Item,
   conceptReference?: string,
+  styleReference?: string,
 ): Promise<Result> {
   const sources = conceptReference ? [imageDataUrl, conceptReference] : [imageDataUrl];
+  if (styleReference) sources.push(styleReference);
   for (const source of sources) {
     if (!/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(source))
       return { label: item.label, kind: item.kind, image: null, error: "Invalid reference image" };
@@ -159,7 +168,14 @@ export async function generateOne(
         {
           role: "user",
           content: [
-            { type: "text", text: item.prompt },
+            {
+              type: "text",
+              text:
+                item.prompt +
+                (styleReference
+                  ? " Reference 3 is a PACKAGING LAYOUT REFERENCE ONLY: match its substantial box proportions, dominant top wordmark, illustrated printed front and bold side emblem. References 1 and 2 exclusively determine your character, product, colours, visual motifs and brand identity. Never copy the reference-3 character, name, logo, pink palette or city. Replace its wordmark with the supplied character name and derive its illustration from references 1 and 2. The requested printed wordmark is required packaging artwork, not a caption."
+                  : ""),
+            },
             ...sources.map((url) => ({ type: "image_url", image_url: { url } })),
           ],
         },
