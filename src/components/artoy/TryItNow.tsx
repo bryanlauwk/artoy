@@ -338,7 +338,7 @@ export function TryItNow({ session }: { session: CreatorSession }) {
                 ))}
               </div>
             </section>
-            {chosen && (
+            {chosen && !isPrebaked && (
               <section className="collection-breakdown" aria-labelledby="breakdown-heading">
                 <div className="collection-breakdown-heading">
                   <div>
@@ -418,14 +418,16 @@ export function TryItNow({ session }: { session: CreatorSession }) {
               Download your favorites before refreshing, starting a new character, or generating a
               new set.
             </p>
-            <button
-              className="studio-text-button"
-              disabled={busy}
-              onClick={() => void session.generate()}
-            >
-              <RefreshCw size={15} />
-              Generate a new set
-            </button>
+            {!isPrebaked && (
+              <button
+                className="studio-text-button"
+                disabled={busy}
+                onClick={() => void session.generate()}
+              >
+                <RefreshCw size={15} />
+                Generate a new set
+              </button>
+            )}
           </div>
           <details className="studio-waitlist">
             <summary>
